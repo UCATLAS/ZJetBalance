@@ -263,6 +263,17 @@ int main( int argc, char* argv[] ) {
   BasicEventSelection* baseEventSel = new BasicEventSelection();
   baseEventSel->setName("baseEventSel")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/baseEvent.config" );
 
+  /// MUONS ///
+  MuonCalibrator* muonCalib = new MuonCalibrator();
+  muonCalib->setName( "muonCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCalib.config")->setSyst( systName, systVal );
+
+  MuonSelector* muonSelect = new MuonSelector();
+  muonSelect->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelect.config");
+
+  MuonEfficiencyCorrector* muonCorrect = new MuonEfficiencyCorrector();
+  muonCorrect->setName( "muonCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCorrect.config");
+
+  /// JETS ///
   // jet calibrator
   JetCalibrator* jetCalib = new JetCalibrator();
   jetCalib->setName( "jetCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/jetCalib_AntiKt4EMTopo.config")->setSyst( systName, systVal );
@@ -277,15 +288,18 @@ int main( int argc, char* argv[] ) {
   
 
   // zjet algo
-//  ResonanceAlgorithm* resAlg = new ResonanceAlgorithm();
-//  resAlg->setName("DijetAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/dijetAlgo.config" );
+  BalanceAlgorithm* balAlg = new BalanceAlgorithm();
+  balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
 
   // ADD ALGOS TO JOB
   job.algsAdd( baseEventSel );
-  job.algsAdd( muonCalib );
-  job.algsAdd( muonSelect );
-  job.algsAdd( jetCalib );
-  job.algsAdd( jetSelect );
+  job.algsAdd( muonCalib    );
+  job.algsAdd( muonSelect   );
+  job.algsAdd( muonCorrect  );
+  job.algsAdd( jetCalib     );
+  job.algsAdd( jetSelect    );
+  job.algsAdd( bjetCorrect  );
+  job.algsAdd( balAlg       );
 
   if(f_grid){
     EL::PrunDriver driver;
