@@ -16,6 +16,8 @@
 #include "xAODAnaHelpers/JetSelector.h"
 #include "xAODAnaHelpers/BJetEfficiencyCorrector.h"
 
+#include "ZJetBalance/BalanceAlgorithm.h"
+
 #include <string>
 #include <sys/stat.h>
 #include <fstream>
@@ -290,6 +292,13 @@ int main( int argc, char* argv[] ) {
   // zjet algo
   BalanceAlgorithm* balAlg = new BalanceAlgorithm();
   balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
+
+//  muonCalib->m_debug    = true;
+//  muonSelect->m_debug   = true;
+//  muonCorrect->m_debug  = true;
+//  jetCalib->m_debug     = true;
+//  jetSelect->m_debug    = true;
+
 
   // ADD ALGOS TO JOB
   job.algsAdd( baseEventSel );
