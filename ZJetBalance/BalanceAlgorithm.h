@@ -46,6 +46,8 @@ class BalanceAlgorithm : public xAH::Algorithm
     std::string m_inputJetAlgo;             //! input algo for when running systs
     std::string m_inputMuonContainerName;   //! input container name
     std::string m_inputMuonAlgo;            //! input algo for when running systs
+    std::string m_inputMuonForMuonInJetCorrectionContainerName; //! input container name
+    std::string m_inputMuonForMuonInJetCorrectionAlgo;          //! input algo for when running systs
     bool m_isMC;                      //! Is MC
     bool m_useCutFlow;                //! true will write out cutflow histograms
     bool m_writeTree;                 //! true will write out a TTree
@@ -66,6 +68,8 @@ class BalanceAlgorithm : public xAH::Algorithm
 
     std::string m_treeStream;
     void passCut();
+    TLorentzVector getFourMomentumOfMuonInJet(const xAOD::Muon* muon);
+    EL::StatusCode muonInJetCorrection (const xAOD::JetContainer* signalJets);
 
 #ifndef __CINT__
     EL::StatusCode getLumiWeights(const xAOD::EventInfo* eventInfo);

@@ -56,6 +56,8 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
   m_inputJetAlgo             = config->GetValue("InputJetAlgo",       "");
   m_inputMuonContainerName   = config->GetValue("InputMuonContainer",  "");
   m_inputMuonAlgo            = config->GetValue("InputMuonAlgo",       "");
+  m_inputMuonForMuonInJetCorrectionContainerName   = config->GetValue("InputMuonForMuonInJetCorrectionContainer",  "");
+  m_inputMuonForMuonInJetCorrectionAlgo            = config->GetValue("InputMuonForMuonInJetCorrectionAlgo",       "");
   m_debug                    = config->GetValue("Debug" ,      false );
   m_useCutFlow               = config->GetValue("UseCutFlow",  true);
   m_writeTree                = config->GetValue("WriteTree",  true);
@@ -75,6 +77,10 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
     return EL::StatusCode::FAILURE;
   }
   if( m_inputMuonContainerName.empty() ) {
+    Error("configure()", "Muon InputContainer is empty!");
+    return EL::StatusCode::FAILURE;
+  }
+  if( m_inputMuonForMuonInJetCorrectionContainerName.empty() ) {
     Error("configure()", "Muon InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
@@ -358,7 +364,9 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
   if(doCutflow) passCut(); //Z mass cut
 
-
+  if ( muonInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
+    Error("executeAnalysis()", "failure in muonInJetCorrection()");
+  }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -524,4 +532,75 @@ EL::StatusCode BalanceAlgorithm :: histFinalize ()
     }
   }
   return EL::StatusCode::SUCCESS;
+}
+
+//===============================
+EL::StatusCode BalanceAlgorithm :: muonInJetCorrection (const xAOD::JetContainer* signalJets)
+{
+  const xAOD::MuonContainer* muonsForCorr = 0;
+  RETURN_CHECK("BalanceAlgorithm::muonInJetCorrection()", 
+	       HelperFunctions::retrieve(muonsForCorr, m_inputMuonForMuonInJetCorrectionContainerName, m_event, m_store), "");
+  
+  for( auto signalJet : *signalJets ) {
+    const double pt  = signalJet->pt();
+    const double eta = signalJet->eta();
+    const double phi = signalJet->phi();
+    const double m   = signalJet->m();
+    TLorentzVector jetP4;
+    jetP4.SetPtEtaPhiM(pt, eta, phi, m);
+    
+    xAOD::MuonContainer::const_iterator muItrC = muonsForCorr->begin();
+    xAOD::MuonContainer::const_iterator muItrE = muonsForCorr->end();
+    double minimumDr = 0.4;
+    const xAOD::Muon* closestMuon = 0;
+    for (; muItrC!=muItrE; muItrC++) {
+      const double mu_pt  = (*muItrC)->pt();
+      const double mu_eta = (*muItrC)->eta();
+      const double mu_phi = (*muItrC)->phi();
+      const double mu_m   = (*muItrC)->m();
+      TLorentzVector muonP4;
+      muonP4.SetPtEtaPhiM(mu_pt, mu_eta, mu_phi, mu_m);
+      const double dR = jetP4.DeltaR(muonP4);
+      if (dR<minimumDr) {
+	minimumDr   = dR;
+	closestMuon = (*muItrC);
+      }
+    }
+    
+    TLorentzVector muonInJetP4(0, 0, 0, 0);
+    if (closestMuon) {
+      muonInJetP4 = getFourMomentumOfMuonInJet (closestMuon);
+    }
+    
+    TLorentzVector correctedJetP4 = (jetP4+muonInJetP4);
+    
+    signalJet->auxdecor< float >("mucorrected_pt")  = correctedJetP4.Pt();
+    signalJet->auxdecor< float >("mucorrected_phi") = correctedJetP4.Phi();
+    signalJet->auxdecor< float >("mucorrected_eta") = correctedJetP4.Eta();
+    signalJet->auxdecor< float >("mucorrected_m"  ) = correctedJetP4.M();
+  }
+  
+  return EL::StatusCode::SUCCESS;
+}
+
+//===============================
+TLorentzVector BalanceAlgorithm :: getFourMomentumOfMuonInJet (const xAOD::Muon* muon)  
+{
+  float eLoss=0.0;
+  muon->parameter(eLoss,xAOD::Muon::EnergyLoss);
+  TLorentzVector muonP4;
+  const double pt  = muon->pt();
+  const double eta = muon->eta();
+  const double phi = muon->phi();
+  const double m   = muon->m();
+  muonP4.SetPtEtaPhiM(pt, eta, phi, m);
+  
+  double theta=muonP4.Theta();
+  double eLossX=eLoss*sin(theta)*cos(phi);
+  double eLossY=eLoss*sin(theta)*sin(phi);
+  double eLossZ=eLoss*cos(theta);
+  
+  TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
+  
+  return muonP4-eLossP4;
 }

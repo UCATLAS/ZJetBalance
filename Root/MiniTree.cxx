@@ -22,7 +22,7 @@ void MiniTree::AddEventUser(const std::string detailStr)
   m_tree->Branch("Zeta",  &m_Zeta,  "Zeta/F" );
   m_tree->Branch("Zphi",  &m_Zphi,  "Zphi/F" );
   m_tree->Branch("ZM",    &m_ZM,    "ZM/F"   );
-
+  
 
   m_tree->Branch("weight", &m_weight, "weight/F");
   m_tree->Branch("weight_xs", &m_weight_xs, "weight_xs/F");
@@ -33,6 +33,10 @@ void MiniTree::AddJetsUser(const std::string detailStr)
 {
   m_tree->Branch("jet_constitScaleEta", &m_jet_constitScaleEta);
   m_tree->Branch("jet_emScaleEta", &m_jet_emScaleEta);
+  m_tree->Branch("jet_mucorrected_pt", &m_jet_mucorrected_pt);
+  m_tree->Branch("jet_mucorrected_eta", &m_jet_mucorrected_eta);
+  m_tree->Branch("jet_mucorrected_phi", &m_jet_mucorrected_phi);
+  m_tree->Branch("jet_mucorrected_m",  &m_jet_mucorrected_m);
 }
 
 //////////////////// Clear any defined vectors here ////////////////////////////
@@ -51,6 +55,10 @@ void MiniTree::ClearEventUser() {
 void MiniTree::ClearJetsUser() {
   m_jet_constitScaleEta.clear();
   m_jet_emScaleEta.clear();
+  m_jet_mucorrected_pt.clear();
+  m_jet_mucorrected_eta.clear();
+  m_jet_mucorrected_phi.clear();
+  m_jet_mucorrected_m.clear();
 }
 
 /////////////////// Assign values to defined event variables here ////////////////////////
@@ -86,6 +94,10 @@ void MiniTree::FillJetsUser( const xAOD::Jet* jet ) {
   } else {
     m_jet_emScaleEta.push_back( -999 );
   }
-
+  
+  m_jet_mucorrected_pt.push_back(jet->auxdata< float >("mucorrected_pt")/m_units);
+  m_jet_mucorrected_eta.push_back(jet->auxdata< float >("mucorrected_eta"));
+  m_jet_mucorrected_phi.push_back(jet->auxdata< float >("mucorrected_phi"));
+  m_jet_mucorrected_m.push_back(jet->auxdata< float >("mucorrected_m")/m_units);
 }
 
