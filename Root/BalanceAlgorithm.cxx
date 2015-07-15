@@ -542,28 +542,16 @@ EL::StatusCode BalanceAlgorithm :: muonInJetCorrection (const xAOD::JetContainer
 	       HelperFunctions::retrieve(muonsForCorr, m_inputMuonForMuonInJetCorrectionContainerName, m_event, m_store), "");
   
   for( auto signalJet : *signalJets ) {
-    const double pt  = signalJet->pt();
-    const double eta = signalJet->eta();
-    const double phi = signalJet->phi();
-    const double m   = signalJet->m();
-    TLorentzVector jetP4;
-    jetP4.SetPtEtaPhiM(pt, eta, phi, m);
+    const TLorentzVector& jetP4 = signalJet->p4();
     
-    xAOD::MuonContainer::const_iterator muItrC = muonsForCorr->begin();
-    xAOD::MuonContainer::const_iterator muItrE = muonsForCorr->end();
     double minimumDr = 0.4;
     const xAOD::Muon* closestMuon = 0;
-    for (; muItrC!=muItrE; muItrC++) {
-      const double mu_pt  = (*muItrC)->pt();
-      const double mu_eta = (*muItrC)->eta();
-      const double mu_phi = (*muItrC)->phi();
-      const double mu_m   = (*muItrC)->m();
-      TLorentzVector muonP4;
-      muonP4.SetPtEtaPhiM(mu_pt, mu_eta, mu_phi, mu_m);
+    for ( auto muon : *muonsForCorr ) {
+      const TLorentzVector& muonP4 = muon->p4();
       const double dR = jetP4.DeltaR(muonP4);
       if (dR<minimumDr) {
 	minimumDr   = dR;
-	closestMuon = (*muItrC);
+	closestMuon = muon;
       }
     }
     
@@ -588,17 +576,14 @@ TLorentzVector BalanceAlgorithm :: getFourMomentumOfMuonInJet (const xAOD::Muon*
 {
   float eLoss=0.0;
   muon->parameter(eLoss,xAOD::Muon::EnergyLoss);
-  TLorentzVector muonP4;
-  const double pt  = muon->pt();
-  const double eta = muon->eta();
-  const double phi = muon->phi();
-  const double m   = muon->m();
-  muonP4.SetPtEtaPhiM(pt, eta, phi, m);
+  const TLorentzVector& muonP4 = muon->p4();
   
-  double theta=muonP4.Theta();
-  double eLossX=eLoss*sin(theta)*cos(phi);
-  double eLossY=eLoss*sin(theta)*sin(phi);
-  double eLossZ=eLoss*cos(theta);
+  const double theta=muonP4.Theta();
+  const double phi  =muonP4.Phi();
+  
+  const double eLossX=eLoss*sin(theta)*cos(phi);
+  const double eLossY=eLoss*sin(theta)*sin(phi);
+  const double eLossZ=eLoss*cos(theta);
   
   TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
   
