@@ -21,8 +21,11 @@ class MiniTree : public HelpTreeBase
 
     std::vector<float> m_jet_constitScaleEta;
     std::vector<float> m_jet_emScaleEta;
-
-
+    std::vector<float> m_jet_mucorrected_pt;
+    std::vector<float> m_jet_mucorrected_eta;
+    std::vector<float> m_jet_mucorrected_phi;
+    std::vector<float> m_jet_mucorrected_m;
+    
   public:
 
     MiniTree(xAOD::TEvent * event, TTree* tree, TFile* file);
