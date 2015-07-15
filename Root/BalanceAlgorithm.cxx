@@ -560,7 +560,7 @@ EL::StatusCode BalanceAlgorithm :: muonInJetCorrection (const xAOD::JetContainer
       muonInJetP4 = getFourMomentumOfMuonInJet (closestMuon);
     }
     
-    TLorentzVector correctedJetP4 = (jetP4+muonInJetP4);
+    const TLorentzVector correctedJetP4 = (jetP4+muonInJetP4);
     
     signalJet->auxdecor< float >("mucorrected_pt")  = correctedJetP4.Pt();
     signalJet->auxdecor< float >("mucorrected_phi") = correctedJetP4.Phi();
@@ -585,7 +585,7 @@ TLorentzVector BalanceAlgorithm :: getFourMomentumOfMuonInJet (const xAOD::Muon*
   const double eLossY=eLoss*sin(theta)*sin(phi);
   const double eLossZ=eLoss*cos(theta);
   
-  TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
+  const TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
   
   return muonP4-eLossP4;
 }
