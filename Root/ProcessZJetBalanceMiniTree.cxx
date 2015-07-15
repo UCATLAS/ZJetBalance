@@ -25,8 +25,7 @@ using namespace std;
 // this is needed to distribute the algorithm to the workers
 ClassImp(ProcessZJetBalanceMiniTree)
 
-ProcessZJetBalanceMiniTree :: ProcessZJetBalanceMiniTree () :
-  m_debug(false)
+ProcessZJetBalanceMiniTree :: ProcessZJetBalanceMiniTree ()
 {
   Info("ProcessZJetBalanceMiniTree()", "Calling constructor");
 }
@@ -34,6 +33,7 @@ ProcessZJetBalanceMiniTree :: ProcessZJetBalanceMiniTree () :
 
 EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
 {
+  Info("configure()", "called");
   m_configName = gSystem->ExpandPathName( m_configName.c_str() );
   Info("configure()", "Configuing ProcessZJetBalanceMiniTree Interface. User configuration read from : %s \n", m_configName.c_str());
   TEnv* config = new TEnv(m_configName.c_str());
@@ -76,8 +76,12 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   // beginning on each worker node, e.g. create histograms and output
   // trees.  This method gets called before any input files are
   // connected.
-  Info("histInitialize()", "Calling histInitialize \n");
-
+  Info("histInitialize()", "Calling histInitialize");
+  
+  // list of the histograms
+  m_h_ZpT = new TH1D("h_ZpT", "", 100, 0, 100);
+  wk()->addOutput( m_h_ZpT );
+  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -94,13 +98,15 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: fileExecute ()
 
 EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
 {
+  Info("changedInput", "called"); 
+
   // Here you do everything you need to do when we change input files,
   // e.g. resetting branch addresses on trees.  If you are using
   // D3PDReader or a similar service this method is not needed.
-  TTree *tree = wk()->tree();
-  tree->SetBranchStatus ("*", 0);
   
-  return EL::StatusCode::SUCCESS;
+  TTree *tree = wk()->tree();
+  InitTree(tree);
+ return EL::StatusCode::SUCCESS;
 }
 
 
@@ -117,6 +123,11 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   // input events.
   m_eventCounter = 0;
   
+  if ( this->configure() == EL::StatusCode::FAILURE ) {
+    Error("initialize()", "Failed to properly configure. Exiting." );
+    return EL::StatusCode::FAILURE;
+  }
+  
   Info("initialize()", "Succesfully initialized! \n");
   return EL::StatusCode::SUCCESS;
 }
@@ -128,13 +139,23 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   // event, e.g. read input variables, apply cuts, and fill
   // histograms and trees.  This is where most of your actual analysis
   // code will go.
-  if(m_debug) Info("execute()", "Processing Event");
+  
+  //===============================
+  // load tree
+  //===============================
+  TTree* tree = wk()->tree();
+  const int jentry = wk()->treeEntry();
+  tree->LoadTree (jentry);
+  tree->GetEntry (jentry);
+  
+  if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
   if (m_eventCounter%100==0) {
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
   
-  wk()->tree()->GetEntry (wk()->treeEntry());
+  m_h_ZpT->Fill(ZpT);
+  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -160,7 +181,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: finalize ()
   // submission node after all your histogram outputs have been
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
-
+  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -179,4 +200,147 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histFinalize ()
   // that it gets called on all worker nodes regardless of whether
   // they processed input events.
   return EL::StatusCode::SUCCESS;
+}
+
+void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
+{
+  // // Set object pointer
+  jet_E = 0;
+  jet_pt = 0;
+  jet_phi = 0;
+  jet_eta = 0;
+  jet_rapidity = 0;
+  jet_HECFrac = 0;
+  jet_EMFrac = 0;
+  jet_CentroidR = 0;
+  jet_FracSamplingMax = 0;
+  jet_FracSamplingMaxIndex = 0;
+  jet_LowEtConstituentsFrac = 0;
+  jet_GhostMuonSegmentCount = 0;
+  jet_Width = 0;
+  jet_NumTrkPt1000PV = 0;
+  jet_SumPtTrkPt1000PV = 0;
+  jet_TrackWidthPt1000PV = 0;
+  jet_NumTrkPt500PV = 0;
+  jet_SumPtTrkPt500PV = 0;
+  jet_TrackWidthPt500PV = 0;
+  jet_JVFPV = 0;
+  jet_Jvt = 0;
+  jet_JvtJvfcorr = 0;
+  jet_JvtRpt = 0;
+  jet_SV0 = 0;
+  jet_SV1 = 0;
+  jet_IP3D = 0;
+  jet_SV1IP3D = 0;
+  jet_MV1 = 0;
+  jet_MV2c00 = 0;
+  jet_MV2c20 = 0;
+  jet_GhostArea = 0;
+  jet_ActiveArea = 0;
+  jet_VoronoiArea = 0;
+  jet_ActiveArea4vec_pt = 0;
+  jet_ActiveArea4vec_eta = 0;
+  jet_ActiveArea4vec_phi = 0;
+  jet_ActiveArea4vec_m = 0;
+  jet_ConeTruthLabelID = 0;
+  jet_TruthCount = 0;
+  jet_TruthLabelDeltaR_B = 0;
+  jet_TruthLabelDeltaR_C = 0;
+  jet_TruthLabelDeltaR_T = 0;
+  jet_PartonTruthLabelID = 0;
+  jet_GhostTruthAssociationFraction = 0;
+  jet_truth_E = 0;
+  jet_truth_pt = 0;
+  jet_truth_phi = 0;
+  jet_truth_eta = 0;
+  jet_constitScaleEta = 0;
+  jet_emScaleEta = 0;
+  jet_mucorrected_pt = 0;
+  jet_mucorrected_eta = 0;
+  jet_mucorrected_phi = 0;
+  jet_mucorrected_m = 0;
+  // Set branch addresses and branch pointers
+  
+  tree->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
+  tree->SetBranchAddress("eventNumber", &eventNumber, &b_eventNumber);
+  tree->SetBranchAddress("mcEventNumber", &mcEventNumber, &b_mcEventNumber);
+  tree->SetBranchAddress("mcChannelNumber", &mcChannelNumber, &b_mcChannelNumber);
+  tree->SetBranchAddress("mcEventWeight", &mcEventWeight, &b_mcEventWeight);
+  tree->SetBranchAddress("weight_pileup", &weight_pileup, &b_weight_pileup);
+  tree->SetBranchAddress("NPV", &NPV, &b_NPV);
+  tree->SetBranchAddress("actualInteractionsPerCrossing", &actualInteractionsPerCrossing, &b_actualInteractionsPerCrossing);
+  tree->SetBranchAddress("averageInteractionsPerCrossing", &averageInteractionsPerCrossing, &b_averageInteractionsPerCrossing);
+  tree->SetBranchAddress("lumiBlock", &lumiBlock, &b_lumiBlock);
+  tree->SetBranchAddress("rhoEM", &rhoEM, &b_rhoEM);
+  tree->SetBranchAddress("pdgId1", &pdgId1, &b_pdgId1);
+  tree->SetBranchAddress("pdgId2", &pdgId2, &b_pdgId2);
+  tree->SetBranchAddress("pdfId1", &pdfId1, &b_pdfId1);
+  tree->SetBranchAddress("pdfId2", &pdfId2, &b_pdfId2);
+  tree->SetBranchAddress("x1", &x1, &b_x1);
+  tree->SetBranchAddress("x2", &x2, &b_x2);
+  tree->SetBranchAddress("xf1", &xf1, &b_xf1);
+  tree->SetBranchAddress("xf2", &xf2, &b_xf2);
+  tree->SetBranchAddress("ZpT", &ZpT, &b_ZpT);
+  tree->SetBranchAddress("Zeta", &Zeta, &b_Zeta);
+  tree->SetBranchAddress("Zphi", &Zphi, &b_Zphi);
+  tree->SetBranchAddress("ZM", &ZM, &b_ZM);
+  tree->SetBranchAddress("weight", &weight, &b_weight);
+  tree->SetBranchAddress("weight_xs", &weight_xs, &b_weight_xs);
+  tree->SetBranchAddress("weight_prescale", &weight_prescale, &b_weight_prescale);
+  tree->SetBranchAddress("njets", &njets, &b_njets);
+  tree->SetBranchAddress("jet_E", &jet_E, &b_jet_E);
+  tree->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
+  tree->SetBranchAddress("jet_phi", &jet_phi, &b_jet_phi);
+  tree->SetBranchAddress("jet_eta", &jet_eta, &b_jet_eta);
+  tree->SetBranchAddress("jet_rapidity", &jet_rapidity, &b_jet_rapidity);
+  tree->SetBranchAddress("jet_HECFrac", &jet_HECFrac, &b_jet_HECFrac);
+  tree->SetBranchAddress("jet_EMFrac", &jet_EMFrac, &b_jet_EMFrac);
+  tree->SetBranchAddress("jet_CentroidR", &jet_CentroidR, &b_jet_CentroidR);
+  tree->SetBranchAddress("jet_FracSamplingMax", &jet_FracSamplingMax, &b_jet_FracSamplingMax);
+  tree->SetBranchAddress("jet_FracSamplingMaxIndex", &jet_FracSamplingMaxIndex, &b_jet_FracSamplingMaxIndex);
+  tree->SetBranchAddress("jet_LowEtConstituentsFrac", &jet_LowEtConstituentsFrac, &b_jet_LowEtConstituentsFrac);
+  tree->SetBranchAddress("jet_GhostMuonSegmentCount", &jet_GhostMuonSegmentCount, &b_jet_GhostMuonSegmentCount);
+  tree->SetBranchAddress("jet_Width", &jet_Width, &b_jet_Width);
+  tree->SetBranchAddress("jet_NumTrkPt1000PV", &jet_NumTrkPt1000PV, &b_jet_NumTrkPt1000PV);
+  tree->SetBranchAddress("jet_SumPtTrkPt1000PV", &jet_SumPtTrkPt1000PV, &b_jet_SumPtTrkPt1000PV);
+  tree->SetBranchAddress("jet_TrackWidthPt1000PV", &jet_TrackWidthPt1000PV, &b_jet_TrackWidthPt1000PV);
+  tree->SetBranchAddress("jet_NumTrkPt500PV", &jet_NumTrkPt500PV, &b_jet_NumTrkPt500PV);
+  tree->SetBranchAddress("jet_SumPtTrkPt500PV", &jet_SumPtTrkPt500PV, &b_jet_SumPtTrkPt500PV);
+  tree->SetBranchAddress("jet_TrackWidthPt500PV", &jet_TrackWidthPt500PV, &b_jet_TrackWidthPt500PV);
+  tree->SetBranchAddress("jet_JVFPV", &jet_JVFPV, &b_jet_JVFPV);
+  tree->SetBranchAddress("jet_Jvt", &jet_Jvt, &b_jet_Jvt);
+  tree->SetBranchAddress("jet_JvtJvfcorr", &jet_JvtJvfcorr, &b_jet_JvtJvfcorr);
+  tree->SetBranchAddress("jet_JvtRpt", &jet_JvtRpt, &b_jet_JvtRpt);
+  tree->SetBranchAddress("jet_SV0", &jet_SV0, &b_jet_SV0);
+  tree->SetBranchAddress("jet_SV1", &jet_SV1, &b_jet_SV1);
+  tree->SetBranchAddress("jet_IP3D", &jet_IP3D, &b_jet_IP3D);
+  tree->SetBranchAddress("jet_SV1IP3D", &jet_SV1IP3D, &b_jet_SV1IP3D);
+  tree->SetBranchAddress("jet_MV1", &jet_MV1, &b_jet_MV1);
+  tree->SetBranchAddress("jet_MV2c00", &jet_MV2c00, &b_jet_MV2c00);
+  tree->SetBranchAddress("jet_MV2c20", &jet_MV2c20, &b_jet_MV2c20);
+  tree->SetBranchAddress("jet_GhostArea", &jet_GhostArea, &b_jet_GhostArea);
+  tree->SetBranchAddress("jet_ActiveArea", &jet_ActiveArea, &b_jet_ActiveArea);
+  tree->SetBranchAddress("jet_VoronoiArea", &jet_VoronoiArea, &b_jet_VoronoiArea);
+  tree->SetBranchAddress("jet_ActiveArea4vec_pt", &jet_ActiveArea4vec_pt, &b_jet_ActiveArea4vec_pt);
+  tree->SetBranchAddress("jet_ActiveArea4vec_eta", &jet_ActiveArea4vec_eta, &b_jet_ActiveArea4vec_eta);
+  tree->SetBranchAddress("jet_ActiveArea4vec_phi", &jet_ActiveArea4vec_phi, &b_jet_ActiveArea4vec_phi);
+  tree->SetBranchAddress("jet_ActiveArea4vec_m", &jet_ActiveArea4vec_m, &b_jet_ActiveArea4vec_m);
+  tree->SetBranchAddress("jet_ConeTruthLabelID", &jet_ConeTruthLabelID, &b_jet_ConeTruthLabelID);
+  tree->SetBranchAddress("jet_TruthCount", &jet_TruthCount, &b_jet_TruthCount);
+  tree->SetBranchAddress("jet_TruthLabelDeltaR_B", &jet_TruthLabelDeltaR_B, &b_jet_TruthLabelDeltaR_B);
+  tree->SetBranchAddress("jet_TruthLabelDeltaR_C", &jet_TruthLabelDeltaR_C, &b_jet_TruthLabelDeltaR_C);
+  tree->SetBranchAddress("jet_TruthLabelDeltaR_T", &jet_TruthLabelDeltaR_T, &b_jet_TruthLabelDeltaR_T);
+  tree->SetBranchAddress("jet_PartonTruthLabelID", &jet_PartonTruthLabelID, &b_jet_PartonTruthLabelID);
+  tree->SetBranchAddress("jet_GhostTruthAssociationFraction", &jet_GhostTruthAssociationFraction, &b_jet_GhostTruthAssociationFraction);
+  tree->SetBranchAddress("jet_truth_E", &jet_truth_E, &b_jet_truth_E);
+  tree->SetBranchAddress("jet_truth_pt", &jet_truth_pt, &b_jet_truth_pt);
+  tree->SetBranchAddress("jet_truth_phi", &jet_truth_phi, &b_jet_truth_phi);
+  tree->SetBranchAddress("jet_truth_eta", &jet_truth_eta, &b_jet_truth_eta);
+  tree->SetBranchAddress("jet_constitScaleEta", &jet_constitScaleEta, &b_jet_constitScaleEta);
+  tree->SetBranchAddress("jet_emScaleEta", &jet_emScaleEta, &b_jet_emScaleEta);
+  tree->SetBranchAddress("jet_mucorrected_pt", &jet_mucorrected_pt, &b_jet_mucorrected_pt);
+  tree->SetBranchAddress("jet_mucorrected_eta", &jet_mucorrected_eta, &b_jet_mucorrected_eta);
+  tree->SetBranchAddress("jet_mucorrected_phi", &jet_mucorrected_phi, &b_jet_mucorrected_phi);
+  tree->SetBranchAddress("jet_mucorrected_m", &jet_mucorrected_m, &b_jet_mucorrected_m);
+  tree->SetBranchAddress("nmuon", &nmuon, &b_nmuon);
 }

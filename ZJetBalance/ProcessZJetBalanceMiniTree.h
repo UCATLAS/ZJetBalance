@@ -12,6 +12,7 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TLorentzVector.h>
+#include <TBranch.h>
 
 #include <vector>
 
@@ -28,14 +29,16 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
  private:
   bool m_debug; //! set verbose mode
   
+  // histograms
+  TH1D* m_h_ZpT; //!
   
-public:
+ public:
   // Tree *myTree; //!
   // TH1 *myHist; //!
-
+  
   // this is a standard constructor
   ProcessZJetBalanceMiniTree ();
-
+  
   // these are the functions inherited from Algorithm
   virtual EL::StatusCode setupJob (EL::Job& job);
   virtual EL::StatusCode fileExecute ();
@@ -52,6 +55,177 @@ public:
   
   // this is needed to distribute the algorithm to the workers
   ClassDef(ProcessZJetBalanceMiniTree, 1);
+
+ private:
+  void            InitTree(TTree* tree);
+  // copied from MakeClass function and add //! for all the variables
+  // Declaration of leaf types
+  Int_t           runNumber; //!
+  Int_t           eventNumber; //!
+  Int_t           mcEventNumber; //!
+  Int_t           mcChannelNumber; //!
+  Float_t         mcEventWeight; //!
+  Float_t         weight_pileup; //!
+  Int_t           NPV; //!
+  Float_t         actualInteractionsPerCrossing; //!
+  Float_t         averageInteractionsPerCrossing; //!
+  Int_t           lumiBlock; //!
+  Double_t        rhoEM; //!
+  Int_t           pdgId1; //!
+  Int_t           pdgId2; //!
+  Int_t           pdfId1; //!
+  Int_t           pdfId2; //!
+  Float_t         x1; //!
+  Float_t         x2; //!
+  Float_t         xf1; //!
+  Float_t         xf2; //!
+  Float_t         ZpT; //!
+  Float_t         Zeta; //!
+  Float_t         Zphi; //!
+  Float_t         ZM; //!
+  Float_t         weight; //!
+  Float_t         weight_xs; //!
+  Float_t         weight_prescale; //!
+  Int_t           njets; //!
+  std::vector<float>   *jet_E; //!
+  std::vector<float>   *jet_pt; //!
+  std::vector<float>   *jet_phi; //!
+  std::vector<float>   *jet_eta; //!
+  std::vector<float>   *jet_rapidity; //!
+  std::vector<float>   *jet_HECFrac; //!
+  std::vector<float>   *jet_EMFrac; //!
+  std::vector<float>   *jet_CentroidR; //!
+  std::vector<float>   *jet_FracSamplingMax; //!
+  std::vector<float>   *jet_FracSamplingMaxIndex; //!
+  std::vector<float>   *jet_LowEtConstituentsFrac; //!
+  std::vector<float>   *jet_GhostMuonSegmentCount; //!
+  std::vector<float>   *jet_Width; //!
+  std::vector<int>     *jet_NumTrkPt1000PV; //!
+  std::vector<float>   *jet_SumPtTrkPt1000PV; //!
+  std::vector<float>   *jet_TrackWidthPt1000PV; //!
+  std::vector<int>     *jet_NumTrkPt500PV; //!
+  std::vector<float>   *jet_SumPtTrkPt500PV; //!
+  std::vector<float>   *jet_TrackWidthPt500PV; //!
+  std::vector<float>   *jet_JVFPV; //!
+  std::vector<float>   *jet_Jvt; //!
+  std::vector<float>   *jet_JvtJvfcorr; //!
+  std::vector<float>   *jet_JvtRpt; //!
+  std::vector<float>   *jet_SV0; //!
+  std::vector<float>   *jet_SV1; //!
+  std::vector<float>   *jet_IP3D; //!
+  std::vector<float>   *jet_SV1IP3D; //!
+  std::vector<float>   *jet_MV1; //!
+  std::vector<float>   *jet_MV2c00; //!
+  std::vector<float>   *jet_MV2c20; //!
+  std::vector<float>   *jet_GhostArea; //!
+  std::vector<float>   *jet_ActiveArea; //!
+  std::vector<float>   *jet_VoronoiArea; //!
+  std::vector<float>   *jet_ActiveArea4vec_pt; //!
+  std::vector<float>   *jet_ActiveArea4vec_eta; //!
+  std::vector<float>   *jet_ActiveArea4vec_phi; //!
+  std::vector<float>   *jet_ActiveArea4vec_m; //!
+  std::vector<int>     *jet_ConeTruthLabelID; //!
+  std::vector<int>     *jet_TruthCount; //!
+  std::vector<float>   *jet_TruthLabelDeltaR_B; //!
+  std::vector<float>   *jet_TruthLabelDeltaR_C; //!
+  std::vector<float>   *jet_TruthLabelDeltaR_T; //!
+  std::vector<int>     *jet_PartonTruthLabelID; //!
+  std::vector<float>   *jet_GhostTruthAssociationFraction; //!
+  std::vector<float>   *jet_truth_E; //!
+  std::vector<float>   *jet_truth_pt; //!
+  std::vector<float>   *jet_truth_phi; //!
+  std::vector<float>   *jet_truth_eta; //!
+  std::vector<float>   *jet_constitScaleEta; //!
+  std::vector<float>   *jet_emScaleEta; //!
+  std::vector<float>   *jet_mucorrected_pt; //!
+  std::vector<float>   *jet_mucorrected_eta; //!
+  std::vector<float>   *jet_mucorrected_phi; //!
+  std::vector<float>   *jet_mucorrected_m; //!
+  Int_t           nmuon; //!
+
+  // List of branches
+  TBranch        *b_runNumber;   //!
+  TBranch        *b_eventNumber;   //!
+  TBranch        *b_mcEventNumber;   //!
+  TBranch        *b_mcChannelNumber;   //!
+  TBranch        *b_mcEventWeight;   //!
+  TBranch        *b_weight_pileup;   //!
+  TBranch        *b_NPV;   //!
+  TBranch        *b_actualInteractionsPerCrossing;   //!
+  TBranch        *b_averageInteractionsPerCrossing;   //!
+  TBranch        *b_lumiBlock;   //!
+  TBranch        *b_rhoEM;   //!
+  TBranch        *b_pdgId1;   //!
+  TBranch        *b_pdgId2;   //!
+  TBranch        *b_pdfId1;   //!
+  TBranch        *b_pdfId2;   //!
+  TBranch        *b_x1;   //!
+  TBranch        *b_x2;   //!
+  TBranch        *b_xf1;   //!
+  TBranch        *b_xf2;   //!
+  TBranch        *b_ZpT;   //!
+  TBranch        *b_Zeta;   //!
+  TBranch        *b_Zphi;   //!
+  TBranch        *b_ZM;   //!
+  TBranch        *b_weight;   //!
+  TBranch        *b_weight_xs;   //!
+  TBranch        *b_weight_prescale;   //!
+  TBranch        *b_njets;   //!
+  TBranch        *b_jet_E;   //!
+  TBranch        *b_jet_pt;   //!
+  TBranch        *b_jet_phi;   //!
+  TBranch        *b_jet_eta;   //!
+  TBranch        *b_jet_rapidity;   //!
+  TBranch        *b_jet_HECFrac;   //!
+  TBranch        *b_jet_EMFrac;   //!
+  TBranch        *b_jet_CentroidR;   //!
+  TBranch        *b_jet_FracSamplingMax;   //!
+  TBranch        *b_jet_FracSamplingMaxIndex;   //!
+  TBranch        *b_jet_LowEtConstituentsFrac;   //!
+  TBranch        *b_jet_GhostMuonSegmentCount;   //!
+  TBranch        *b_jet_Width;   //!
+  TBranch        *b_jet_NumTrkPt1000PV;   //!
+  TBranch        *b_jet_SumPtTrkPt1000PV;   //!
+  TBranch        *b_jet_TrackWidthPt1000PV;   //!
+  TBranch        *b_jet_NumTrkPt500PV;   //!
+  TBranch        *b_jet_SumPtTrkPt500PV;   //!
+  TBranch        *b_jet_TrackWidthPt500PV;   //!
+  TBranch        *b_jet_JVFPV;   //!
+  TBranch        *b_jet_Jvt;   //!
+  TBranch        *b_jet_JvtJvfcorr;   //!
+  TBranch        *b_jet_JvtRpt;   //!
+  TBranch        *b_jet_SV0;   //!
+  TBranch        *b_jet_SV1;   //!
+  TBranch        *b_jet_IP3D;   //!
+  TBranch        *b_jet_SV1IP3D;   //!
+  TBranch        *b_jet_MV1;   //!
+  TBranch        *b_jet_MV2c00;   //!
+  TBranch        *b_jet_MV2c20;   //!
+  TBranch        *b_jet_GhostArea;   //!
+  TBranch        *b_jet_ActiveArea;   //!
+  TBranch        *b_jet_VoronoiArea;   //!
+  TBranch        *b_jet_ActiveArea4vec_pt;   //!
+  TBranch        *b_jet_ActiveArea4vec_eta;   //!
+  TBranch        *b_jet_ActiveArea4vec_phi;   //!
+  TBranch        *b_jet_ActiveArea4vec_m;   //!
+  TBranch        *b_jet_ConeTruthLabelID;   //!
+  TBranch        *b_jet_TruthCount;   //!
+  TBranch        *b_jet_TruthLabelDeltaR_B;   //!
+  TBranch        *b_jet_TruthLabelDeltaR_C;   //!
+  TBranch        *b_jet_TruthLabelDeltaR_T;   //!
+  TBranch        *b_jet_PartonTruthLabelID;   //!
+  TBranch        *b_jet_GhostTruthAssociationFraction;   //!
+  TBranch        *b_jet_truth_E;   //!
+  TBranch        *b_jet_truth_pt;   //!
+  TBranch        *b_jet_truth_phi;   //!
+  TBranch        *b_jet_truth_eta;   //!
+  TBranch        *b_jet_constitScaleEta;   //!
+  TBranch        *b_jet_emScaleEta;   //!
+  TBranch        *b_jet_mucorrected_pt;   //!
+  TBranch        *b_jet_mucorrected_eta;   //!
+  TBranch        *b_jet_mucorrected_phi;   //!
+  TBranch        *b_jet_mucorrected_m;   //!
+  TBranch        *b_nmuon;   //!
 };
 
 #endif
