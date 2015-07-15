@@ -56,6 +56,8 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
   m_inputJetAlgo             = config->GetValue("InputJetAlgo",       "");
   m_inputMuonContainerName   = config->GetValue("InputMuonContainer",  "");
   m_inputMuonAlgo            = config->GetValue("InputMuonAlgo",       "");
+  m_inputMuonForMuonInJetCorrectionContainerName   = config->GetValue("InputMuonForMuonInJetCorrectionContainer",  "");
+  m_inputMuonForMuonInJetCorrectionAlgo            = config->GetValue("InputMuonForMuonInJetCorrectionAlgo",       "");
   m_debug                    = config->GetValue("Debug" ,      false );
   m_useCutFlow               = config->GetValue("UseCutFlow",  true);
   m_writeTree                = config->GetValue("WriteTree",  true);
@@ -75,6 +77,10 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
     return EL::StatusCode::FAILURE;
   }
   if( m_inputMuonContainerName.empty() ) {
+    Error("configure()", "Muon InputContainer is empty!");
+    return EL::StatusCode::FAILURE;
+  }
+  if( m_inputMuonForMuonInJetCorrectionContainerName.empty() ) {
     Error("configure()", "Muon InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
@@ -358,7 +364,9 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
   if(doCutflow) passCut(); //Z mass cut
 
-
+  if ( muonInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
+    Error("executeAnalysis()", "failure in muonInJetCorrection()");
+  }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -524,4 +532,60 @@ EL::StatusCode BalanceAlgorithm :: histFinalize ()
     }
   }
   return EL::StatusCode::SUCCESS;
+}
+
+//===============================
+EL::StatusCode BalanceAlgorithm :: muonInJetCorrection (const xAOD::JetContainer* signalJets)
+{
+  const xAOD::MuonContainer* muonsForCorr = 0;
+  RETURN_CHECK("BalanceAlgorithm::muonInJetCorrection()", 
+	       HelperFunctions::retrieve(muonsForCorr, m_inputMuonForMuonInJetCorrectionContainerName, m_event, m_store), "");
+  
+  for( auto signalJet : *signalJets ) {
+    const TLorentzVector& jetP4 = signalJet->p4();
+    
+    double minimumDr = 0.4;
+    const xAOD::Muon* closestMuon = 0;
+    for ( auto muon : *muonsForCorr ) {
+      const TLorentzVector& muonP4 = muon->p4();
+      const double dR = jetP4.DeltaR(muonP4);
+      if (dR<minimumDr) {
+	minimumDr   = dR;
+	closestMuon = muon;
+      }
+    }
+    
+    TLorentzVector muonInJetP4(0, 0, 0, 0);
+    if (closestMuon) {
+      muonInJetP4 = getFourMomentumOfMuonInJet (closestMuon);
+    }
+    
+    const TLorentzVector correctedJetP4 = (jetP4+muonInJetP4);
+    
+    signalJet->auxdecor< float >("mucorrected_pt")  = correctedJetP4.Pt();
+    signalJet->auxdecor< float >("mucorrected_phi") = correctedJetP4.Phi();
+    signalJet->auxdecor< float >("mucorrected_eta") = correctedJetP4.Eta();
+    signalJet->auxdecor< float >("mucorrected_m"  ) = correctedJetP4.M();
+  }
+  
+  return EL::StatusCode::SUCCESS;
+}
+
+//===============================
+TLorentzVector BalanceAlgorithm :: getFourMomentumOfMuonInJet (const xAOD::Muon* muon)  
+{
+  float eLoss=0.0;
+  muon->parameter(eLoss,xAOD::Muon::EnergyLoss);
+  const TLorentzVector& muonP4 = muon->p4();
+  
+  const double theta=muonP4.Theta();
+  const double phi  =muonP4.Phi();
+  
+  const double eLossX=eLoss*sin(theta)*cos(phi);
+  const double eLossY=eLoss*sin(theta)*sin(phi);
+  const double eLossZ=eLoss*cos(theta);
+  
+  const TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
+  
+  return muonP4-eLossP4;
 }

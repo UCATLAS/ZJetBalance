@@ -272,6 +272,9 @@ int main( int argc, char* argv[] ) {
   MuonSelector* muonSelect = new MuonSelector();
   muonSelect->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelect.config");
 
+  MuonSelector* muonSelectForMuonInJetCorrection = new MuonSelector();
+  muonSelectForMuonInJetCorrection->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelectForMuonInJetCorrection.config");
+
   MuonEfficiencyCorrector* muonCorrect = new MuonEfficiencyCorrector();
   muonCorrect->setName( "muonCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCorrect.config");
 
@@ -304,7 +307,8 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( baseEventSel );
   job.algsAdd( muonCalib    );
   job.algsAdd( muonSelect   );
-  job.algsAdd( muonCorrect  );
+  job.algsAdd( muonSelectForMuonInJetCorrection   );
+  //job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
   job.algsAdd( jetCalib     );
   job.algsAdd( jetSelect    );
   job.algsAdd( bjetCorrect  );
