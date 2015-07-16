@@ -20,6 +20,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <stdlib.h>
+
 using namespace std;
 
 // this is needed to distribute the algorithm to the workers
@@ -42,11 +44,14 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
     Error("configure()", "config name : %s",m_configName.c_str());
     return EL::StatusCode::FAILURE;
   }
-
+  
   //
   // Read Input from .config file
   //
-  m_debug                    = config->GetValue("Debug" ,          false );
+  m_debug                    = config->GetValue("Debug" ,      false );
+  TString pT_binning_str     = config->GetValue("pT_binning" , "20,25,30,35,45,60,80,110,160,210,260,310,500");
+  DecodePtBinning(pT_binning_str, m_pT_binning, m_n_pT_binning);
+  Info("configure()", "DecodePtBinning() gives nBins=%d, first=%.1f last=%.1f", m_n_pT_binning, m_pT_binning[0], m_pT_binning[m_n_pT_binning]);
   
   config->Print();
   Info("configure()", "ProcessZJetBalanceMiniTree Interface succesfully configured! \n");
@@ -79,9 +84,17 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   Info("histInitialize()", "Calling histInitialize");
   
   // list of the histograms
-  m_h_ZpT = new TH1D("h_ZpT", "", 100, 0, 100);
-  wk()->addOutput( m_h_ZpT );
+  TH1::SetDefaultSumw2();
+  m_h_ZpT   = new TH1D("h_ZpT", "", 100, 0, 100); // validation purpose
+  m_h_ZM    = new TH1D("h_ZM",  "", 100, 71, 110); // validation purpose
+  m_h_nJets = new TH1D("h_nJets", "", 5, -0.5, 0.5); // validation purpose
+  m_h_Z_jet_dPhi = new TH1D("h_Z_jet_dPhi", "", 100, -TMath::Pi(), TMath::Pi());
   
+  wk()->addOutput( m_h_ZpT );
+  wk()->addOutput( m_h_ZM );
+  wk()->addOutput( m_h_nJets );
+  wk()->addOutput( m_h_Z_jet_dPhi );
+
   return EL::StatusCode::SUCCESS;
 }
 
@@ -106,13 +119,15 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
   
   TTree *tree = wk()->tree();
   InitTree(tree);
- return EL::StatusCode::SUCCESS;
+  return EL::StatusCode::SUCCESS;
 }
 
 
 
 EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
 {
+  Info("initialize()", "Calling initialize");
+
   // Here you do everything that you need to do after the first input
   // file has been connected and before the first event is processed,
   // e.g. create additional histograms based on which variables are
@@ -123,10 +138,29 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   // input events.
   m_eventCounter = 0;
   
+  // create object before configuration
+  m_pT_binning = new Double_t[BUFSIZ];
+  
+  // configuration from ENV file
   if ( this->configure() == EL::StatusCode::FAILURE ) {
     Error("initialize()", "Failed to properly configure. Exiting." );
     return EL::StatusCode::FAILURE;
   }
+  
+  // additinoal histograms according to configuration parameters
+  const int    nBinsX=50;
+  const double maxX=0.0;
+  const double minX=5.0;
+  for (int ii=1; ii<m_n_pT_binning+1; ii++) {
+    Info("Initialize()", "%s", Form("DB_RefEtaBin_PtBin%d", ii));
+    TH1D* h = new TH1D(Form("DB_RefEtaBin_PtBin%d", ii), Form("%.1f < p_{T} < %.1f", m_pT_binning[ii-1], m_pT_binning[ii]), nBinsX, maxX, minX);
+    m_balance_hists.push_back(h);
+    wk()->addOutput( h );
+  }
+  m_h_jet_pt_bin = new TH2D("h_jet_pt_bin", "", 100, 0, 500, m_n_pT_binning, -0.5, -0.5+m_n_pT_binning); // validation purpose
+  wk()->addOutput( m_h_jet_pt_bin );
+  
+
   
   Info("initialize()", "Succesfully initialized! \n");
   return EL::StatusCode::SUCCESS;
@@ -154,7 +188,21 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
   
+  // selection criteria need to be applied
+  if (njets!=1) {return EL::StatusCode::SUCCESS;}
+  if (TMath::Abs(ZM-91)>15) {return EL::StatusCode::SUCCESS;}
+  if (TMath::Abs(dPhiZJet1)<2.8) {return EL::StatusCode::SUCCESS;}
+  
+  // 
+  const float& lead_jet_pt     = jet_pt->at(0);
+  const int    lead_jet_pt_bin = GetPtBin(lead_jet_pt);
+  
   m_h_ZpT->Fill(ZpT);
+  m_h_nJets->Fill(njets);  // for validation
+  m_h_ZM->Fill(ZM);  // for validation
+  m_h_jet_pt_bin->Fill(lead_jet_pt, lead_jet_pt_bin);  // for validation
+  m_h_Z_jet_dPhi->Fill(dPhiZJet1); // for validation
+  m_balance_hists[lead_jet_pt_bin]->Fill(lead_jet_pt/pTRef1);
   
   return EL::StatusCode::SUCCESS;
 }
@@ -202,9 +250,35 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histFinalize ()
   return EL::StatusCode::SUCCESS;
 }
 
+void ProcessZJetBalanceMiniTree::DecodePtBinning(TString pT_binning_str, Double_t* pT_binning_array, Int_t& n_pT_binning)
+{
+  TString tok;
+  Ssiz_t  from = 0;
+  pT_binning_str.ReplaceAll(" ", "");
+  int iArrayIndex=0;
+  while (pT_binning_str.Tokenize(tok, from, ",")) {  
+    const double x = strtod(tok.Data(), NULL);
+    pT_binning_array[iArrayIndex]=x;
+    iArrayIndex++;
+  }
+  n_pT_binning=iArrayIndex-1;
+  
+  return;
+}
+
+int ProcessZJetBalanceMiniTree::GetPtBin(const double& _pt)
+{
+  int rc=0;
+  for (; rc<m_n_pT_binning-1 ; rc++) {
+    if (_pt<m_pT_binning[rc+1]) {break;}
+  }
+  return rc;
+}
+
+
 void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
 {
-  // // Set object pointer
+  // Set object pointer
   jet_E = 0;
   jet_pt = 0;
   jet_phi = 0;
@@ -259,8 +333,7 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   jet_mucorrected_eta = 0;
   jet_mucorrected_phi = 0;
   jet_mucorrected_m = 0;
-  // Set branch addresses and branch pointers
-  
+   
   tree->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
   tree->SetBranchAddress("eventNumber", &eventNumber, &b_eventNumber);
   tree->SetBranchAddress("mcEventNumber", &mcEventNumber, &b_mcEventNumber);
@@ -284,6 +357,13 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("Zeta", &Zeta, &b_Zeta);
   tree->SetBranchAddress("Zphi", &Zphi, &b_Zphi);
   tree->SetBranchAddress("ZM", &ZM, &b_ZM);
+  tree->SetBranchAddress("dPhiZJet1", &dPhiZJet1, &b_dPhiZJet1);
+  tree->SetBranchAddress("pTRef1", &pTRef1, &b_pTRef1);
+  tree->SetBranchAddress("dPhiZJet2", &dPhiZJet2, &b_dPhiZJet2);
+  tree->SetBranchAddress("pTRef2", &pTRef2, &b_pTRef2);
+  tree->SetBranchAddress("jetDPhi", &jetDPhi, &b_jetDPhi);
+  tree->SetBranchAddress("jetDEta", &jetDEta, &b_jetDEta);
+  tree->SetBranchAddress("jetPtRatio", &jetPtRatio, &b_jetPtRatio);
   tree->SetBranchAddress("weight", &weight, &b_weight);
   tree->SetBranchAddress("weight_xs", &weight_xs, &b_weight_xs);
   tree->SetBranchAddress("weight_prescale", &weight_prescale, &b_weight_prescale);

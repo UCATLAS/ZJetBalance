@@ -31,8 +31,19 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   
   // histograms
   TH1D* m_h_ZpT; //!
+  TH1D* m_h_ZM; //!
+  TH1D* m_h_Z_jet_dPhi; //!
+  TH1D* m_h_nJets; //!
+  TH2D* m_h_jet_pt_bin; //!
+  
+  Double_t*       m_pT_binning; //!
+  Int_t           m_n_pT_binning; //!
   
  public:
+  static void DecodePtBinning(TString pT_binning_str, Double_t* pT_binning_array, Int_t& n_pT_binning);
+  int GetPtBin(const double& _pt);
+  std::vector<TH1D*> m_balance_hists;
+  
   // Tree *myTree; //!
   // TH1 *myHist; //!
   
@@ -60,6 +71,8 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   void            InitTree(TTree* tree);
   // copied from MakeClass function and add //! for all the variables
   // Declaration of leaf types
+
+  // Declaration of leaf types
   Int_t           runNumber; //!
   Int_t           eventNumber; //!
   Int_t           mcEventNumber; //!
@@ -83,6 +96,13 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Float_t         Zeta; //!
   Float_t         Zphi; //!
   Float_t         ZM; //!
+  Float_t         dPhiZJet1; //!
+  Float_t         pTRef1; //!
+  Float_t         dPhiZJet2; //!
+  Float_t         pTRef2; //!
+  Float_t         jetDPhi; //!
+  Float_t         jetDEta; //!
+  Float_t         jetPtRatio; //!
   Float_t         weight; //!
   Float_t         weight_xs; //!
   Float_t         weight_prescale; //!
@@ -167,6 +187,13 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_Zeta;   //!
   TBranch        *b_Zphi;   //!
   TBranch        *b_ZM;   //!
+  TBranch        *b_dPhiZJet1;   //!
+  TBranch        *b_pTRef1;   //!
+  TBranch        *b_dPhiZJet2;   //!
+  TBranch        *b_pTRef2;   //!
+  TBranch        *b_jetDPhi;   //!
+  TBranch        *b_jetDEta;   //!
+  TBranch        *b_jetPtRatio;   //!
   TBranch        *b_weight;   //!
   TBranch        *b_weight_xs;   //!
   TBranch        *b_weight_prescale;   //!
@@ -226,6 +253,8 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_mucorrected_phi;   //!
   TBranch        *b_jet_mucorrected_m;   //!
   TBranch        *b_nmuon;   //!
+
+
 };
 
 #endif

@@ -40,8 +40,6 @@ int main( int argc, char* argv[] ) {
   std::string inputTag;
   std::string outputTag = "";
   
-  bool doCondor          = false;
-  
   //
   // Set up various job options
   //
@@ -124,12 +122,7 @@ int main( int argc, char* argv[] ) {
          iArg += 2;
        }
 
-    } else if (options.at(iArg).compare("-condor") == 0) {
-      std::cout << "Running on condor" << std::endl;
-      doCondor = true;
-      iArg += 1;
-
-    }else{
+    } else{
       std::cout << "Couldn't understand argument " << options.at(iArg) << std::endl;
       return 1;
     }

@@ -383,7 +383,6 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
     eventInfo->auxdecor< float >( "jetDPhi" ) = signalJets->at(0)->p4().DeltaPhi( signalJets->at(1)->p4() );
     eventInfo->auxdecor< float >( "jetDEta" ) = signalJets->at(0)->eta() - signalJets->at(1)->eta();
     eventInfo->auxdecor< float >( "jetPtRatio" ) = signalJets->at(1)->pt() / signalJets->at(0)->pt();
-
   }
 
   // detector eta and punch-through-variable
