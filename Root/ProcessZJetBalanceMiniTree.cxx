@@ -50,6 +50,11 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   //
   m_debug                    = config->GetValue("Debug" ,      false );
   TString pT_binning_str     = config->GetValue("pT_binning" , "20,25,30,35,45,60,80,110,160,210,260,310,500");
+  m_nBinsXForResponseHist    = config->GetValue("nBinsXForResponseHist", 50.);
+  m_maxXForResponseHist      = config->GetValue("maxXForResponseHist", 5.0);
+  m_minXForResponseHist      = config->GetValue("minXForResponseHist", 0.0);
+  
+  
   DecodePtBinning(pT_binning_str, m_pT_binning, m_n_pT_binning);
   Info("configure()", "DecodePtBinning() gives nBins=%d, first=%.1f last=%.1f", m_n_pT_binning, m_pT_binning[0], m_pT_binning[m_n_pT_binning]);
   
@@ -148,19 +153,18 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   }
   
   // additinoal histograms according to configuration parameters
-  const int    nBinsX=50;
-  const double maxX=0.0;
   const double minX=5.0;
   for (int ii=1; ii<m_n_pT_binning+1; ii++) {
     Info("Initialize()", "%s", Form("DB_RefEtaBin_PtBin%d", ii));
-    TH1D* h = new TH1D(Form("DB_RefEtaBin_PtBin%d", ii), Form("%.1f < p_{T} < %.1f", m_pT_binning[ii-1], m_pT_binning[ii]), nBinsX, maxX, minX);
+    TH1D* h = new TH1D(Form("DB_RefEtaBin_PtBin%d", ii), Form("%.1f < p_{T} < %.1f", m_pT_binning[ii-1], m_pT_binning[ii]), 
+		       m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
     m_balance_hists.push_back(h);
     wk()->addOutput( h );
   }
   m_h_jet_pt_bin = new TH2D("h_jet_pt_bin", "", 100, 0, 500, m_n_pT_binning, -0.5, -0.5+m_n_pT_binning); // validation purpose
   wk()->addOutput( m_h_jet_pt_bin );
-  
-
+  m_h_pt_binning_info = new TH1D("h_pt_binning_info", "", m_n_pT_binning, m_pT_binning);
+  wk()->addOutput( m_h_pt_binning_info );
   
   Info("initialize()", "Succesfully initialized! \n");
   return EL::StatusCode::SUCCESS;

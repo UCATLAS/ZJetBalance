@@ -28,6 +28,9 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   
  private:
   bool m_debug; //! set verbose mode
+  int    m_nBinsXForResponseHist; //! configurable parameter
+  double m_maxXForResponseHist; //! configurable parameter
+  double m_minXForResponseHist; //! configurable parameter
   
   // histograms
   TH1D* m_h_ZpT; //!
@@ -35,6 +38,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1D* m_h_Z_jet_dPhi; //!
   TH1D* m_h_nJets; //!
   TH2D* m_h_jet_pt_bin; //!
+  TH1D* m_h_pt_binning_info; //!
   
   Double_t*       m_pT_binning; //!
   Int_t           m_n_pT_binning; //!

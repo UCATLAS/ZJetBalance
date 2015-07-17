@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
   Double_t* ptbins  = new Double_t[BUFSIZ];
   int       nptbins = -1;
   
-  TH1F* hRef = (TH1F*)f->Get("DB_RefEtaBin_PtBin1");
+  TH1F* hRef = (TH1F*)f->Get("h_pt_binning_info");
   GetBinningInformation(hRef, ptbins, nptbins);
   
 
@@ -100,9 +100,10 @@ int main(int argc, char* argv[]) {
   can->SetMargin(0.12,0.04,0.12,0.04);
   
   can->Print(pdf+"[");
-  for (int bin=1;bin<14;++bin) {
+  for (int bin=1;bin<nptbins+1;++bin) {
     double ptlow=ptbins[bin]; //, ptup=ptbins[bin+1], pt=(ptlow+ptup)/2;
     double fitMin = 17.0/ptlow;
+    printf("INFO> %s \n", Form("DB_RefEtaBin_PtBin%d",bin));
     TH1F *h = (TH1F*)f->Get(Form("DB_RefEtaBin_PtBin%d",bin));
     h->SetStats(0);
     myFitter->FitAndDraw(h,fitMin);
@@ -113,7 +114,7 @@ int main(int argc, char* argv[]) {
     h_width->SetBinContent(bin,myFitter->GetSigma()/myFitter->GetMean());
     h_width->SetBinError(bin,myFitter->GetSigmaError()/myFitter->GetMean());
     h_chi2->SetBinContent(bin,myFitter->GetChi2Ndof());
-
+    
     // Quantiles
     h_fitQuants[0]->SetBinContent(bin,myFitter->GetMedian());
     h_fitQuants[1]->SetBinContent(bin,myFitter->GetNeg2SigQuantile());
