@@ -155,18 +155,20 @@ EL::StatusCode BalanceAlgorithm :: initialize ()
   m_store = wk()->xaodStore();
   m_eventCounter = -1;
 
+  if ( this->configure() == EL::StatusCode::FAILURE ) {
+    Error("initialize()", "Failed to properly configure. Exiting." );
+    return EL::StatusCode::FAILURE;
+  }
+  
   const xAOD::EventInfo* eventInfo(nullptr);
   RETURN_CHECK("BalanceAlgorithm::initialize()", HelperFunctions::retrieve(eventInfo, "EventInfo", m_event, m_store, m_debug), "");
   if( m_truthLevelOnly ) { m_isMC = true; }
   else { 
     m_isMC = ( eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION ) ) ? true : false;
   }
-
-  if ( this->configure() == EL::StatusCode::FAILURE ) {
-    Error("initialize()", "Failed to properly configure. Exiting." );
-    return EL::StatusCode::FAILURE;
-  }
-
+  
+  Info("initialize()", "eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION )=%s", eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION )? "true" : "false");
+  
   getLumiWeights(eventInfo);
 
   if(m_useCutFlow) {
@@ -383,7 +385,6 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
     eventInfo->auxdecor< float >( "jetDPhi" ) = signalJets->at(0)->p4().DeltaPhi( signalJets->at(1)->p4() );
     eventInfo->auxdecor< float >( "jetDEta" ) = signalJets->at(0)->eta() - signalJets->at(1)->eta();
     eventInfo->auxdecor< float >( "jetPtRatio" ) = signalJets->at(1)->pt() / signalJets->at(0)->pt();
-
   }
 
   // detector eta and punch-through-variable
@@ -436,7 +437,9 @@ void BalanceAlgorithm::passCut() {
 //This grabs cross section, acceptance, and eventNumber information from the respective text file
 //text format:     147915 2.3793E-01 5.0449E-03 499000
 EL::StatusCode BalanceAlgorithm::getLumiWeights(const xAOD::EventInfo* eventInfo) {
-
+  
+  Info("getLumiWeights()", "m_isMC=%s", m_isMC? "true" : "false");
+  
   if(!m_isMC){
     m_mcChannelNumber = eventInfo->runNumber();
     m_xs = 1;

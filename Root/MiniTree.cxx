@@ -22,7 +22,14 @@ void MiniTree::AddEventUser(const std::string detailStr)
   m_tree->Branch("Zeta",  &m_Zeta,  "Zeta/F" );
   m_tree->Branch("Zphi",  &m_Zphi,  "Zphi/F" );
   m_tree->Branch("ZM",    &m_ZM,    "ZM/F"   );
-  
+  m_tree->Branch("dPhiZJet1",  &m_dPhiZJet1,  "dPhiZJet1/F");
+  m_tree->Branch("pTRef1",     &m_pTRef1,     "pTRef1/F");
+  m_tree->Branch("dPhiZJet2",  &m_dPhiZJet2,  "dPhiZJet2/F");
+  m_tree->Branch("pTRef2",     &m_pTRef2,     "pTRef2/F");
+  m_tree->Branch("jetDPhi",    &m_jetDPhi,    "jetDPhi/F");
+  m_tree->Branch("jetDEta",    &m_jetDEta,    "jetDEta/F");
+  m_tree->Branch("jetPtRatio", &m_jetPtRatio, "jetPtRatio/F");
+
 
   m_tree->Branch("weight", &m_weight, "weight/F");
   m_tree->Branch("weight_xs", &m_weight_xs, "weight_xs/F");
@@ -46,6 +53,14 @@ void MiniTree::ClearEventUser() {
   m_Zphi     = -999;
   m_ZM       = -999;
 
+  m_dPhiZJet1  = -999.;
+  m_pTRef1     = -999.;
+  m_dPhiZJet2  = -999.;
+  m_pTRef2     = -999.;
+  m_jetDPhi    = -999.;
+  m_jetDEta    = -999.;
+  m_jetPtRatio = -999.;
+  
   m_weight_corr = -999;
   m_weight    = -999;
   m_weight_xs = -999;
@@ -63,7 +78,8 @@ void MiniTree::ClearJetsUser() {
 
 /////////////////// Assign values to defined event variables here ////////////////////////
 void MiniTree::FillEventUser( const xAOD::EventInfo* eventInfo ) {
-
+  
+  
   if( eventInfo->isAvailable< float >( "ZpT" ) )
     m_ZpT = eventInfo->auxdecor< float >( "ZpT" );
   if( eventInfo->isAvailable< float >( "Zeta" ) )
@@ -72,7 +88,23 @@ void MiniTree::FillEventUser( const xAOD::EventInfo* eventInfo ) {
     m_Zphi = eventInfo->auxdecor< float >( "Zphi" );
   if( eventInfo->isAvailable< float >( "ZM" ) )
     m_ZM = eventInfo->auxdecor< float >( "ZM" );
+  if( eventInfo->isAvailable< float >( "dPhiZJet1" ) ) 
+    m_dPhiZJet1 = eventInfo->auxdecor< float >( "dPhiZJet1" );
+  if( eventInfo->isAvailable< float >( "pTRef1" ) ) 
+    m_pTRef1    = eventInfo->auxdecor< float >( "pTRef1" );
+  if( eventInfo->isAvailable< float >( "dPhiZJet2" ) ) 
+    m_dPhiZJet2 = eventInfo->auxdecor< float >( "dPhiZJet2" );
+  if( eventInfo->isAvailable< float >( "pTRef2" ) ) 
+    m_pTRef2    = eventInfo->auxdecor< float >( "pTRef2" );
+  if( eventInfo->isAvailable< float >( "jetDPhi" ) ) 
+    m_jetDPhi   = eventInfo->auxdecor< float >( "jetDPhi" );
+  if( eventInfo->isAvailable< float >( "jetDEta" ) ) 
+    m_jetDEta   = eventInfo->auxdecor< float >( "jetDEta" );
+  if( eventInfo->isAvailable< float >( "jetPtRatio" ) ) 
+    m_jetPtRatio = eventInfo->auxdecor< float >( "jetPtRatio" );
+  
 
+  
   if( eventInfo->isAvailable< float >( "weight" ) )
     m_weight = eventInfo->auxdecor< float >( "weight" );
   if( eventInfo->isAvailable< float >( "weight_xs" ) )
