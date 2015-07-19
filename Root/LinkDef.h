@@ -1,3 +1,5 @@
+#include <ZJetBalance/ProcessZJetBalanceMiniTree.h>
+
 #include <ZJetBalance/BalanceAlgorithm.h>
 #include <ZJetBalance/MiniTree.h>
 
@@ -11,4 +13,8 @@
 #pragma link C++ class BalanceAlgorithm+;
 #pragma link C++ class MiniTree+;
 
+#endif
+
+#ifdef __CINT__
+#pragma link C++ class ProcessZJetBalanceMiniTree+;
 #endif
