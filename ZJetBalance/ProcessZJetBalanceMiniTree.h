@@ -7,6 +7,7 @@
 
 //algorithm wrapper
 #include <xAODAnaHelpers/Algorithm.h>
+#include "PileupReweighting/PileupReweightingTool.h"
 
 // ROOT include(s):
 #include <TH1D.h>
@@ -31,22 +32,39 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   int    m_nBinsXForResponseHist; //! configurable parameter
   double m_maxXForResponseHist; //! configurable parameter
   double m_minXForResponseHist; //! configurable parameter
+  bool   m_doPUreweighting; //! configurable parameter
+  std::string m_lumiCalcFileNames; //! configurable parameter
+  std::string m_PRWFileNames; //! configurable parameter
+  double m_cutDPhiZJet; //! configurable parameter
+  double m_ZMassWindow; //! configurable parameter
   
+  CP::PileupReweightingTool* m_pileuptool; //!
+
   // histograms
   TH1D* m_h_ZpT; //!
   TH1D* m_h_ZM; //!
   TH1D* m_h_Z_jet_dPhi; //!
   TH1D* m_h_nJets; //!
+  TH1D* m_h_jet_eta; //!
+  TH1D* m_h_jet_pt; //!
+  TH1D* m_h_averageInteractionsPerCrossing; //!
   TH2D* m_h_jet_pt_bin; //!
   TH1D* m_h_pt_binning_info; //!
+  TH1D* m_h_eta_binning_info; //!
+  TH1D* m_h_prwfactor; //!
+  
   
   Double_t*       m_pT_binning; //!
   Int_t           m_n_pT_binning; //!
+  Double_t*       m_eta_binning; //!
+  Int_t           m_n_eta_binning; //!
   
  public:
-  static void DecodePtBinning(TString pT_binning_str, Double_t* pT_binning_array, Int_t& n_pT_binning);
+  static void DecodeBinning(TString binning_str, Double_t* binning_array, Int_t& n_binning);
   int GetPtBin(const double& _pt);
-  std::vector<TH1D*> m_balance_hists;
+  int GetEtaBin(const double& _eta);
+  double GetPileupReweightingFactor();
+  std::vector< std::vector<TH1D*> > m_balance_hists;
   
   // Tree *myTree; //!
   // TH1 *myHist; //!
