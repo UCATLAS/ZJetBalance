@@ -139,7 +139,6 @@ int main(int argc, char* argv[]) {
     for (int iPtBin=1;iPtBin<nptbins+1;++iPtBin) {
       double ptlow=ptbins[iPtBin]; //, ptup=ptbins[bin+1], pt=(ptlow+ptup)/2;
       double fitMin = 17.0/ptlow;
-      printf("INFO> %s \n", Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
       TH1F *h = (TH1F*)f->Get(Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
       h->SetStats(0);
       myFitter->FitAndDraw(h,fitMin);
@@ -186,19 +185,14 @@ int main(int argc, char* argv[]) {
   
   can->SetLogx(1);
   for (int iEtaBin=1;iEtaBin<netabins+1;++iEtaBin) {
-    printf("INFO> iEtaBin=%d \n", iEtaBin);
-    
     TH1F *h_mean_pt  = (TH1F*)gROOT->FindObject(Form("mean_pt_eta%d", iEtaBin));
     TH1F *h_width_pt = (TH1F*)gROOT->FindObject(Form("width_pt_eta%d", iEtaBin));
     TH1F *h_chi2_pt  = (TH1F*)gROOT->FindObject(Form("chi2_pt_eta%d", iEtaBin));
-    
-    printf("INFO> 0x%08x 0x%08x 0x%08x \n", h_mean_pt, h_width_pt, h_chi2_pt);
     
     TLatex title(0.15, 0.2, Form("#it{ATLAS} internal %1.f<#eta<%1.f", 
 				 etabins[iEtaBin-1], etabins[iEtaBin]
 				 ));
     title.SetNDC();
-    printf("INFO> %d\n", __LINE__);
     DrawHisto(h_mean_pt,"Mean of fit",0.8,1.2,"p_{T}^{ref} [GeV]");
     myFitter->ResetTextCounters();
     myFitter->DrawTextLeft(jetDesc); 
@@ -207,7 +201,6 @@ int main(int argc, char* argv[]) {
     title.Draw();
     can->Print(pdf);
     
-    printf("INFO> %d\n", __LINE__);
     DrawHisto(h_width_pt,"Width/Mean of fit",0.0,0.6,"p_{T}^{ref} [GeV]");
     myFitter->ResetTextCounters();
     myFitter->DrawTextLeft(jetDesc);
@@ -222,7 +215,6 @@ int main(int argc, char* argv[]) {
     // title.Draw();
     // can->Print(pdf);
     
-    printf("INFO> %d\n", __LINE__);
     DrawHisto(h_quantiles[0],"0#sigma, #pm1#sigma and #pm2#sigma quantiles",0,2,"p_{T}^{ref} [GeV]");
     for (int i=1;i<5;++i)
       h_quantiles[i]->Draw("same");
@@ -255,7 +247,6 @@ int main(int argc, char* argv[]) {
   
   can->SetLogx(0);
   for (int iPtBin=1;iPtBin<nptbins+1;++iPtBin) {
-    printf("INFO> iPtBin=%d \n", iPtBin);
     TH1F *h_mean_eta  = (TH1F*)gROOT->FindObject(Form("mean_eta_pt%d", iPtBin));
     TH1F *h_width_eta = (TH1F*)gROOT->FindObject(Form("width_eta_pt%d", iPtBin));
     TH1F *h_chi2_eta  = (TH1F*)gROOT->FindObject(Form("chi2_eta_pt%d", iPtBin));
