@@ -11,11 +11,14 @@
 
 // ROOT include(s):
 #include <TH1D.h>
+#include <TH1F.h>
 #include <TH2D.h>
 #include <TLorentzVector.h>
 #include <TBranch.h>
 
 #include <vector>
+#include <map>
+
 
 class ProcessZJetBalanceMiniTree : public xAH::Algorithm
 {
@@ -41,6 +44,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   CP::PileupReweightingTool* m_pileuptool; //!
 
   // histograms
+  TH1D* m_h_RunNumber; //!
   TH1D* m_h_ZpT; //!
   TH1D* m_h_ZM; //!
   TH1D* m_h_Z_jet_dPhi; //!
@@ -52,6 +56,11 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1D* m_h_pt_binning_info; //!
   TH1D* m_h_eta_binning_info; //!
   TH1D* m_h_prwfactor; //!
+  TH1D* m_h_njets_beforecut; //!
+  TH1D* m_h_jet_eta_beforecut; //!
+  TH1D* m_h_jet_pt_beforecut; //!
+  TH1F* m_h_cutflow; //!
+  TH1F* m_h_cutflow_weighted; //!
   
   
   Double_t*       m_pT_binning; //!
@@ -64,6 +73,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   int GetPtBin(const double& _pt);
   int GetEtaBin(const double& _eta);
   double GetPileupReweightingFactor();
+  std::pair<TH1F*, TH1F*> ReturnCutflowPointers();
   std::vector< std::vector<TH1D*> > m_balance_hists;
   
   // Tree *myTree; //!
