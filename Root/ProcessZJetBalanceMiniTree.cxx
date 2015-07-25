@@ -100,18 +100,37 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   
   // list of the histograms
   TH1::SetDefaultSumw2();
+  m_h_RunNumber = new TH1D("h_RunNumber", "", 1000, 271000.5, 272000.5);
   m_h_ZpT   = new TH1D("h_ZpT", "", 100, 0, 100); // validation purpose
   m_h_ZM    = new TH1D("h_ZM",  "", 100, 71, 110); // validation purpose
-  m_h_nJets = new TH1D("h_nJets", "", 5, -0.5, 0.5); // validation purpose
+  m_h_nJets = new TH1D("h_nJets", "", 10, -0.5, 9.5); // validation purpose
   m_h_Z_jet_dPhi = new TH1D("h_Z_jet_dPhi", "", 100, -TMath::Pi(), TMath::Pi());
   m_h_prwfactor  = new TH1D("h_prwfactor", "", 100, 0, 3.0);
+  m_h_njets_beforecut   = new TH1D("h_njets_beforecut", "", 7, 0.5, 7.5);
+  m_h_jet_eta_beforecut = new TH1D("h_jet_eta_beforecut", "", 32, -3.2, 3.2);
+  m_h_jet_pt_beforecut  = new TH1D("h_jet_pt_beforecut", "", 30, 0, 300);
   
+  wk()->addOutput( m_h_RunNumber );
   wk()->addOutput( m_h_ZpT );
   wk()->addOutput( m_h_ZM );
   wk()->addOutput( m_h_nJets );
   wk()->addOutput( m_h_Z_jet_dPhi );
   wk()->addOutput( m_h_prwfactor );
+  wk()->addOutput( m_h_njets_beforecut );
+  wk()->addOutput( m_h_jet_eta_beforecut );
+  wk()->addOutput( m_h_jet_pt_beforecut );    
   
+  const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();
+  int nBinsCutflow = cutflows.first->GetNbinsX();
+  int xminCutflow  = cutflows.first->GetXaxis()->GetXmin();
+  int xmaxCutflow  = cutflows.first->GetXaxis()->GetXmax();
+  
+  m_h_cutflow = new TH1F("cutflow", "", nBinsCutflow, xminCutflow, xmaxCutflow); //!
+  m_h_cutflow_weighted = new TH1F("cutflow_weighted", "", nBinsCutflow, xminCutflow, xmaxCutflow); //!
+  
+  wk()->addOutput( m_h_cutflow );
+  wk()->addOutput( m_h_cutflow_weighted );
+
   Info("histInitialize()", "ends");
   return EL::StatusCode::SUCCESS;
 }
@@ -132,10 +151,18 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: fileExecute ()
 EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
 {
   Info("changedInput", "called"); 
-
+  
   // Here you do everything you need to do when we change input files,
   // e.g. resetting branch addresses on trees.  If you are using
   // D3PDReader or a similar service this method is not needed.
+  
+  const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();  
+  for (int iBin=1, nBins=cutflows.first->GetNbinsX(); iBin<=nBins; iBin++) { // update
+    m_h_cutflow->SetBinContent(iBin, m_h_cutflow->GetBinContent(iBin)+cutflows.first->GetBinContent(iBin)); 
+  }
+  for (int iBin=1, nBins=cutflows.second->GetNbinsX(); iBin<=nBins; iBin++) { // update
+    m_h_cutflow_weighted->SetBinContent(iBin, m_h_cutflow_weighted->GetBinContent(iBin)+cutflows.second->GetBinContent(iBin)); 
+  }
   
   TTree *tree = wk()->tree();
   InitTree(tree);
@@ -194,6 +221,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   m_h_jet_eta = new TH1D("h_jet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
   m_h_jet_pt  = new TH1D("h_jet_pt",  "", 50, 0, 300.);
   m_h_averageInteractionsPerCrossing = new TH1D("h_averageInteractionsPerCrossing", "", 50, -0.5, 49.5);
+  
   wk()->addOutput( m_h_jet_eta );
   wk()->addOutput( m_h_jet_pt );
   wk()->addOutput( m_h_averageInteractionsPerCrossing );
@@ -274,6 +302,9 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     m_h_prwfactor->Fill(pileup_reweighting_factor);
     weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
+    
+    // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e",
+    // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final);
   }
   
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
@@ -281,6 +312,22 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   if (m_eventCounter%10000==0) {
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
+  
+  m_h_RunNumber->Fill(runNumber, weight_final);
+
+  // for valiadtion
+  int nJetsBeforeCut = 0;
+  for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
+    const float& pt  = jet_pt->at(iJet);
+    const float& eta = jet_eta->at(iJet);
+    
+    if ( pt < 30. ) continue;
+    nJetsBeforeCut++;
+    
+    m_h_jet_eta_beforecut->Fill(eta, weight_final);
+    m_h_jet_pt_beforecut->Fill(pt, weight_final);
+  }
+  m_h_njets_beforecut->Fill(nJetsBeforeCut, weight_final);
   
   // selection criteria need to be applied
   if (TMath::Abs(ZM-91)>m_ZMassWindow) {return EL::StatusCode::SUCCESS;}
@@ -400,6 +447,33 @@ double ProcessZJetBalanceMiniTree::GetPileupReweightingFactor()
 	  m_pileuptool->GetCombinedWeight(runNumber, mcChannelNumber, averageInteractionsPerCrossing) :
 	  1.0);
 }
+
+std::pair<TH1F*, TH1F*> ProcessZJetBalanceMiniTree::ReturnCutflowPointers()
+{
+  std::pair<TH1F*, TH1F*> rc(0, 0);
+  
+  TFile* inputFile = wk()->inputFile();
+  TIter next(inputFile->GetListOfKeys());
+  TKey *key;
+  while ((key = (TKey*)next())) {
+    std::string keyName = key->GetName();
+    
+    std::size_t found = keyName.find("cutflow");
+    bool foundCutFlow = (found!=std::string::npos);
+    
+    found = keyName.find("weighted");
+    bool foundWeighted = (found!=std::string::npos);
+    
+    if(foundCutFlow && !foundWeighted){
+      rc.first  = ((TH1F*)key->ReadObj());
+    } else if(foundCutFlow && foundWeighted) {
+      rc.second = ((TH1F*)key->ReadObj());
+    }
+  }//over Keys
+  
+  return rc;
+}
+
 
 void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
 {
