@@ -7,6 +7,7 @@
 #include <TRandom.h>
 #include <TROOT.h>
 #include <TLatex.h>
+#include <TList.h>
 
 using namespace std;
 
@@ -33,8 +34,11 @@ void DrawHisto(TH1F* h, TString ytit, double min, double max, std::string xtitle
 
 int main(int argc, char* argv[]) {
   
+  
   TString inFile;
+  TString outTag("output");
   Bool_t  usePoisson=true;
+  TList outputList;
   
   /////////// Retrieve job arguments //////////////////////////
   std::vector< std::string> options;
@@ -50,6 +54,7 @@ int main(int argc, char* argv[]) {
 	      << "  -h               Prints this menu" << std::endl
 	      << "  -usePoisson      Use poisson note : without arguement (default gausian) " << std::endl
 	      << "  -inFile          file" << std::endl
+	      << "  -outTag          tag for output files" << std::endl
 	      << std::endl;
     exit(EXIT_SUCCESS);
   }
@@ -63,6 +68,9 @@ int main(int argc, char* argv[]) {
     } else if (options.at(iArg).compare("-usePoisson")==0) {
       usePoisson=true;
       ++iArg;
+    } else if (options.at(iArg).compare("-outTag") == 0) {
+      outTag=options.at(iArg+1);
+      iArg += 2;
     } else if (options.at(iArg).compare("-inFile") == 0) {
       char tmpChar = options.at(iArg+1)[0];
       if (iArg+1 == argc || tmpChar == '-' ) {
@@ -79,10 +87,11 @@ int main(int argc, char* argv[]) {
   }//while arguments
   
   
-  
   TString jetDesc="Anti k_{t} #it{R} = 0.4, EM+JES";
   TString fitDesc= usePoisson ? "Modified Poisson" : "Gaussian fit";
-  TString pdf="Zjet_DB_Gauss_fits.pdf";
+  TString pdf= usePoisson ? 
+    Form("Zjet_DB_Gauss_fits_%s.pdf", outTag.Data()) :
+    Form("Zjet_DB_Poisson_fits_%s.pdf", outTag.Data());
   
   gErrorIgnoreLevel=2000; // removes Canvas print statements
   TFile *f = TFile::Open(inFile.Data());
@@ -112,17 +121,23 @@ int main(int argc, char* argv[]) {
   for (int iEtaBin=1; iEtaBin<netabins+1;++iEtaBin) {
     TH1F *h_mean  = new TH1F(Form("mean_pt_eta%d", iEtaBin), "", nptbins, ptbins);
     TH1F *h_width = new TH1F(Form("width_pt_eta%d", iEtaBin),"", nptbins, ptbins);
-    TH1F *h_chi2  = new TH1F(Form("chi2_pt_eta%d", iEtaBin), "", nptbins, ptbins);
-    Info("main()", "iEtaBin=%d : histograms %s %s %s created", 
-	 iEtaBin, h_mean->GetName(), h_width->GetName(), h_chi2->GetName());
+    //TH1F *h_chi2  = new TH1F(Form("chi2_pt_eta%d", iEtaBin), "", nptbins, ptbins);
+    Info("main()", "iEtaBin=%d : histograms %s %s created", 
+	 iEtaBin, h_mean->GetName(), h_width->GetName());
+    outputList.Add(h_mean);
+    outputList.Add(h_width);
+    //outputList.Add(h_chi2);
   }
   
   for (int iPtBin=1; iPtBin<nptbins+1;++iPtBin) {
     TH1F *h_mean  = new TH1F(Form("mean_eta_pt%d", iPtBin), "", netabins, etabins);
     TH1F *h_width = new TH1F(Form("width_eta_pt%d", iPtBin),"", netabins, etabins);
-    TH1F *h_chi2  = new TH1F(Form("chi2_eta_pt%d", iPtBin), "", netabins, etabins);
-    Info("main()", "iPtBin=%d : histograms %s %s %s created", 
-	 iPtBin, h_mean->GetName(), h_width->GetName(), h_chi2->GetName());
+    //TH1F *h_chi2  = new TH1F(Form("chi2_eta_pt%d", iPtBin), "", netabins, etabins);
+    Info("main()", "iPtBin=%d : histograms %s %s created", 
+	 iPtBin, h_mean->GetName(), h_width->GetName());
+    outputList.Add(h_mean);
+    outputList.Add(h_width);
+    //outputList.Add(h_chi2);
   }
   
   TH1F *h_fitQuants[5], *h_quantiles[5];
@@ -146,22 +161,22 @@ int main(int argc, char* argv[]) {
       
       TH1F *h_mean_pt  = (TH1F*)gROOT->FindObject(Form("mean_pt_eta%d", iEtaBin));
       TH1F *h_width_pt = (TH1F*)gROOT->FindObject(Form("width_pt_eta%d", iEtaBin));
-      TH1F *h_chi2_pt  = (TH1F*)gROOT->FindObject(Form("chi2_pt_eta%d", iEtaBin));
+      //TH1F *h_chi2_pt  = (TH1F*)gROOT->FindObject(Form("chi2_pt_eta%d", iEtaBin));
       TH1F *h_mean_eta  = (TH1F*)gROOT->FindObject(Form("mean_eta_pt%d", iPtBin));
       TH1F *h_width_eta = (TH1F*)gROOT->FindObject(Form("width_eta_pt%d", iPtBin));
-      TH1F *h_chi2_eta  = (TH1F*)gROOT->FindObject(Form("chi2_eta_pt%d", iPtBin));
+      //TH1F *h_chi2_eta  = (TH1F*)gROOT->FindObject(Form("chi2_eta_pt%d", iPtBin));
       
       h_mean_pt->SetBinContent(iPtBin,myFitter->GetMean());
       h_mean_pt->SetBinError(iPtBin,myFitter->GetMeanError());
       h_width_pt->SetBinContent(iPtBin,myFitter->GetSigma()/myFitter->GetMean());
       h_width_pt->SetBinError(iPtBin,myFitter->GetSigmaError()/myFitter->GetMean());
-      h_chi2_pt->SetBinContent(iPtBin,myFitter->GetChi2Ndof());
+      //h_chi2_pt->SetBinContent(iPtBin,myFitter->GetChi2Ndof());
       
       h_mean_eta->SetBinContent(iEtaBin,myFitter->GetMean());
       h_mean_eta->SetBinError(iEtaBin,myFitter->GetMeanError());
       h_width_eta->SetBinContent(iEtaBin,myFitter->GetSigma()/myFitter->GetMean());
       h_width_eta->SetBinError(iEtaBin,myFitter->GetSigmaError()/myFitter->GetMean());
-      h_chi2_eta->SetBinContent(iEtaBin,myFitter->GetChi2Ndof());
+      //h_chi2_eta->SetBinContent(iEtaBin,myFitter->GetChi2Ndof());
       
       // Quantiles
       h_fitQuants[0]->SetBinContent(iPtBin,myFitter->GetMedian());
@@ -187,7 +202,7 @@ int main(int argc, char* argv[]) {
   for (int iEtaBin=1;iEtaBin<netabins+1;++iEtaBin) {
     TH1F *h_mean_pt  = (TH1F*)gROOT->FindObject(Form("mean_pt_eta%d", iEtaBin));
     TH1F *h_width_pt = (TH1F*)gROOT->FindObject(Form("width_pt_eta%d", iEtaBin));
-    TH1F *h_chi2_pt  = (TH1F*)gROOT->FindObject(Form("chi2_pt_eta%d", iEtaBin));
+    //TH1F *h_chi2_pt  = (TH1F*)gROOT->FindObject(Form("chi2_pt_eta%d", iEtaBin));
     
     TLatex title(0.15, 0.2, Form("#it{ATLAS} internal %1.f<#eta<%1.f", 
 				 etabins[iEtaBin-1], etabins[iEtaBin]
@@ -249,7 +264,7 @@ int main(int argc, char* argv[]) {
   for (int iPtBin=1;iPtBin<nptbins+1;++iPtBin) {
     TH1F *h_mean_eta  = (TH1F*)gROOT->FindObject(Form("mean_eta_pt%d", iPtBin));
     TH1F *h_width_eta = (TH1F*)gROOT->FindObject(Form("width_eta_pt%d", iPtBin));
-    TH1F *h_chi2_eta  = (TH1F*)gROOT->FindObject(Form("chi2_eta_pt%d", iPtBin));
+    //TH1F *h_chi2_eta  = (TH1F*)gROOT->FindObject(Form("chi2_eta_pt%d", iPtBin));
     
     TLatex title(0.15, 0.2, Form("#it{ATLAS} internal %1.f<p_{T}<%1.f", 
 				 ptbins[iPtBin-1], ptbins[iPtBin]
@@ -282,4 +297,16 @@ int main(int argc, char* argv[]) {
   can->Print(pdf+"]");
   
   printf("\nProduced:\n  %s\n\n",pdf.Data());
+  
+  // write to the output
+  TFile fileOutput(Form("ZJetBalancePlotterOut%s.root", outTag.Data()), "RECREATE");
+  outputList.Print();
+  
+  TIter next(&outputList);
+  TObject* object = 0;
+  while ((object = next())) {
+    object->Write();
+  }//over Keys  
+  
+  fileOutput.Write();
 }
