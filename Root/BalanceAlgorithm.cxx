@@ -238,21 +238,19 @@ EL::StatusCode BalanceAlgorithm :: execute ()
   ++m_eventCounter;
 
   m_iCutflow = m_cutflowFirst;
-
+  
   //----------------------------
   // Event information
   //---------------------------
 
   ///////////////////////////// Retrieve Containers /////////////////////////////////////////
-
-
+  
   if(m_debug) Info("execute()", "Get Containers");
   const xAOD::EventInfo* eventInfo(nullptr);
   RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(eventInfo, "EventInfo", m_event, m_store, m_debug), "");
 
   if (m_eventCounter == 0) {
   }
-
   SG::AuxElement::ConstAccessor<float> NPVAccessor("NPV");
   const xAOD::VertexContainer* vertices = 0;
   if(!m_truthLevelOnly) {
@@ -264,7 +262,6 @@ EL::StatusCode BalanceAlgorithm :: execute ()
     // TMP for JetUncertainties uses the same variable
     eventInfo->auxdecor< float >( "NPV" ) = HelperFunctions::countPrimaryVertices(vertices, 2);
   }
-
   //Set this first, as it's needed by passCut()
   if(m_isMC)
     m_mcEventWeight = eventInfo->mcEventWeight();
@@ -275,15 +272,12 @@ EL::StatusCode BalanceAlgorithm :: execute ()
   eventInfo->auxdecor< float >("weight") = m_mcEventWeight * m_xs * m_filtEff;
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%% Loop over Systematics %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
   if(m_debug) Info("execute()", "Systematic Loop");
-
   // did any collection pass the cuts?
   bool pass(false);
   bool doCutflow(m_useCutFlow); // will only stay true for nominal
   const xAOD::JetContainer*  signalJets  = 0;
   const xAOD::MuonContainer* signalMuons = 0;
-
   // if input comes from xAOD, or just running one collection,
   // then get the one collection and be done with it
   if( (m_inputJetAlgo.empty() && m_inputMuonAlgo.empty()) || m_truthLevelOnly ) {
@@ -333,12 +327,11 @@ EL::StatusCode BalanceAlgorithm :: execute ()
       RETURN_CHECK( "execute()", m_store->record( vecOutContainerNames, m_name), "Failed to record vector of output container names.");
     }
   }
-
   if(!pass) {
     wk()->skipEvent();
   }
   return EL::StatusCode::SUCCESS;
-
+  
 }
 
 bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,

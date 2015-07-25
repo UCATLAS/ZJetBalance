@@ -324,7 +324,7 @@ int main( int argc, char* argv[] ) {
     //driver.options()->setDouble("nc_nGBPerJob", 1);
     //driver.options()->setString("nc_excludeSite", ???);
     //driver.options()->setString(EL::Job::optGridMergeOutput, "false");
-    driver.options()->setDouble(EL::Job::optGridMemory,10240); // 10 GB
+    //driver.options()->setDouble(EL::Job::optGridMemory,10240); // 10 GB
 
     //driver.submit(job, submitDir); // with monitoring
     driver.submitOnly(job, submitDir); //without monitoring
