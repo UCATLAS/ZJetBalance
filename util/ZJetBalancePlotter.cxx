@@ -19,10 +19,10 @@ void GetBinningInformation(TH1F* h, Double_t* binEdges, Int_t& nbins)
   }
 }
 
-void DrawHisto(TH1F* h, TString ytit, double min, double max, std::string xtitle="#it{p}_{T}^{ref} [GeV]") {
+void DrawHisto(TH1F* h, TString ytit, double min, double max, TString xtit) {
   h->SetTitleSize(0);
   h->GetYaxis()->SetRangeUser(min,max); 
-  h->SetXTitle(xtitle.c_str()); 
+  h->SetXTitle(xtit); 
   h->SetYTitle(ytit);
   h->SetMarkerStyle(20); 
   h->SetMarkerSize(0.8); 
@@ -33,7 +33,6 @@ void DrawHisto(TH1F* h, TString ytit, double min, double max, std::string xtitle
 }
 
 int main(int argc, char* argv[]) {
-  
   
   TString inFile;
   TString outTag("output");
@@ -86,7 +85,6 @@ int main(int argc, char* argv[]) {
     }
   }//while arguments
   
-  
   TString jetDesc="Anti k_{t} #it{R} = 0.4, EM+JES";
   TString fitDesc= usePoisson ? "Modified Poisson" : "Gaussian fit";
   TString pdf= usePoisson ? 
@@ -99,7 +97,7 @@ int main(int argc, char* argv[]) {
     std::cout << "inFile=[" << inFile.Data() << "] is not valid file name." << std::endl;
     exit(EXIT_FAILURE);
   }
-
+  
   Double_t* ptbins  = new Double_t[BUFSIZ];
   Double_t* etabins = new Double_t[BUFSIZ];
   
@@ -119,9 +117,16 @@ int main(int argc, char* argv[]) {
   
   
   for (int iEtaBin=1; iEtaBin<netabins+1;++iEtaBin) {
-    TH1F *h_mean  = new TH1F(Form("mean_pt_eta%d", iEtaBin), "", nptbins, ptbins);
-    TH1F *h_width = new TH1F(Form("width_pt_eta%d", iEtaBin),"", nptbins, ptbins);
+    TH1F *h_mean  = new TH1F(Form("mean_pt_eta%d", iEtaBin), 
+			     Form("%.1f<#eta<%.1f", etabins[iEtaBin-1], etabins[iEtaBin]),
+			     nptbins, ptbins);
+    TH1F *h_width = new TH1F(Form("width_pt_eta%d", iEtaBin),
+			     Form("%.1f<#eta<%.1f", etabins[iEtaBin-1], etabins[iEtaBin]),
+			     nptbins, ptbins);
     //TH1F *h_chi2  = new TH1F(Form("chi2_pt_eta%d", iEtaBin), "", nptbins, ptbins);
+    h_mean->GetXaxis()->SetTitle("p_{T}^{ref} [GeV]");
+    h_width->GetXaxis()->SetTitle("p_{T}^{ref} [GeV]");
+    
     Info("main()", "iEtaBin=%d : histograms %s %s created", 
 	 iEtaBin, h_mean->GetName(), h_width->GetName());
     outputList.Add(h_mean);
@@ -130,9 +135,16 @@ int main(int argc, char* argv[]) {
   }
   
   for (int iPtBin=1; iPtBin<nptbins+1;++iPtBin) {
-    TH1F *h_mean  = new TH1F(Form("mean_eta_pt%d", iPtBin), "", netabins, etabins);
-    TH1F *h_width = new TH1F(Form("width_eta_pt%d", iPtBin),"", netabins, etabins);
+    TH1F *h_mean  = new TH1F(Form("mean_eta_pt%d", iPtBin),
+			     Form("%.1f<p_{T}^{ref}<%.1f", ptbins[iPtBin-1], ptbins[iPtBin]),
+			     netabins, etabins);
+    TH1F *h_width = new TH1F(Form("width_eta_pt%d", iPtBin),
+			     Form("%.1f<p_{T}^{ref}<%.1f", ptbins[iPtBin-1], ptbins[iPtBin]),
+			     netabins, etabins);
     //TH1F *h_chi2  = new TH1F(Form("chi2_eta_pt%d", iPtBin), "", netabins, etabins);
+    h_mean->GetXaxis()->SetTitle("jet #eta");
+    h_width->GetXaxis()->SetTitle("jet #eta");
+    
     Info("main()", "iPtBin=%d : histograms %s %s created", 
 	 iPtBin, h_mean->GetName(), h_width->GetName());
     outputList.Add(h_mean);
