@@ -220,7 +220,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   
   m_h_jet_eta = new TH1D("h_jet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
   m_h_jet_pt  = new TH1D("h_jet_pt",  "", 50, 0, 300.);
-  m_h_averageInteractionsPerCrossing = new TH1D("h_averageInteractionsPerCrossing", "", 50, -0.5, 49.5);
+  m_h_averageInteractionsPerCrossing = new TH1D("h_averageInteractionsPerCrossing", "", 50, 0, 50.);
   
   wk()->addOutput( m_h_jet_eta );
   wk()->addOutput( m_h_jet_pt );
@@ -294,7 +294,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   const int jentry = wk()->treeEntry();
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
-
+    
   bool isMC = (mcChannelNumber!=-1);
   
   double weight_final=1.0;
@@ -314,7 +314,8 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   }
   
   m_h_RunNumber->Fill(runNumber, weight_final);
-
+  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
+  
   // for valiadtion
   int nJetsBeforeCut = 0;
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
@@ -351,7 +352,6 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   m_h_ZM->Fill(ZM, weight_final);  // for validation
   m_h_jet_pt_bin->Fill(lead_jet_pt, lead_jet_pt_bin, weight_final);  // for validation
   m_h_Z_jet_dPhi->Fill(dPhiZJet1, weight_final); // for validation
-  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
   m_h_jet_eta->Fill(lead_jet_eta, weight_final);
   m_h_jet_pt->Fill(lead_jet_pt, weight_final);
   (m_balance_hists[lead_jet_pt_bin])[lead_jet_eta_bin]->Fill(lead_jet_pt/pTRef1, weight_final);
