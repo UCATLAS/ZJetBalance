@@ -1,0 +1,26 @@
+Index: JES_ResponseFitter/Root/JES_BalanceFitter.cxx
+===================================================================
+--- JES_ResponseFitter/Root/JES_BalanceFitter.cxx	(revision 312558)
++++ JES_ResponseFitter/Root/JES_BalanceFitter.cxx	(working copy)
+@@ -1,6 +1,8 @@
+ 
+ #include "JES_ResponseFitter/JES_BalanceFitter.h"
+ 
++using namespace std;
++
+ //-----------------------------------------------------------------------//
+ // Constructor 
+ //-----------------------------------------------------------------------//
+Index: JES_ResponseFitter/cmt/Makefile.RootCore
+===================================================================
+--- JES_ResponseFitter/cmt/Makefile.RootCore	(revision 312558)
++++ JES_ResponseFitter/cmt/Makefile.RootCore	(working copy)
+@@ -6,7 +6,7 @@
+ PACKAGE_PRELOAD  = Hist
+ PACKAGE_CXXFLAGS = 
+ PACKAGE_LDFLAGS  = $(shell root-config --libs)
+-PACKAGE_BINFLAGS = -lCintex -lReflex
++PACKAGE_BINFLAGS = 
+ PACKAGE_DEP      =
+ PACKAGE_NOOPT    = 0
+ 
