@@ -40,6 +40,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::string m_PRWFileNames; //! configurable parameter
   double m_cutDPhiZJet; //! configurable parameter
   double m_ZMassWindow; //! configurable parameter
+  double m_MV2c20threshold; //! configurable parameter
   
   CP::PileupReweightingTool* m_pileuptool; //!
 
@@ -51,6 +52,8 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1D* m_h_nJets; //!
   TH1D* m_h_jet_eta; //!
   TH1D* m_h_jet_pt; //!
+  TH1D* m_h_bjet_eta; //!
+  TH1D* m_h_bjet_pt; //!
   TH1D* m_h_averageInteractionsPerCrossing; //!
   TH2D* m_h_jet_pt_bin; //!
   TH1D* m_h_pt_binning_info; //!
@@ -59,6 +62,9 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1D* m_h_njets_beforecut; //!
   TH1D* m_h_jet_eta_beforecut; //!
   TH1D* m_h_jet_pt_beforecut; //!
+  TH1D* m_h_nbjets_beforecut; //!
+  TH1D* m_h_bjet_eta_beforecut; //!
+  TH1D* m_h_bjet_pt_beforecut; //!
   TH1F* m_h_cutflow; //!
   TH1F* m_h_cutflow_weighted; //!
   
