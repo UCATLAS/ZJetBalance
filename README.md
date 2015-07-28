@@ -7,7 +7,8 @@ rcSetup Base,2.3.15
 git clone https://github.com/UCATLAS/xAODAnaHelpers
 git clone https://github.com/UCATLAS/ZJetBalance
 python xAODAnaHelpers/scripts/checkoutASGtags.py 2.3.15
-<also we need to setup the JES_ResponseFitter here : see below>
+rc checkout_pkg atlasperf/CombPerf/JetETMiss/JetCalibrationTools/JES_ResponseFitter/trunk JES_ResponseFitter
+patch -p0 -i ZJetBalance/patches/JESResponse.patch
 rc find_packages
 rc compile
 ```
@@ -31,16 +32,6 @@ You may use submitDir/hist-mc15_13TeV.361107.PowhegPythia8EvtGen_AZNLOCTEQ6L1_Zm
 ZJetBalancePlotter -inFile ${ROOTCOREBIN}/data/ZJetBalance/PlotterExampleInput.root
 ```
 Then you will see Zjet_DB_Gauss_fits.pdf as output.
-
-* How to setup the JES_REesponseFitter
-rc checkout_pkg atlasperf/CombPerf/JetETMiss/JetCalibrationTools/JES_ResponseFitter/trunk
-edit 1) Root/JES_BalanceFitter.cxx, 2) cmt/Makefile.RootCore
-
-1) add 'using namespace std;' in Root/JES_BalanceFitter.cxx
-
-2) modify cmt/Makefile.RootCore as following
-> before: PACKAGE_BINFLAGS = -lCintex -lReflex
-> after: PACKAGE_BINFLAGS =
 
 
 See TWiki for more information
