@@ -59,6 +59,7 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   m_PRWFileNames             = config->GetValue("PRWFiles", "");
   m_cutDPhiZJet              = config->GetValue("cutDPhiZJet", 2.8);
   m_ZMassWindow              = config->GetValue("ZMassWindow", 15);
+  m_MV2c20threshold          = config->GetValue("MV2c20threshold", -0.5911); 
   
   DecodeBinning(pT_binning_str, m_pT_binning, m_n_pT_binning);
   Info("configure()", "DecodeBinning() gives for pT  : nBins=%d, first=%.1f last=%.1f", m_n_pT_binning, m_pT_binning[0], m_pT_binning[m_n_pT_binning]);
@@ -106,9 +107,12 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   m_h_nJets = new TH1D("h_nJets", "", 10, -0.5, 9.5); // validation purpose
   m_h_Z_jet_dPhi = new TH1D("h_Z_jet_dPhi", "", 100, -TMath::Pi(), TMath::Pi());
   m_h_prwfactor  = new TH1D("h_prwfactor", "", 100, 0, 3.0);
-  m_h_njets_beforecut   = new TH1D("h_njets_beforecut", "", 7, 0.5, 7.5);
+  m_h_njets_beforecut   = new TH1D("h_njets_beforecut", "", 7, -0.5, 6.5);
   m_h_jet_eta_beforecut = new TH1D("h_jet_eta_beforecut", "", 32, -3.2, 3.2);
-  m_h_jet_pt_beforecut  = new TH1D("h_jet_pt_beforecut", "", 30, 0, 300);
+  m_h_jet_pt_beforecut  = new TH1D("h_jet_pt_beforecut", "", 30, 0, 300);  
+  m_h_nbjets_beforecut   = new TH1D("h_nbjets_beforecut", "", 7, -0.5, 6.5);
+  m_h_bjet_eta_beforecut = new TH1D("h_bjet_eta_beforecut", "", 32, -3.2, 3.2);
+  m_h_bjet_pt_beforecut  = new TH1D("h_bjet_pt_beforecut", "", 30, 0, 300);
   
   wk()->addOutput( m_h_RunNumber );
   wk()->addOutput( m_h_ZpT );
@@ -118,7 +122,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   wk()->addOutput( m_h_prwfactor );
   wk()->addOutput( m_h_njets_beforecut );
   wk()->addOutput( m_h_jet_eta_beforecut );
-  wk()->addOutput( m_h_jet_pt_beforecut );    
+  wk()->addOutput( m_h_jet_pt_beforecut );
+  wk()->addOutput( m_h_nbjets_beforecut );
+  wk()->addOutput( m_h_bjet_eta_beforecut );
+  wk()->addOutput( m_h_bjet_pt_beforecut );    
   
   const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();
   int nBinsCutflow = cutflows.first->GetNbinsX();
@@ -220,12 +227,18 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   
   m_h_jet_eta = new TH1D("h_jet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
   m_h_jet_pt  = new TH1D("h_jet_pt",  "", 50, 0, 300.);
+  m_h_bjet_eta = new TH1D("h_bjet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_bjet_pt  = new TH1D("h_bjet_pt", "", 50, 0, 300.);
+  
   m_h_averageInteractionsPerCrossing = new TH1D("h_averageInteractionsPerCrossing", "", 50, 0, 50.);
+
   
   wk()->addOutput( m_h_jet_eta );
   wk()->addOutput( m_h_jet_pt );
   wk()->addOutput( m_h_averageInteractionsPerCrossing );
-  
+  wk()->addOutput( m_h_bjet_eta );
+  wk()->addOutput( m_h_bjet_pt );
+
   // Pileup RW Tool //
   if ( m_doPUreweighting ) {
     m_pileuptool = new CP::PileupReweightingTool("Pileup");
@@ -318,6 +331,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   
   // for valiadtion
   int nJetsBeforeCut = 0;
+  int nBJetsBeforeCut = 0;
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
     const float& pt  = jet_pt->at(iJet);
     const float& eta = jet_eta->at(iJet);
@@ -327,8 +341,16 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     
     m_h_jet_eta_beforecut->Fill(eta, weight_final);
     m_h_jet_pt_beforecut->Fill(pt, weight_final);
+
+    if ( jet_MV2c20->at(iJet) > m_MV2c20threshold ) {
+      nBJetsBeforeCut++;
+      m_h_bjet_eta_beforecut->Fill(eta, weight_final);
+      m_h_bjet_pt_beforecut->Fill(pt, weight_final);
+    }
+
   }
   m_h_njets_beforecut->Fill(nJetsBeforeCut, weight_final);
+  m_h_nbjets_beforecut->Fill(nBJetsBeforeCut, weight_final);
   
   // selection criteria need to be applied
   if (TMath::Abs(ZM-91)>m_ZMassWindow) {return EL::StatusCode::SUCCESS;}
@@ -355,6 +377,11 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   m_h_jet_eta->Fill(lead_jet_eta, weight_final);
   m_h_jet_pt->Fill(lead_jet_pt, weight_final);
   (m_balance_hists[lead_jet_pt_bin])[lead_jet_eta_bin]->Fill(lead_jet_pt/pTRef1, weight_final);
+  
+  if (jet_MV2c20->at(0)>m_MV2c20threshold) {
+    m_h_bjet_eta->Fill(lead_jet_eta, weight_final);
+    m_h_bjet_pt->Fill(lead_jet_pt, weight_final);
+  }
   
   return EL::StatusCode::SUCCESS;
 }
