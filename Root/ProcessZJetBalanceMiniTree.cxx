@@ -49,24 +49,33 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   // Read Input from .config file
   //
   m_debug                    = config->GetValue("Debug" ,      false );
-  TString pT_binning_str     = config->GetValue("pT_binning" , "20,25,30,35,45,60,80,110,160,210,260,310,500");
+  TString pT_binning_str     = config->GetValue("pT_binning", "20,25,30,35,45,60,80,110,160,210,260,310,500");
+  TString eta_binning_str    = config->GetValue("eta_binning", "-4.5,-3.2,-2.5,-1.0,0,1.0,2.5,3.2,4.5");
   m_nBinsXForResponseHist    = config->GetValue("nBinsXForResponseHist", 50.);
   m_maxXForResponseHist      = config->GetValue("maxXForResponseHist", 5.0);
   m_minXForResponseHist      = config->GetValue("minXForResponseHist", 0.0);
+  m_doPUreweighting          = config->GetValue("DoPileupReweighting", false);
+  m_lumiCalcFileNames        = config->GetValue("LumiCalcFiles", "");
+  m_PRWFileNames             = config->GetValue("PRWFiles", "");
+  m_cutDPhiZJet              = config->GetValue("cutDPhiZJet", 2.8);
+  m_ZMassWindow              = config->GetValue("ZMassWindow", 15);
   
-  
-  DecodePtBinning(pT_binning_str, m_pT_binning, m_n_pT_binning);
-  Info("configure()", "DecodePtBinning() gives nBins=%d, first=%.1f last=%.1f", m_n_pT_binning, m_pT_binning[0], m_pT_binning[m_n_pT_binning]);
+  DecodeBinning(pT_binning_str, m_pT_binning, m_n_pT_binning);
+  Info("configure()", "DecodeBinning() gives for pT  : nBins=%d, first=%.1f last=%.1f", m_n_pT_binning, m_pT_binning[0], m_pT_binning[m_n_pT_binning]);
+  DecodeBinning(eta_binning_str, m_eta_binning, m_n_eta_binning);
+  Info("configure()", "DecodeBinning() gives for eta : nBins=%d, first=%.1f last=%.1f", m_n_eta_binning, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
   
   config->Print();
   Info("configure()", "ProcessZJetBalanceMiniTree Interface succesfully configured! \n");
   
+  Info("configure()", "Ends");
   return EL::StatusCode::SUCCESS;
 }
 
 
 EL::StatusCode ProcessZJetBalanceMiniTree :: setupJob (EL::Job& job)
 {
+  Info("setupJob()", "called");
   // Here you put code that sets up the job on the submission object
   // so that it is ready to work with your algorithm, e.g. you can
   // request the D3PDReader service or add output files.  Any code you
@@ -74,7 +83,8 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: setupJob (EL::Job& job)
   // sole advantage of putting it here is that it gets automatically
   // activated/deactivated when you add/remove the algorithm from your
   // job, which may or may not be of value to you.
-
+  
+  Info("setupJob()", "ends");
   return EL::StatusCode::SUCCESS;
 }
 
@@ -86,20 +96,42 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   // beginning on each worker node, e.g. create histograms and output
   // trees.  This method gets called before any input files are
   // connected.
-  Info("histInitialize()", "Calling histInitialize");
+  Info("histInitialize()", "called");
   
   // list of the histograms
   TH1::SetDefaultSumw2();
+  m_h_RunNumber = new TH1D("h_RunNumber", "", 1000, 271000.5, 272000.5);
   m_h_ZpT   = new TH1D("h_ZpT", "", 100, 0, 100); // validation purpose
   m_h_ZM    = new TH1D("h_ZM",  "", 100, 71, 110); // validation purpose
-  m_h_nJets = new TH1D("h_nJets", "", 5, -0.5, 0.5); // validation purpose
+  m_h_nJets = new TH1D("h_nJets", "", 10, -0.5, 9.5); // validation purpose
   m_h_Z_jet_dPhi = new TH1D("h_Z_jet_dPhi", "", 100, -TMath::Pi(), TMath::Pi());
+  m_h_prwfactor  = new TH1D("h_prwfactor", "", 100, 0, 3.0);
+  m_h_njets_beforecut   = new TH1D("h_njets_beforecut", "", 7, 0.5, 7.5);
+  m_h_jet_eta_beforecut = new TH1D("h_jet_eta_beforecut", "", 32, -3.2, 3.2);
+  m_h_jet_pt_beforecut  = new TH1D("h_jet_pt_beforecut", "", 30, 0, 300);
   
+  wk()->addOutput( m_h_RunNumber );
   wk()->addOutput( m_h_ZpT );
   wk()->addOutput( m_h_ZM );
   wk()->addOutput( m_h_nJets );
   wk()->addOutput( m_h_Z_jet_dPhi );
+  wk()->addOutput( m_h_prwfactor );
+  wk()->addOutput( m_h_njets_beforecut );
+  wk()->addOutput( m_h_jet_eta_beforecut );
+  wk()->addOutput( m_h_jet_pt_beforecut );    
+  
+  const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();
+  int nBinsCutflow = cutflows.first->GetNbinsX();
+  int xminCutflow  = cutflows.first->GetXaxis()->GetXmin();
+  int xmaxCutflow  = cutflows.first->GetXaxis()->GetXmax();
+  
+  m_h_cutflow = new TH1F("cutflow", "", nBinsCutflow, xminCutflow, xmaxCutflow); //!
+  m_h_cutflow_weighted = new TH1F("cutflow_weighted", "", nBinsCutflow, xminCutflow, xmaxCutflow); //!
+  
+  wk()->addOutput( m_h_cutflow );
+  wk()->addOutput( m_h_cutflow_weighted );
 
+  Info("histInitialize()", "ends");
   return EL::StatusCode::SUCCESS;
 }
 
@@ -107,8 +139,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
 
 EL::StatusCode ProcessZJetBalanceMiniTree :: fileExecute ()
 {
+  Info("fileExecute()", "called");
   // Here you do everything that needs to be done exactly once for every
   // single file, e.g. collect a list of all lumi-blocks processed
+  Info("fileExecute()", "end");
   return EL::StatusCode::SUCCESS;
 }
 
@@ -117,10 +151,18 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: fileExecute ()
 EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
 {
   Info("changedInput", "called"); 
-
+  
   // Here you do everything you need to do when we change input files,
   // e.g. resetting branch addresses on trees.  If you are using
   // D3PDReader or a similar service this method is not needed.
+  
+  const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();  
+  for (int iBin=1, nBins=cutflows.first->GetNbinsX(); iBin<=nBins; iBin++) { // update
+    m_h_cutflow->SetBinContent(iBin, m_h_cutflow->GetBinContent(iBin)+cutflows.first->GetBinContent(iBin)); 
+  }
+  for (int iBin=1, nBins=cutflows.second->GetNbinsX(); iBin<=nBins; iBin++) { // update
+    m_h_cutflow_weighted->SetBinContent(iBin, m_h_cutflow_weighted->GetBinContent(iBin)+cutflows.second->GetBinContent(iBin)); 
+  }
   
   TTree *tree = wk()->tree();
   InitTree(tree);
@@ -145,6 +187,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   
   // create object before configuration
   m_pT_binning = new Double_t[BUFSIZ];
+  m_eta_binning = new Double_t[BUFSIZ];
   
   // configuration from ENV file
   if ( this->configure() == EL::StatusCode::FAILURE ) {
@@ -153,18 +196,84 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   }
   
   // additinoal histograms according to configuration parameters
-  const double minX=5.0;
-  for (int ii=1; ii<m_n_pT_binning+1; ii++) {
-    Info("Initialize()", "%s", Form("DB_RefEtaBin_PtBin%d", ii));
-    TH1D* h = new TH1D(Form("DB_RefEtaBin_PtBin%d", ii), Form("%.1f < p_{T} < %.1f", m_pT_binning[ii-1], m_pT_binning[ii]), 
-		       m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
-    m_balance_hists.push_back(h);
-    wk()->addOutput( h );
+  for (int iPtBin=1; iPtBin<m_n_pT_binning+1; iPtBin++) {
+    std::vector<TH1D*> tmp_hist_container;
+    for (int iEtaBin=1; iEtaBin<m_n_eta_binning+1; iEtaBin++) {
+      Info("Initialize()", "%s", Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
+      TH1D* h = new TH1D(Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin), 
+			 Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+			      m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
+			      m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
+			      ), 
+			 m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
+      tmp_hist_container.push_back(h);
+      wk()->addOutput( h );
+    }
+    m_balance_hists.push_back(tmp_hist_container);
   }
   m_h_jet_pt_bin = new TH2D("h_jet_pt_bin", "", 100, 0, 500, m_n_pT_binning, -0.5, -0.5+m_n_pT_binning); // validation purpose
   wk()->addOutput( m_h_jet_pt_bin );
   m_h_pt_binning_info = new TH1D("h_pt_binning_info", "", m_n_pT_binning, m_pT_binning);
   wk()->addOutput( m_h_pt_binning_info );
+  m_h_eta_binning_info = new TH1D("h_eta_binning_info", "", m_n_eta_binning, m_eta_binning);
+  wk()->addOutput( m_h_eta_binning_info );
+  
+  m_h_jet_eta = new TH1D("h_jet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_jet_pt  = new TH1D("h_jet_pt",  "", 50, 0, 300.);
+  m_h_averageInteractionsPerCrossing = new TH1D("h_averageInteractionsPerCrossing", "", 50, 0, 50.);
+  
+  wk()->addOutput( m_h_jet_eta );
+  wk()->addOutput( m_h_jet_pt );
+  wk()->addOutput( m_h_averageInteractionsPerCrossing );
+  
+  // Pileup RW Tool //
+  if ( m_doPUreweighting ) {
+    m_pileuptool = new CP::PileupReweightingTool("Pileup");
+
+    std::vector<std::string> PRWFiles;
+    std::vector<std::string> lumiCalcFiles;
+    
+    std::string tmp_lumiCalcFileNames = m_lumiCalcFileNames;
+    std::string tmp_PRWFileNames = m_PRWFileNames;
+    
+    // Parse all comma seperated files
+    while( tmp_PRWFileNames.size() > 0){
+      std::string::size_type pos = tmp_PRWFileNames.find_first_of(',');
+      if( pos == std::string::npos){
+        pos = tmp_PRWFileNames.size();
+        PRWFiles.push_back(tmp_PRWFileNames.substr(0, pos));
+        tmp_PRWFileNames.erase(0, pos);
+      }else{
+        PRWFiles.push_back(tmp_PRWFileNames.substr(0, pos));
+        tmp_PRWFileNames.erase(0, pos+1);
+      }
+    }
+    while( tmp_lumiCalcFileNames.size() > 0){
+      std::string::size_type pos = tmp_lumiCalcFileNames.find_first_of(',');
+      if( pos == std::string::npos){
+        pos = tmp_lumiCalcFileNames.size();
+        lumiCalcFiles.push_back(tmp_lumiCalcFileNames.substr(0, pos));
+        tmp_lumiCalcFileNames.erase(0, pos);
+      }else{
+        lumiCalcFiles.push_back(tmp_lumiCalcFileNames.substr(0, pos));
+        tmp_lumiCalcFileNames.erase(0, pos+1);
+      }
+    }
+
+    std::cout << "PileupReweighting Tool is adding Pileup files:" << std::endl;
+    for( unsigned int i=0; i < PRWFiles.size(); ++i){
+      std::cout << "    " << PRWFiles.at(i) << std::endl;
+    }
+    std::cout << "PileupReweighting Tool is adding Lumi Calc files:" << std::endl;
+    for( unsigned int i=0; i < lumiCalcFiles.size(); ++i){
+      std::cout << "    " << lumiCalcFiles.at(i) << std::endl;
+    }
+    
+    RETURN_CHECK("BasicEventSelection::initialize()", m_pileuptool->setProperty("ConfigFiles", PRWFiles), "");
+    RETURN_CHECK("BasicEventSelection::initialize()", m_pileuptool->setProperty("LumiCalcFiles", lumiCalcFiles), "");
+    RETURN_CHECK("BasicEventSelection::initialize()", m_pileuptool->initialize(), "");
+  }  
+  
   
   Info("initialize()", "Succesfully initialized! \n");
   return EL::StatusCode::SUCCESS;
@@ -185,28 +294,67 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   const int jentry = wk()->treeEntry();
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
+    
+  bool isMC = (mcChannelNumber!=-1);
+  
+  double weight_final=1.0;
+  if (isMC) {
+    double pileup_reweighting_factor = GetPileupReweightingFactor();
+    m_h_prwfactor->Fill(pileup_reweighting_factor);
+    weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
+    
+    // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e",
+    // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final);
+  }
   
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
-  if (m_eventCounter%100==0) {
+  if (m_eventCounter%10000==0) {
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
   
+  m_h_RunNumber->Fill(runNumber, weight_final);
+  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
+  
+  // for valiadtion
+  int nJetsBeforeCut = 0;
+  for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
+    const float& pt  = jet_pt->at(iJet);
+    const float& eta = jet_eta->at(iJet);
+    
+    if ( pt < 30. ) continue;
+    nJetsBeforeCut++;
+    
+    m_h_jet_eta_beforecut->Fill(eta, weight_final);
+    m_h_jet_pt_beforecut->Fill(pt, weight_final);
+  }
+  m_h_njets_beforecut->Fill(nJetsBeforeCut, weight_final);
+  
   // selection criteria need to be applied
-  if (njets!=1) {return EL::StatusCode::SUCCESS;}
-  if (TMath::Abs(ZM-91)>15) {return EL::StatusCode::SUCCESS;}
-  if (TMath::Abs(dPhiZJet1)<2.8) {return EL::StatusCode::SUCCESS;}
+  if (TMath::Abs(ZM-91)>m_ZMassWindow) {return EL::StatusCode::SUCCESS;}
+  if (TMath::Abs(dPhiZJet1)<m_cutDPhiZJet) {return EL::StatusCode::SUCCESS;}
   
   // 
-  const float& lead_jet_pt     = jet_pt->at(0);
-  const int    lead_jet_pt_bin = GetPtBin(lead_jet_pt);
+  const float& lead_jet_pt      = jet_pt->at(0);
+  const float& lead_jet_eta     = jet_eta->at(0);
+  const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
+  const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
   
-  m_h_ZpT->Fill(ZpT);
-  m_h_nJets->Fill(njets);  // for validation
-  m_h_ZM->Fill(ZM);  // for validation
-  m_h_jet_pt_bin->Fill(lead_jet_pt, lead_jet_pt_bin);  // for validation
-  m_h_Z_jet_dPhi->Fill(dPhiZJet1); // for validation
-  m_balance_hists[lead_jet_pt_bin]->Fill(lead_jet_pt/pTRef1);
+  //Info("execute()", "lead_jet_eta=%.1f (%d) lead_jet_pt=%.1f (%d)",
+  //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
+  
+  if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
+  
+  if (jet_pt->size()>1) { if (jet_pt->at(1)>pTRef1*0.2) {return EL::StatusCode::SUCCESS;} } // event with second jet is vetoed
+  
+  m_h_ZpT->Fill(ZpT, weight_final);
+  m_h_nJets->Fill(njets, weight_final);  // for validation
+  m_h_ZM->Fill(ZM, weight_final);  // for validation
+  m_h_jet_pt_bin->Fill(lead_jet_pt, lead_jet_pt_bin, weight_final);  // for validation
+  m_h_Z_jet_dPhi->Fill(dPhiZJet1, weight_final); // for validation
+  m_h_jet_eta->Fill(lead_jet_eta, weight_final);
+  m_h_jet_pt->Fill(lead_jet_pt, weight_final);
+  (m_balance_hists[lead_jet_pt_bin])[lead_jet_eta_bin]->Fill(lead_jet_pt/pTRef1, weight_final);
   
   return EL::StatusCode::SUCCESS;
 }
@@ -254,18 +402,18 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histFinalize ()
   return EL::StatusCode::SUCCESS;
 }
 
-void ProcessZJetBalanceMiniTree::DecodePtBinning(TString pT_binning_str, Double_t* pT_binning_array, Int_t& n_pT_binning)
+void ProcessZJetBalanceMiniTree::DecodeBinning(TString binning_str, Double_t* binning_array, Int_t& n_binning)
 {
   TString tok;
   Ssiz_t  from = 0;
-  pT_binning_str.ReplaceAll(" ", "");
+  binning_str.ReplaceAll(" ", "");
   int iArrayIndex=0;
-  while (pT_binning_str.Tokenize(tok, from, ",")) {  
+  while (binning_str.Tokenize(tok, from, ",")) {  
     const double x = strtod(tok.Data(), NULL);
-    pT_binning_array[iArrayIndex]=x;
+    binning_array[iArrayIndex]=x;
     iArrayIndex++;
   }
-  n_pT_binning=iArrayIndex-1;
+  n_binning=iArrayIndex-1;
   
   return;
 }
@@ -273,9 +421,56 @@ void ProcessZJetBalanceMiniTree::DecodePtBinning(TString pT_binning_str, Double_
 int ProcessZJetBalanceMiniTree::GetPtBin(const double& _pt)
 {
   int rc=0;
-  for (; rc<m_n_pT_binning-1 ; rc++) {
+  for (; rc<m_n_pT_binning-1; rc++) {
     if (_pt<m_pT_binning[rc+1]) {break;}
   }
+  return rc;
+}
+
+int ProcessZJetBalanceMiniTree::GetEtaBin(const double& _eta)
+{
+  int rc=-1;
+  for (int iBin=0; iBin<m_n_eta_binning; iBin++) {
+    if (m_eta_binning[iBin]<_eta && _eta<m_eta_binning[iBin+1]) {
+      rc = iBin;
+      break;
+    }
+  }
+  return rc;
+}
+
+double ProcessZJetBalanceMiniTree::GetPileupReweightingFactor()
+{
+  // what actually done in getCombinedWeight( const xAOD::EventInfo& eventInfo )
+  // PileupReweighting/Root/PileupReweightingTool.cxx
+  return ((m_doPUreweighting) ? 
+	  m_pileuptool->GetCombinedWeight(runNumber, mcChannelNumber, averageInteractionsPerCrossing) :
+	  1.0);
+}
+
+std::pair<TH1F*, TH1F*> ProcessZJetBalanceMiniTree::ReturnCutflowPointers()
+{
+  std::pair<TH1F*, TH1F*> rc(0, 0);
+  
+  TFile* inputFile = wk()->inputFile();
+  TIter next(inputFile->GetListOfKeys());
+  TKey *key;
+  while ((key = (TKey*)next())) {
+    std::string keyName = key->GetName();
+    
+    std::size_t found = keyName.find("cutflow");
+    bool foundCutFlow = (found!=std::string::npos);
+    
+    found = keyName.find("weighted");
+    bool foundWeighted = (found!=std::string::npos);
+    
+    if(foundCutFlow && !foundWeighted){
+      rc.first  = ((TH1F*)key->ReadObj());
+    } else if(foundCutFlow && foundWeighted) {
+      rc.second = ((TH1F*)key->ReadObj());
+    }
+  }//over Keys
+  
   return rc;
 }
 
