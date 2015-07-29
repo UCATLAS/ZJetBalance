@@ -44,10 +44,10 @@ class EEBalanceAlgorithm : public xAH::Algorithm
     //configuration variables
     std::string m_inputJetContainerName;    //! input container name
     std::string m_inputJetAlgo;             //! input algo for when running systs
-    std::string m_inputMuonContainerName;   //! input container name
-    std::string m_inputMuonAlgo;            //! input algo for when running systs
-    std::string m_inputMuonForMuonInJetCorrectionContainerName; //! input container name
-    std::string m_inputMuonForMuonInJetCorrectionAlgo;          //! input algo for when running systs
+    std::string m_inputElectronContainerName;   //! input container name
+    std::string m_inputElectronAlgo;            //! input algo for when running systs
+    std::string m_inputElectronForElectronInJetCorrectionContainerName; //! input container name
+    std::string m_inputElectronForElectronInJetCorrectionAlgo;          //! input algo for when running systs
     bool m_isMC;                      //! Is MC
     bool m_useCutFlow;                //! true will write out cutflow histograms
     bool m_writeTree;                 //! true will write out a TTree
@@ -57,8 +57,8 @@ class EEBalanceAlgorithm : public xAH::Algorithm
     std::string m_trigDetailStr;      //! trigger info add to tree
     std::string m_jetDetailStr;       //! jet info add to tree
     std::string m_jetDetailStrSyst;   //! jetsyst info add to tree
-    std::string m_muonDetailStr;      //! muon info add to tree
-    std::string m_muonDetailStrSyst;  //! muonsyst info add to tree
+    std::string m_electronDetailStr;      //! electron info add to tree
+    std::string m_electronDetailStrSyst;  //! electronsyst info add to tree
 
     float m_xs; //!
     float m_filtEff; //!
@@ -68,8 +68,8 @@ class EEBalanceAlgorithm : public xAH::Algorithm
 
     std::string m_treeStream;
     void passCut();
-    TLorentzVector getFourMomentumOfMuonInJet(const xAOD::Muon* muon);
-    EL::StatusCode muonInJetCorrection (const xAOD::JetContainer* signalJets);
+    TLorentzVector getFourMomentumOfElectronInJet(const xAOD::Electron* electron);
+    EL::StatusCode electronInJetCorrection (const xAOD::JetContainer* signalJets);
 
 #ifndef __CINT__
     EL::StatusCode getLumiWeights(const xAOD::EventInfo* eventInfo);
@@ -100,7 +100,7 @@ public:
 #ifndef __CINT__
   bool executeAnalysis( const xAOD::EventInfo* eventInfo,
       const xAOD::JetContainer* signalJets,
-      const xAOD::MuonContainer* signalMuons,
+      const xAOD::ElectronContainer* signalElectrons,
       const xAOD::VertexContainer* vertices,
       bool count,
       std::string systName = "");

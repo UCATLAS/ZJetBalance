@@ -55,10 +55,10 @@ EL::StatusCode  EEBalanceAlgorithm :: configure ()
   // read debug flag from .config file
   m_inputJetContainerName    = config->GetValue("InputJetContainer",  "");
   m_inputJetAlgo             = config->GetValue("InputJetAlgo",       "");
-  m_inputMuonContainerName   = config->GetValue("InputMuonContainer",  "");
-  m_inputMuonAlgo            = config->GetValue("InputMuonAlgo",       "");
-  m_inputMuonForMuonInJetCorrectionContainerName   = config->GetValue("InputMuonForMuonInJetCorrectionContainer",  "");
-  m_inputMuonForMuonInJetCorrectionAlgo            = config->GetValue("InputMuonForMuonInJetCorrectionAlgo",       "");
+  m_inputElectronContainerName   = config->GetValue("InputElectronContainer",  "");
+  m_inputElectronAlgo            = config->GetValue("InputElectronAlgo",       "");
+  m_inputElectronForElectronInJetCorrectionContainerName   = config->GetValue("InputElectronForElectronInJetCorrectionContainer",  "");
+  m_inputElectronForElectronInJetCorrectionAlgo            = config->GetValue("InputElectronForElectronInJetCorrectionAlgo",       "");
   m_debug                    = config->GetValue("Debug" ,      false );
   m_useCutFlow               = config->GetValue("UseCutFlow",  true);
   m_writeTree                = config->GetValue("WriteTree",  true);
@@ -68,7 +68,7 @@ EL::StatusCode  EEBalanceAlgorithm :: configure ()
   m_trigDetailStr            = config->GetValue("TrigDetailStr", "");
   m_jetDetailStr             = config->GetValue("JetDetailStr", "kinematic clean energy truth flavorTag layer");
   m_jetDetailStrSyst         = config->GetValue("JetDetailStrSyst", "kinematic clean energy");
-  m_muonDetailStr            = config->GetValue("MuonDetailStr", "kinematic");
+  m_electronDetailStr        = config->GetValue("ElectronDetailStr", "kinematic");
 
   config->Print();
   Info("configure()", "EEBalanceAlgorithm Interface succesfully configured! \n");
@@ -77,12 +77,12 @@ EL::StatusCode  EEBalanceAlgorithm :: configure ()
     Error("configure()", "Jet InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
-  if( m_inputMuonContainerName.empty() ) {
-    Error("configure()", "Muon InputContainer is empty!");
+  if( m_inputElectronContainerName.empty() ) {
+    Error("configure()", "Electron InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
-  if( m_inputMuonForMuonInJetCorrectionContainerName.empty() ) {
-    Error("configure()", "Muon InputContainer is empty!");
+  if( m_inputElectronForElectronInJetCorrectionContainerName.empty() ) {
+    Error("configure()", "Electron InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
 
@@ -214,10 +214,10 @@ void EEBalanceAlgorithm::AddTree( std::string name ) {
     miniTree->AddTrigger( m_trigDetailStr );
     if( !name.empty() ) { // save limited information for systematic variations
       miniTree->AddJets( m_jetDetailStrSyst );
-      //miniTree->AddMuons( m_muonDetailStrSyst );
+      //miniTree->AddElectrons( m_electronDetailStrSyst );
     } else {
       miniTree->AddJets ( m_jetDetailStr );
-      miniTree->AddMuons( m_muonDetailStr );
+      miniTree->AddElectrons( m_electronDetailStr );
     }
   }
   m_myTrees[name] = miniTree;
@@ -278,13 +278,13 @@ EL::StatusCode EEBalanceAlgorithm :: execute ()
   bool pass(false);
   bool doCutflow(m_useCutFlow); // will only stay true for nominal
   const xAOD::JetContainer*  signalJets  = 0;
-  const xAOD::MuonContainer* signalMuons = 0;
+  const xAOD::ElectronContainer* signalElectrons = 0;
   // if input comes from xAOD, or just running one collection,
   // then get the one collection and be done with it
-  if( (m_inputJetAlgo.empty() && m_inputMuonAlgo.empty()) || m_truthLevelOnly ) {
+  if( (m_inputJetAlgo.empty() && m_inputElectronAlgo.empty()) || m_truthLevelOnly ) {
     RETURN_CHECK("EEBalanceAlgorithm::execute()", HelperFunctions::retrieve(signalJets, m_inputJetContainerName, m_event, m_store), "");
-    RETURN_CHECK("EEBalanceAlgorithm::execute()", HelperFunctions::retrieve(signalMuons, m_inputMuonContainerName, m_event, m_store), "");
-    pass = this->executeAnalysis( eventInfo, signalJets, signalMuons, vertices, doCutflow, "" );
+    RETURN_CHECK("EEBalanceAlgorithm::execute()", HelperFunctions::retrieve(signalElectrons, m_inputElectronContainerName, m_event, m_store), "");
+    pass = this->executeAnalysis( eventInfo, signalJets, signalElectrons, vertices, doCutflow, "" );
 
   }
   else { // get the list of systematics to run over
@@ -298,8 +298,8 @@ EL::StatusCode EEBalanceAlgorithm :: execute ()
       }
     }
     
-    // Add loop over muon systematics !!! TODO
-    RETURN_CHECK("EEBalanceAlgorithm::execute()", HelperFunctions::retrieve(signalMuons, m_inputMuonContainerName, m_event, m_store), "");
+    // Add loop over electron systematics !!! TODO
+    RETURN_CHECK("EEBalanceAlgorithm::execute()", HelperFunctions::retrieve(signalElectrons, m_inputElectronContainerName, m_event, m_store), "");
 
     // loop over systematics
     bool saveContainerNames(false);
@@ -315,7 +315,7 @@ EL::StatusCode EEBalanceAlgorithm :: execute ()
       // allign with Dijet naming conventions
       if( systName.empty() ) { doCutflow = m_useCutFlow; } // only doCutflow for nominal
       else { doCutflow = false; }
-      passOne = this->executeAnalysis( eventInfo, signalJets, signalMuons, vertices, doCutflow, systName );
+      passOne = this->executeAnalysis( eventInfo, signalJets, signalElectrons, vertices, doCutflow, systName );
       // save the string if passing the selection
       if( saveContainerNames && passOne ) { vecOutContainerNames->push_back( systName ); }
       // the final decision - if at least one passes keep going!
@@ -337,7 +337,7 @@ EL::StatusCode EEBalanceAlgorithm :: execute ()
 
 bool EEBalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
     const xAOD::JetContainer* signalJets,
-    const xAOD::MuonContainer* signalMuons,
+    const xAOD::ElectronContainer* signalElectrons,
     const xAOD::VertexContainer* vertices,
     bool doCutflow,
     std::string systName) {
@@ -353,15 +353,15 @@ bool EEBalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
 
   // create the Z-Object
   TLorentzVector Z = TLorentzVector();
-  Z += signalMuons->at(0)->p4();
-  Z += signalMuons->at(1)->p4();
+  Z += signalElectrons->at(0)->p4();
+  Z += signalElectrons->at(1)->p4();
   if( fabs(Z.M() - 90e3) > 35e3 ) {
       wk()->skipEvent();  return EL::StatusCode::SUCCESS;
   }
   if(doCutflow) passCut(); //Z mass cut
 
-  if ( muonInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
-    Error("executeAnalysis()", "failure in muonInJetCorrection()");
+  if ( electronInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
+    Error("executeAnalysis()", "failure in electronInJetCorrection()");
   }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -413,7 +413,7 @@ bool EEBalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
       m_myTrees[systName]->FillTrigger( eventInfo );
       int pVLoc = HelperFunctions::getPrimaryVertexLocation( vertices );
       if(signalJets)  m_myTrees[systName]->FillJets( signalJets, pVLoc );
-      if(signalMuons) m_myTrees[systName]->FillMuons( signalMuons, vertices->at(pVLoc) );
+      if(signalElectrons) m_myTrees[systName]->FillElectrons( signalElectrons, vertices->at(pVLoc) );
     }
     m_myTrees[systName]->Fill();
   }
@@ -532,32 +532,32 @@ EL::StatusCode EEBalanceAlgorithm :: histFinalize ()
 }
 
 //===============================
-EL::StatusCode EEBalanceAlgorithm :: muonInJetCorrection (const xAOD::JetContainer* signalJets)
+EL::StatusCode EEBalanceAlgorithm :: electronInJetCorrection (const xAOD::JetContainer* signalJets)
 {
-  const xAOD::MuonContainer* muonsForCorr = 0;
-  RETURN_CHECK("EEBalanceAlgorithm::muonInJetCorrection()", 
-	       HelperFunctions::retrieve(muonsForCorr, m_inputMuonForMuonInJetCorrectionContainerName, m_event, m_store), "");
+  const xAOD::ElectronContainer* electronsForCorr = 0;
+  RETURN_CHECK("EEBalanceAlgorithm::electronInJetCorrection()", 
+	       HelperFunctions::retrieve(electronsForCorr, m_inputElectronForElectronInJetCorrectionContainerName, m_event, m_store), "");
   
   for( auto signalJet : *signalJets ) {
     const TLorentzVector& jetP4 = signalJet->p4();
     
     double minimumDr = 0.4;
-    const xAOD::Muon* closestMuon = 0;
-    for ( auto muon : *muonsForCorr ) {
-      const TLorentzVector& muonP4 = muon->p4();
-      const double dR = jetP4.DeltaR(muonP4);
+    const xAOD::Electron* closestElectron = 0;
+    for ( auto electron : *electronsForCorr ) {
+      const TLorentzVector& electronP4 = electron->p4();
+      const double dR = jetP4.DeltaR(electronP4);
       if (dR<minimumDr) {
 	minimumDr   = dR;
-	closestMuon = muon;
+	closestElectron = electron;
       }
     }
     
-    TLorentzVector muonInJetP4(0, 0, 0, 0);
-    if (closestMuon) {
-      muonInJetP4 = getFourMomentumOfMuonInJet (closestMuon);
+    TLorentzVector electronInJetP4(0, 0, 0, 0);
+    if (closestElectron) {
+      electronInJetP4 = getFourMomentumOfElectronInJet (closestElectron);
     }
     
-    const TLorentzVector correctedJetP4 = (jetP4+muonInJetP4);
+    const TLorentzVector correctedJetP4 = (jetP4+electronInJetP4);
     
     signalJet->auxdecor< float >("mucorrected_pt")  = correctedJetP4.Pt();
     signalJet->auxdecor< float >("mucorrected_phi") = correctedJetP4.Phi();
@@ -569,14 +569,14 @@ EL::StatusCode EEBalanceAlgorithm :: muonInJetCorrection (const xAOD::JetContain
 }
 
 //===============================
-TLorentzVector EEBalanceAlgorithm :: getFourMomentumOfMuonInJet (const xAOD::Muon* muon)  
+TLorentzVector EEBalanceAlgorithm :: getFourMomentumOfElectronInJet (const xAOD::Electron* electron)  
 {
   float eLoss=0.0;
-  muon->parameter(eLoss,xAOD::Muon::EnergyLoss);
-  const TLorentzVector& muonP4 = muon->p4();
+  electron->parameter(eLoss,xAOD::Electron::EnergyLoss);
+  const TLorentzVector& electronP4 = electron->p4();
   
-  const double theta=muonP4.Theta();
-  const double phi  =muonP4.Phi();
+  const double theta=electronP4.Theta();
+  const double phi  =electronP4.Phi();
   
   const double eLossX=eLoss*sin(theta)*cos(phi);
   const double eLossY=eLoss*sin(theta)*sin(phi);
@@ -584,5 +584,5 @@ TLorentzVector EEBalanceAlgorithm :: getFourMomentumOfMuonInJet (const xAOD::Muo
   
   const TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
   
-  return muonP4-eLossP4;
+  return electronP4-eLossP4;
 }
