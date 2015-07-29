@@ -1,5 +1,5 @@
 #include <ZJetBalance/ProcessZJetBalanceMiniTree.h>
-
+#include <ZJetBalance/EEBalanceAlgorithm.h>
 #include <ZJetBalance/BalanceAlgorithm.h>
 #include <ZJetBalance/MiniTree.h>
 
