@@ -24,8 +24,6 @@
 
 #include <sstream>
 
-static float GeV = 1000.;
-
 class EEBalanceAlgorithm : public xAH::Algorithm
 {
   // put your configuration variables here as public variables.
