@@ -571,18 +571,20 @@ EL::StatusCode EEBalanceAlgorithm :: electronInJetCorrection (const xAOD::JetCon
 //===============================
 TLorentzVector EEBalanceAlgorithm :: getFourMomentumOfElectronInJet (const xAOD::Electron* electron)  
 {
-  float eLoss=0.0;
-  electron->parameter(eLoss,xAOD::Electron::EnergyLoss);
-  const TLorentzVector& electronP4 = electron->p4();
+  // float eLoss=0.0;
+  // // electron->parameter(eLoss,xAOD::Electron::EnergyLoss);
+  // const TLorentzVector& electronP4 = electron->p4();
   
-  const double theta=electronP4.Theta();
-  const double phi  =electronP4.Phi();
+	return TLorentzVector();
+
+  // const double theta=electronP4.Theta();
+  // const double phi  =electronP4.Phi();
   
-  const double eLossX=eLoss*sin(theta)*cos(phi);
-  const double eLossY=eLoss*sin(theta)*sin(phi);
-  const double eLossZ=eLoss*cos(theta);
+  // const double eLossX=eLoss*sin(theta)*cos(phi);
+  // const double eLossY=eLoss*sin(theta)*sin(phi);
+  // const double eLossZ=eLoss*cos(theta);
   
-  const TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
+  // const TLorentzVector eLossP4(eLossX,eLossY,eLossZ,eLoss);  
   
-  return electronP4-eLossP4;
+  // return electronP4-eLossP4;
 }
