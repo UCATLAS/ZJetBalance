@@ -64,6 +64,7 @@ class EEBalanceAlgorithm : public xAH::Algorithm
     int m_mcChannelNumber; //!
     std::stringstream m_ss; //!
 
+    const float GeV = 1000.;
     std::string m_treeStream;
     void passCut();
     TLorentzVector getFourMomentumOfElectronInJet(const xAOD::Electron* electron);
