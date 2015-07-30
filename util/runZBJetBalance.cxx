@@ -53,7 +53,7 @@ int main( int argc, char* argv[] ) {
   float systVal = 0;
 
   // True -> use Muons; False -> Use Electrons
-  bool useMuons = false;
+  bool useMuons = true;
 
   /////////// Retrieve arguments //////////////////////////
   std::vector< std::string> options;
@@ -219,20 +219,19 @@ int main( int argc, char* argv[] ) {
           }
         }
       }
-
     }else{ //It is a single root file to run on
-    //Get full path of file
-    char fullPath[300];
-    realpath( samplePath.c_str(), fullPath );
-    string thisPath = fullPath;
-    //split into fileName and directory two levels above file
-    string fileName = thisPath.substr(thisPath.find_last_of("/")+1);
-    thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
-    thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
+      //Get full path of file
+      char fullPath[300];
+      realpath( samplePath.c_str(), fullPath );
+      string thisPath = fullPath;
+      //split into fileName and directory two levels above file
+      string fileName = thisPath.substr(thisPath.find_last_of("/")+1);
+      thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
+      thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
 
-    std::cout << "path and file " << thisPath << " and " << fileName << std::endl;
-    SH::DiskListLocal list (thisPath);
-    SH::scanDir (sh, list, fileName); // specifying one particular file for testing
+      std::cout << "path and file " << thisPath << " and " << fileName << std::endl;
+      SH::DiskListLocal list (thisPath);
+      SH::scanDir (sh, list, fileName); // specifying one particular file for testing
 
     }
   }//it's a file
@@ -259,6 +258,9 @@ int main( int argc, char* argv[] ) {
   // Create an EventLoop job:
   EL::Job job;
   job.sampleHandler( sh );
+
+  // For debugging purposes, limit the amount of events that we loop over.
+  job.options()->setDouble (EL::Job::optMaxEvents, 5000);
 
   // To automatically delete submitDir
   job.options()->setDouble(EL::Job::optRemoveSubmitDir, 1);
