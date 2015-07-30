@@ -53,7 +53,7 @@ int main( int argc, char* argv[] ) {
   float systVal = 0;
 
   // True -> use Muons; False -> Use Electrons
-  bool useMuons = true;
+  bool useMuons = false;
 
   /////////// Retrieve arguments //////////////////////////
   std::vector< std::string> options;
@@ -179,7 +179,7 @@ int main( int argc, char* argv[] ) {
 
   } else {  //if it is a file
     if( samplePath.substr( samplePath.size()-4 ).find(".txt") != std::string::npos){ //It is a text file of samples
-      if( samplePath.find("grid") != std::string::npos ) //It is samples for the grid
+      if( samplePath.find("grid") != string::npos || samplePath.find("Grid") != string::npos || samplePath.find("GRID") != string::npos ) //It is samples for the grid
         f_grid = true;
 
       std::ifstream inFile( samplePath );
