@@ -5,7 +5,6 @@
 
 #include "xAODTracking/VertexContainer.h"
 #include "xAODJet/JetContainer.h"
-
 #include "xAODEgamma/ElectronContainer.h"
 #include "xAODEventInfo/EventInfo.h"
 #include <ZJetBalance/EEBalanceAlgorithm.h>
@@ -101,7 +100,7 @@ EL::StatusCode EEBalanceAlgorithm :: setupJob (EL::Job& job)
   // job, which may or may not be of value to you.
   job.useXAOD();
   xAOD::Init( "EEBalanceAlgorithm" ).ignore(); // call before opening first file
-
+  
   EL::OutputStream outForTree( m_treeStream );
   job.outputAdd (outForTree);
   return EL::StatusCode::SUCCESS;
