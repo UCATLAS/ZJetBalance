@@ -10,6 +10,7 @@
 #pragma link off all functions;
 #pragma link C++ nestedclass;
 
+#pragma link C++ class EEBalanceAlgorithm+;
 #pragma link C++ class BalanceAlgorithm+;
 #pragma link C++ class MiniTree+;
 
