@@ -546,8 +546,8 @@ EL::StatusCode EEBalanceAlgorithm :: electronInJetCorrection (const xAOD::JetCon
       const TLorentzVector& electronP4 = electron->p4();
       const double dR = jetP4.DeltaR(electronP4);
       if (dR<minimumDr) {
-	minimumDr   = dR;
-	closestElectron = electron;
+        minimumDr   = dR;
+        closestElectron = electron;
       }
     }
     
@@ -574,7 +574,7 @@ TLorentzVector EEBalanceAlgorithm :: getFourMomentumOfElectronInJet (const xAOD:
   // // electron->parameter(eLoss,xAOD::Electron::EnergyLoss);
   // const TLorentzVector& electronP4 = electron->p4();
   
-	return TLorentzVector();
+	return (TLorentzVector)electron->p4();
 
   // const double theta=electronP4.Theta();
   // const double phi  =electronP4.Phi();
