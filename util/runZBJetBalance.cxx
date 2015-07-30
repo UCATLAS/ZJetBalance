@@ -8,15 +8,27 @@
 #include "SampleHandler/DiskListEOS.h"
 #include <TSystem.h>
 
+// xAH Event Selection
 #include "xAODAnaHelpers/BasicEventSelection.h"
+
+// xAH Muons
 #include "xAODAnaHelpers/MuonCalibrator.h"
 #include "xAODAnaHelpers/MuonSelector.h"
 #include "xAODAnaHelpers/MuonEfficiencyCorrector.h"
+
+// xAH Electrons
+#include "xAODAnaHelpers/ElectronCalibrator.h"
+#include "xAODAnaHelpers/ElectronSelector.h"
+#include "xAODAnaHelpers/ElectronEfficiencyCorrector.h"
+
+// xAH Jets
 #include "xAODAnaHelpers/JetCalibrator.h"
 #include "xAODAnaHelpers/JetSelector.h"
 #include "xAODAnaHelpers/BJetEfficiencyCorrector.h"
 
+// Our Balancing Algorithm
 #include "ZJetBalance/BalanceAlgorithm.h"
+#include "ZJetBalance/EEBalanceAlgorithm.h"
 
 #include <string>
 #include <sys/stat.h>
@@ -39,6 +51,9 @@ int main( int argc, char* argv[] ) {
 
   std::string systName = "None";
   float systVal = 0;
+
+  // True -> use Muons; False -> Use Electrons
+  bool useMuons = false;
 
   /////////// Retrieve arguments //////////////////////////
   std::vector< std::string> options;
@@ -259,18 +274,18 @@ int main( int argc, char* argv[] ) {
   BasicEventSelection* baseEventSel = new BasicEventSelection();
   baseEventSel->setName("baseEventSel")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/baseEvent.config" );
 
+  // Declare all lepton operations first, initialization comes later. Slightly inconsistent with other algos, but saves system resources.
   /// MUONS ///
-  MuonCalibrator* muonCalib = new MuonCalibrator();
-  muonCalib->setName( "muonCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCalib.config")->setSyst( systName, systVal );
-
-  MuonSelector* muonSelect = new MuonSelector();
-  muonSelect->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelect.config");
-
-  MuonSelector* muonSelectForMuonInJetCorrection = new MuonSelector();
-  muonSelectForMuonInJetCorrection->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelectForMuonInJetCorrection.config");
-
-  MuonEfficiencyCorrector* muonCorrect = new MuonEfficiencyCorrector();
-  muonCorrect->setName( "muonCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCorrect.config");
+  MuonCalibrator* muonCalib;
+  MuonSelector* muonSelect;
+  MuonSelector* muonSelectForMuonInJetCorrection;
+  MuonEfficiencyCorrector* muonCorrect;
+  
+  /// ELECTRONS ///
+  ElectronCalibrator* electronCalib;
+  ElectronSelector* electronSelect;
+  ElectronSelector* electronSelectForElectronInJetCorrection;
+  ElectronEfficiencyCorrector* electronCorrect;
 
   /// JETS ///
   // jet calibrator
@@ -293,10 +308,43 @@ int main( int argc, char* argv[] ) {
   
   BJetEfficiencyCorrector* bjetCorrectFlt70 = new BJetEfficiencyCorrector();
   bjetCorrectFlt70->setName( "bjetCorrectFlt70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFlt70.config" );
+  // Declare both analyses. Again, initialization comes later.
+  BalanceAlgorithm* balAlg; 
+  EEBalanceAlgorithm* eebalAlg;
 
-  // zjet algo
-  BalanceAlgorithm* balAlg = new BalanceAlgorithm();
-  balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
+  // Lepton choice switch. Initialize algorithms depending on which lepton we want to use.
+  if ( useMuons ){ // If useMuons is true, use muons for Z->mumu
+    muonCalib = new MuonCalibrator();
+    muonCalib->setName( "muonCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCalib.config")->setSyst( systName, systVal );
+
+    muonSelect = new MuonSelector();
+    muonSelect->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelect.config");
+
+    muonSelectForMuonInJetCorrection = new MuonSelector();
+    muonSelectForMuonInJetCorrection->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelectForMuonInJetCorrection.config");
+
+    muonCorrect = new MuonEfficiencyCorrector();
+    muonCorrect->setName( "muonCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCorrect.config");
+    
+    balAlg = new BalanceAlgorithm();
+    balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
+  } else{ // Else, use electros for Z->ee
+    electronCalib = new ElectronCalibrator();
+    electronCalib->setName( "electronCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCalib.config")->setSyst( systName, systVal );
+
+    electronSelect = new ElectronSelector();
+    electronSelect->setName( "electronSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronSelect.config");
+
+    electronSelectForElectronInJetCorrection = new ElectronSelector();
+    electronSelectForElectronInJetCorrection->setName( "electronSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronSelectForElectronInJetCorrection.config");
+
+    electronCorrect = new ElectronEfficiencyCorrector();
+    electronCorrect->setName( "electronCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCorrect.config");
+
+    eebalAlg = new EEBalanceAlgorithm();
+    eebalAlg->setName("ZeeJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zeejetAlgo.config" );
+  }
+
 
 //  muonCalib->m_debug    = true;
 //  muonSelect->m_debug   = true;
@@ -307,14 +355,19 @@ int main( int argc, char* argv[] ) {
 
   // ADD ALGOS TO JOB
   job.algsAdd( baseEventSel );
-  job.algsAdd( muonCalib    );
+
+  if( useMuons ){
+    job.algsAdd( muonCalib    );
+    job.algsAdd( muonSelect   );
+    job.algsAdd( muonSelectForMuonInJetCorrection   );
+    //job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
+  } else{
+    job.algsAdd ( electronCalib );
+    job.algsAdd ( electronSelect );
+    job.algsAdd ( electronSelectForElectronInJetCorrection );
+  }
+
   job.algsAdd( jetCalib     );
-  //job.algsAdd( overlap      );
-  // muon selection
-  job.algsAdd( muonSelect   );
-  job.algsAdd( muonSelectForMuonInJetCorrection   );
-  job.algsAdd( muonCorrect  );
-  // jet selection
   job.algsAdd( jetSelect    );
   job.algsAdd( bjetCorrectFix60 );
   job.algsAdd( bjetCorrectFix70 );
@@ -322,6 +375,11 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFix85 );
   job.algsAdd( bjetCorrectFlt70 );
   job.algsAdd( balAlg       );
+
+  if( useMuons )
+    job.algsAdd( balAlg );
+  else
+    job.algsAdd( eebalAlg );
 
   if(f_grid){
     EL::PrunDriver driver;
