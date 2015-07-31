@@ -56,6 +56,9 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1D* m_h_pt_binning_info; //!
   TH1D* m_h_eta_binning_info; //!
   TH1D* m_h_prwfactor; //!
+  TH1D* m_h_muonTrigFactor; //!
+  TH1D* m_h_muon1EffFactor; //!
+  TH1D* m_h_muon2EffFactor; //!
   TH1D* m_h_njets_beforecut; //!
   TH1D* m_h_jet_eta_beforecut; //!
   TH1D* m_h_jet_pt_beforecut; //!
@@ -138,6 +141,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Float_t         weight; //!
   Float_t         weight_xs; //!
   Float_t         weight_prescale; //!
+  std::vector<double>  *weight_muon_trig; //!
   Int_t           njets; //!
   std::vector<float>   *jet_E; //!
   std::vector<float>   *jet_pt; //!
@@ -193,6 +197,11 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_mucorrected_eta; //!
   std::vector<float>   *jet_mucorrected_phi; //!
   std::vector<float>   *jet_mucorrected_m; //!
+  std::vector<float>   *muon_pt; //!
+  std::vector<float>   *muon_eta; //!
+  std::vector<float>   *muon_phi; //!
+  std::vector<float>   *muon_m; //!
+  std::vector< std::vector<double> >  *muon_effSF; //!
   Int_t           nmuon; //!
 
   // List of branches
@@ -229,6 +238,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_weight;   //!
   TBranch        *b_weight_xs;   //!
   TBranch        *b_weight_prescale;   //!
+  TBranch        *b_weight_muon_trig;   //!
   TBranch        *b_njets;   //!
   TBranch        *b_jet_E;   //!
   TBranch        *b_jet_pt;   //!
@@ -285,6 +295,11 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_mucorrected_phi;   //!
   TBranch        *b_jet_mucorrected_m;   //!
   TBranch        *b_nmuon;   //!
+  TBranch        *b_muon_pt;   //!
+  TBranch        *b_muon_eta;   //!
+  TBranch        *b_muon_phi;   //!
+  TBranch        *b_muon_m;   //!
+  TBranch        *b_muon_effSF;   //!
 
 
 };

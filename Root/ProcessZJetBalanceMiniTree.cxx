@@ -106,6 +106,9 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   m_h_nJets = new TH1D("h_nJets", "", 10, -0.5, 9.5); // validation purpose
   m_h_Z_jet_dPhi = new TH1D("h_Z_jet_dPhi", "", 100, -TMath::Pi(), TMath::Pi());
   m_h_prwfactor  = new TH1D("h_prwfactor", "", 100, 0, 3.0);
+  m_h_muonTrigFactor =  new TH1D("h_muonTrigFactor", "", 100, 0.0, 2.0);
+  m_h_muon1EffFactor =  new TH1D("h_muon1EffFactor", "", 100, 0.0, 2.0);
+  m_h_muon2EffFactor =  new TH1D("h_muon2EffFactor", "", 100, 0.0, 2.0);
   m_h_njets_beforecut   = new TH1D("h_njets_beforecut", "", 7, 0.5, 7.5);
   m_h_jet_eta_beforecut = new TH1D("h_jet_eta_beforecut", "", 32, -3.2, 3.2);
   m_h_jet_pt_beforecut  = new TH1D("h_jet_pt_beforecut", "", 30, 0, 300);
@@ -116,6 +119,9 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   wk()->addOutput( m_h_nJets );
   wk()->addOutput( m_h_Z_jet_dPhi );
   wk()->addOutput( m_h_prwfactor );
+  wk()->addOutput( m_h_muonTrigFactor );
+  wk()->addOutput( m_h_muon1EffFactor );
+  wk()->addOutput( m_h_muon2EffFactor );
   wk()->addOutput( m_h_njets_beforecut );
   wk()->addOutput( m_h_jet_eta_beforecut );
   wk()->addOutput( m_h_jet_pt_beforecut );    
@@ -302,6 +308,13 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     m_h_prwfactor->Fill(pileup_reweighting_factor);
     weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
+    // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
+    m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
+    weight_final *= weight_muon_trig->at(0);
+    // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
+    m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
+    m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
+    weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
     
     // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e",
     // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final);
@@ -478,6 +491,7 @@ std::pair<TH1F*, TH1F*> ProcessZJetBalanceMiniTree::ReturnCutflowPointers()
 void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
 {
   // Set object pointer
+  weight_muon_trig = 0;
   jet_E = 0;
   jet_pt = 0;
   jet_phi = 0;
@@ -532,6 +546,11 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   jet_mucorrected_eta = 0;
   jet_mucorrected_phi = 0;
   jet_mucorrected_m = 0;
+  muon_pt = 0;
+  muon_eta = 0;
+  muon_phi = 0;
+  muon_m = 0;
+  muon_effSF = 0;
    
   tree->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
   tree->SetBranchAddress("eventNumber", &eventNumber, &b_eventNumber);
@@ -566,6 +585,7 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("weight", &weight, &b_weight);
   tree->SetBranchAddress("weight_xs", &weight_xs, &b_weight_xs);
   tree->SetBranchAddress("weight_prescale", &weight_prescale, &b_weight_prescale);
+  tree->SetBranchAddress("weight_muon_trig", &weight_muon_trig, &b_weight_muon_trig);
   tree->SetBranchAddress("njets", &njets, &b_njets);
   tree->SetBranchAddress("jet_E", &jet_E, &b_jet_E);
   tree->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
@@ -622,4 +642,9 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("jet_mucorrected_phi", &jet_mucorrected_phi, &b_jet_mucorrected_phi);
   tree->SetBranchAddress("jet_mucorrected_m", &jet_mucorrected_m, &b_jet_mucorrected_m);
   tree->SetBranchAddress("nmuon", &nmuon, &b_nmuon);
+  tree->SetBranchAddress("muon_pt", &muon_pt, &b_muon_pt);
+  tree->SetBranchAddress("muon_phi", &muon_phi, &b_muon_phi);
+  tree->SetBranchAddress("muon_eta", &muon_eta, &b_muon_eta);
+  tree->SetBranchAddress("muon_m", &muon_m, &b_muon_m);
+  tree->SetBranchAddress("muon_effSF", &muon_effSF, &b_muon_effSF);
 }
