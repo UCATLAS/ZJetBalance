@@ -314,7 +314,7 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( muonCalib    );
   job.algsAdd( muonSelect   );
   job.algsAdd( muonSelectForMuonInJetCorrection   );
-  //job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
+  job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
   job.algsAdd( jetCalib     );
   job.algsAdd( jetSelect    );
   job.algsAdd( bjetCorrectVeryLoose  );
