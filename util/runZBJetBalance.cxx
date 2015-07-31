@@ -200,7 +200,10 @@ int main( int argc, char* argv[] ) {
             namePosition = containerName.find_first_of(".", namePosition)+1;
             std::string outstr = "user."+userName+"."+containerName.substr(startPosition, namePosition)+outputTag+"/";
             outputContainerNames.push_back( outstr );
-          }else{
+          } else if ( containerName.find("root://") != string::npos){
+            SH::readFileList( sh , "sample", samplePath );
+            break;
+          } else{
             //Get full path of file
             char fullPath[300];
             realpath( containerName.c_str(), fullPath );
@@ -260,7 +263,7 @@ int main( int argc, char* argv[] ) {
   job.sampleHandler( sh );
 
   // For debugging purposes, limit the amount of events that we loop over.
-  job.options()->setDouble (EL::Job::optMaxEvents, 5000);
+  // job.options()->setDouble (EL::Job::optMaxEvents, 5000);
 
   // To automatically delete submitDir
   job.options()->setDouble(EL::Job::optRemoveSubmitDir, 1);
