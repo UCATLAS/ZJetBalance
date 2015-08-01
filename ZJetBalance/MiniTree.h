@@ -15,8 +15,10 @@ class MiniTree : public HelpTreeBase
     float m_ZM;
     
     float m_dPhiZJet1;
+    float m_dEtaZJet1;
     float m_pTRef1;
     float m_dPhiZJet2;
+    float m_dEtaZJet2;
     float m_pTRef2;
     float m_jetDPhi;
     float m_jetDEta;
