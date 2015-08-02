@@ -41,8 +41,23 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   double m_ZMassWindow; //! configurable parameter
   bool m_btagJets;      //! configurable parameter
   std::string m_btagOP; //! configurable parameter
+  bool m_fillMuonBefore; //! configurable parameter
   
   CP::PileupReweightingTool* m_pileuptool; //!
+
+  // muons histograms
+  TH1F* m_h_muon1_pT_beforecut; //!
+  TH1F* m_h_muon1_eta_beforecut; //!
+  TH1F* m_h_muon1_phi_beforecut; //!
+  TH1F* m_h_muon2_pT_beforecut; //!
+  TH1F* m_h_muon2_eta_beforecut; //!
+  TH1F* m_h_muon2_phi_beforecut; //!
+  TH1F* m_h_muon1_pT; //!
+  TH1F* m_h_muon1_eta; //!
+  TH1F* m_h_muon1_phi; //!
+  TH1F* m_h_muon2_pT; //!
+  TH1F* m_h_muon2_eta; //!
+  TH1F* m_h_muon2_phi; //!
 
   // histograms
   TH1F* m_h_RunNumber; //!
@@ -102,6 +117,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   
   // these are the functions not inherited from Algorithm
   virtual EL::StatusCode configure ();
+  void SetBTagAddresses(TTree* tree);
 
   // histogram functions
   TH1F* book(std::string name, std::string title,
@@ -204,16 +220,16 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
-  std::vector<int>     *jet_MV2c20_is85;
-  std::vector<std::vector<float> > *jet_MV2c20_SF85;
-  std::vector<int>     *jet_MV2c20_is77;
-  std::vector<std::vector<float> > *jet_MV2c20_SF77;
-  std::vector<int>     *jet_MV2c20_is70;
-  std::vector<std::vector<float> > *jet_MV2c20_SF70;
-  std::vector<int>     *jet_MV2c20_is60;
-  std::vector<std::vector<float> > *jet_MV2c20_SF60;
-  std::vector<int>     *jet_isBTag;
-  std::vector<std::vector<float> > *jet_SFBTag;
+  std::vector<int>     *jet_MV2c20_is85; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF85; //!
+  std::vector<int>     *jet_MV2c20_is77; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF77; //!
+  std::vector<int>     *jet_MV2c20_is70; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF70; //!
+  std::vector<int>     *jet_MV2c20_is60; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF60; //!
+  std::vector<int>     *jet_isBTag; //!
+  std::vector<std::vector<float> > *jet_SFBTag; //!
   std::vector<float>   *jet_GhostArea; //!
   std::vector<float>   *jet_ActiveArea; //!
   std::vector<float>   *jet_VoronoiArea; //!

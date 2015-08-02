@@ -59,6 +59,7 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   m_PRWFileNames             = config->GetValue("PRWFiles", "");
   m_cutDPhiZJet              = config->GetValue("cutDPhiZJet", 2.8);
   m_ZMassWindow              = config->GetValue("ZMassWindow", 15);
+  m_fillMuonBefore           = config->GetValue("FillMuonBefore", false);
   m_btagJets                 = config->GetValue("BTagJets", false);
   m_btagOP                   = config->GetValue("BTagOP", "70"); // 85, 77, 70, 60
 
@@ -67,6 +68,7 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
       std::cout << "Invalid b-tag operating point " << m_btagOP << std::endl;
       return EL::StatusCode::FAILURE;
     }
+    std::cout << "BTagging using the " << m_btagOP << "% operating point" << std::endl;
   }
   
   DecodeBinning(pT_binning_str, m_pT_binning, m_n_pT_binning);
@@ -110,11 +112,17 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   // list of the histograms
   TH1::SetDefaultSumw2();
   m_h_RunNumber = book(m_name, "RunNumber", "Run Number", 1000, 271000.5, 272000.5);
+  m_h_muon1_pT = book(m_name, "muon1_pT", "#mu_{1} p_{T} [GeV]", 120, 0, 120);
+  m_h_muon2_pT = book(m_name, "muon2_pT", "#mu_{2} p_{T} [GeV]", 120, 0, 120);
+  m_h_muon1_eta = book(m_name, "muon1_eta", "#mu_{1} #eta", 60, -3.0, 3.0);
+  m_h_muon2_eta = book(m_name, "muon2_eta", "#mu_{2} #eta", 60, -3.0, 3.0);
+  m_h_muon1_phi = book(m_name, "muon1_phi", "#mu_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
+  m_h_muon2_phi = book(m_name, "muon2_phi", "#mu_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
   // plots of Z itself
   m_h_ZpT   = book(m_name, "ZpT",   "Z p_{T} [GeV]",  120,  0,    240);
-  m_h_Zeta  = book(m_name, "Zeta",  "Z #eta",         120,  -3.0, 3.0);
+  m_h_Zeta  = book(m_name, "Zeta",  "Z #eta",         60,  -3.0, 3.0);
   m_h_Zphi  = book(m_name, "Zphi",  "Z #phi",         64, -TMath::Pi(), TMath::Pi());
-  m_h_ZM    = book(m_name, "ZM",    "m_{Z} [GeV]",    120, 60, 120);
+  m_h_ZM    = book(m_name, "ZM",    "m_{Z} [GeV]",    60, 60, 120);
   // Jet Plots
   // before cuts
   m_h_nJets_beforecut = book(m_name, "nJets_beforecut", "N Jets Before Cuts", 10, -0.5, 9.5);
@@ -140,7 +148,9 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   int xmaxCutflow  = cutflows.first->GetXaxis()->GetXmax();
   
   m_h_cutflow = new TH1F("cutflow", "", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow->SetCanExtend( TH1::kXaxis );
   m_h_cutflow_weighted = new TH1F("cutflow_weighted", "", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow_weighted->SetCanExtend( TH1::kXaxis );
   
   wk()->addOutput( m_h_cutflow );
   wk()->addOutput( m_h_cutflow_weighted );
@@ -175,7 +185,19 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
   // D3PDReader or a similar service this method is not needed.
   
   const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();  
-  // should double check if the bin label is the same?
+  // if first time through - need to set bin labels
+  if ( m_h_cutflow->GetXaxis()->GetBinLabel(1) != cutflows.first->GetXaxis()->GetBinLabel(1) ) {
+    std::cout << "Labels do not agree" << std::endl;
+    for (int iBin=1, nBins=cutflows.first->GetNbinsX(); iBin<=nBins; iBin++) {
+      if( cutflows.first->GetXaxis()->GetBinLabel(iBin) == "" ) { continue; }
+      m_h_cutflow->GetXaxis()->SetBinLabel( iBin, 
+          cutflows.first->GetXaxis()->GetBinLabel(iBin) );
+      m_h_cutflow_weighted->GetXaxis()->SetBinLabel( iBin, 
+          cutflows.first->GetXaxis()->GetBinLabel(iBin) );
+      std::cout << "\t" << cutflows.first->GetXaxis()->GetBinLabel(iBin)  << std::endl;
+    }
+  }
+
   for (int iBin=1, nBins=cutflows.first->GetNbinsX(); iBin<=nBins; iBin++) { // update
     m_h_cutflow->SetBinContent(iBin, m_h_cutflow->GetBinContent(iBin)+cutflows.first->GetBinContent(iBin)); 
   }
@@ -244,6 +266,16 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   wk()->addOutput( m_h_jet_eta );
   wk()->addOutput( m_h_jet_pt );
   wk()->addOutput( m_h_averageInteractionsPerCrossing );
+
+  // before cuts muon plots
+  if( m_fillMuonBefore ) {
+    m_h_muon1_pT_beforecut = book(m_name, "muon1_pT_beforecut", "#mu_{1} p_{T} [GeV]", 120, 0, 120);
+    m_h_muon2_pT_beforecut = book(m_name, "muon2_pT_beforecut", "#mu_{2} p_{T} [GeV]", 120, 0, 120);
+    m_h_muon1_eta_beforecut = book(m_name, "muon1_eta_beforecut", "#mu_{1} #eta", 60, -3.0, 3.0);
+    m_h_muon2_eta_beforecut = book(m_name, "muon2_eta_beforecut", "#mu_{2} #eta", 60, -3.0, 3.0);
+    m_h_muon1_phi_beforecut = book(m_name, "muon1_phi_beforecut", "#mu_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
+    m_h_muon2_phi_beforecut = book(m_name, "muon2_phi_beforecut", "#mu_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+  }
   
   // Pileup RW Tool //
   if ( m_doPUreweighting ) {
@@ -260,10 +292,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
       std::string::size_type pos = tmp_PRWFileNames.find_first_of(',');
       if( pos == std::string::npos){
         pos = tmp_PRWFileNames.size();
-        PRWFiles.push_back(tmp_PRWFileNames.substr(0, pos));
+        PRWFiles.push_back( gSystem->ExpandPathName( (tmp_PRWFileNames.substr(0, pos)).c_str() ) );
         tmp_PRWFileNames.erase(0, pos);
       }else{
-        PRWFiles.push_back(tmp_PRWFileNames.substr(0, pos));
+        PRWFiles.push_back( gSystem->ExpandPathName( (tmp_PRWFileNames.substr(0, pos)).c_str() ) );
         tmp_PRWFileNames.erase(0, pos+1);
       }
     }
@@ -288,9 +320,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
       std::cout << "    " << lumiCalcFiles.at(i) << std::endl;
     }
     
-    RETURN_CHECK("BasicEventSelection::initialize()", m_pileuptool->setProperty("ConfigFiles", PRWFiles), "");
-    RETURN_CHECK("BasicEventSelection::initialize()", m_pileuptool->setProperty("LumiCalcFiles", lumiCalcFiles), "");
-    RETURN_CHECK("BasicEventSelection::initialize()", m_pileuptool->initialize(), "");
+    RETURN_CHECK("ZJetBalance::initialize()", m_pileuptool->setProperty("ConfigFiles", PRWFiles), "");
+    RETURN_CHECK("ZJetBalance::initialize()", m_pileuptool->setProperty("LumiCalcFiles", lumiCalcFiles), "");
+    RETURN_CHECK("ZJetBalance::initialize()", m_pileuptool->initialize(), "");
+    std::cout << "ZJetBalance::initialize() Initialized PileupReweightingTool " << m_pileuptool->name() << std::endl; 
   }  
   
   
@@ -305,11 +338,13 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   // event, e.g. read input variables, apply cuts, and fill
   // histograms and trees.  This is where most of your actual analysis
   // code will go.
-  
+
+
   //===============================
   // load tree
   //===============================
   TTree* tree = wk()->tree();
+  if(m_btagJets) { if(!jet_isBTag || !jet_SFBTag) { this->SetBTagAddresses(tree); } }
   const int jentry = wk()->treeEntry();
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
@@ -332,6 +367,12 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e",
     // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final);
   }
+
+  // use non-weighted to check that the correct number of events was processes
+  // use weighted to see the effect of the weights calculated in xAH
+  static int m_cFlowBin_All = m_h_cutflow->GetXaxis()->FindBin("Process NTuple");
+  m_h_cutflow->Fill( m_cFlowBin_All, 1 );
+  m_h_cutflow_weighted->Fill( m_cFlowBin_All, weight_final );
   
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
@@ -355,6 +396,16 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     m_h_jet_pt_beforecut->Fill(pt, weight_final);
   }
   m_h_nJets_beforecut->Fill(nJetsBeforeCut, weight_final);
+
+  // muon before cut
+  if( m_fillMuonBefore ) {
+    m_h_muon1_pT_beforecut->Fill ( muon_pt ->at(0), weight_final );
+    m_h_muon1_eta_beforecut->Fill( muon_eta->at(0), weight_final );
+    m_h_muon1_phi_beforecut->Fill( muon_phi->at(0), weight_final );
+    m_h_muon2_pT_beforecut->Fill ( muon_pt ->at(1), weight_final );
+    m_h_muon2_eta_beforecut->Fill( muon_eta->at(1), weight_final );
+    m_h_muon2_phi_beforecut->Fill( muon_phi->at(1), weight_final );
+  }
   
   // selection criteria need to be applied
   if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
@@ -378,28 +429,35 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
   
   if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
-//  static int m_cFlowBin_Jet1Eta = m_h_cutflow->GetXaxis()->FindBin("jet_{1} #eta");
-//  m_h_cutflow->Fill( m_cFlowBin_Jet1Eta, 1 );
-//  m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1Eta, weight_final );
+  static int m_cFlowBin_Jet1Eta = m_h_cutflow->GetXaxis()->FindBin("jet_{1} #eta");
+  m_h_cutflow->Fill( m_cFlowBin_Jet1Eta, 1 );
+  m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1Eta, weight_final );
   
   if (jet_pt->size()>1) { if (jet_pt->at(1)>pTRef1*0.2) {return EL::StatusCode::SUCCESS;} } // event with second jet is vetoed
-//  static int m_cFlowBin_Jet2Pt = m_h_cutflow->GetXaxis()->FindBin("jet_{2} p_{T}");
-//  m_h_cutflow->Fill( m_cFlowBin_Jet2Pt, 1 );
-//  m_h_cutflow_weighted->Fill( m_cFlowBin_Jet2Pt, weight_final );
+  static int m_cFlowBin_Jet2Pt = m_h_cutflow->GetXaxis()->FindBin("jet_{2} p_{T}");
+  m_h_cutflow->Fill( m_cFlowBin_Jet2Pt, 1 );
+  m_h_cutflow_weighted->Fill( m_cFlowBin_Jet2Pt, weight_final );
 
-  if(m_btagJets) {
+  if( m_btagJets ) {
     // b-tag if asked for
     if( !jet_isBTag->at(0) ) { return EL::StatusCode::SUCCESS; }
-//    static int m_cFlowBin_Jet1BTag = m_h_cutflow->GetXaxis()->FindBin("jet_{1} b-tagged "+m_btagOP+"% OP");
-//    m_h_cutflow->Fill( m_cFlowBin_Jet1BTag, 1 );
-//    m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1BTag, weight_final );
+    static int m_cFlowBin_Jet1BTag = m_h_cutflow->GetXaxis()->FindBin("jet_{1} b-tagged");
+    m_h_cutflow->Fill( m_cFlowBin_Jet1BTag, 1 );
+    m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1BTag, weight_final );
     // apply b-tagging weight
     weight_final *= jet_SFBTag->at(0)[0]; // other weights are for systematics
-//    static int m_cFlowBin_Jet1BTagWeight = m_h_cutflow->GetXaxis()->FindBin("jet_{1} b-tag SF");
-//    m_h_cutflow->Fill( m_cFlowBin_Jet1BTagWeight, 1 );
-//    m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1BTagWeight, weight_final );
+    static int m_cFlowBin_Jet1BTagWeight = m_h_cutflow->GetXaxis()->FindBin("jet_{1} b-tag SF");
+    m_h_cutflow->Fill( m_cFlowBin_Jet1BTagWeight, 1 );
+    m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1BTagWeight, weight_final );
   }
 
+  // muon plots
+  m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
+  m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
+  m_h_muon1_phi->Fill( muon_phi->at(0), weight_final );
+  m_h_muon2_pT->Fill ( muon_pt ->at(1), weight_final );
+  m_h_muon2_eta->Fill( muon_eta->at(1), weight_final );
+  m_h_muon2_phi->Fill( muon_phi->at(1), weight_final );
   // plots of Z itself
   m_h_ZpT->Fill(ZpT, weight_final);
   m_h_Zeta->Fill(Zeta, weight_final);
@@ -441,6 +499,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: finalize ()
   // submission node after all your histogram outputs have been
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
+  std::cout << "Finialize!" << std::endl;
   
   return EL::StatusCode::SUCCESS;
 }
@@ -684,12 +743,7 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("jet_MV2c20_SF70", &jet_MV2c20_SF70, &b_jet_MV2c20_SF70);
   tree->SetBranchAddress("jet_MV2c20_is60", &jet_MV2c20_is60, &b_jet_MV2c20_is60);
   tree->SetBranchAddress("jet_MV2c20_SF60", &jet_MV2c20_SF60, &b_jet_MV2c20_SF60);
-  if(m_btagJets) {
-    std::string btagAddress("jet_MV2c20_is"+m_btagOP);
-    std::string btagSFAddress("jet_MV2c20_SF"+m_btagOP);
-    tree->SetBranchAddress(btagAddress.c_str(),   &jet_isBTag, &b_jet_isBTag);
-    tree->SetBranchAddress(btagSFAddress.c_str(), &jet_SFBTag, &b_jet_SFBTag);
-  }
+  if(m_btagJets && !m_btagOP.empty() ) { this->SetBTagAddresses(tree); }
   tree->SetBranchAddress("jet_GhostArea", &jet_GhostArea, &b_jet_GhostArea);
   tree->SetBranchAddress("jet_ActiveArea", &jet_ActiveArea, &b_jet_ActiveArea);
   tree->SetBranchAddress("jet_VoronoiArea", &jet_VoronoiArea, &b_jet_VoronoiArea);
@@ -720,6 +774,21 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("muon_eta", &muon_eta, &b_muon_eta);
   tree->SetBranchAddress("muon_m", &muon_m, &b_muon_m);
   tree->SetBranchAddress("muon_effSF", &muon_effSF, &b_muon_effSF);
+}
+
+void ProcessZJetBalanceMiniTree :: SetBTagAddresses(TTree* tree)
+{
+  if(!m_btagJets) { return; }
+  std::string btagAddress("jet_MV2c20_is"+m_btagOP);
+  std::string btagSFAddress("jet_MV2c20_SF"+m_btagOP);
+  tree->SetBranchAddress(btagAddress.c_str(),   &jet_isBTag, &b_jet_isBTag);
+  tree->SetBranchAddress(btagSFAddress.c_str(), &jet_SFBTag, &b_jet_SFBTag);
+  if( !(jet_isBTag && jet_SFBTag) ) {
+    std::cout << "CANNOT Set B-Tagging Branches : " << std::endl;
+    std::cout << "\t" << btagAddress.c_str() << std::endl;
+    std::cout << "\t" << btagSFAddress.c_str() << std::endl;
+  }
+  // FIXME - induce an exit
 }
 
 TH1F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
