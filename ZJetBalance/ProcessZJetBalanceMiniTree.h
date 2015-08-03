@@ -10,9 +10,8 @@
 #include "PileupReweighting/PileupReweightingTool.h"
 
 // ROOT include(s):
-#include <TH1D.h>
 #include <TH1F.h>
-#include <TH2D.h>
+#include <TH2F.h>
 #include <TLorentzVector.h>
 #include <TBranch.h>
 
@@ -40,25 +39,49 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::string m_PRWFileNames; //! configurable parameter
   double m_cutDPhiZJet; //! configurable parameter
   double m_ZMassWindow; //! configurable parameter
+  bool m_btagJets;      //! configurable parameter
+  std::string m_btagOP; //! configurable parameter
+  bool m_fillMuonBefore; //! configurable parameter
   
   CP::PileupReweightingTool* m_pileuptool; //!
 
+  // muons histograms
+  TH1F* m_h_muon1_pT_beforecut; //!
+  TH1F* m_h_muon1_eta_beforecut; //!
+  TH1F* m_h_muon1_phi_beforecut; //!
+  TH1F* m_h_muon2_pT_beforecut; //!
+  TH1F* m_h_muon2_eta_beforecut; //!
+  TH1F* m_h_muon2_phi_beforecut; //!
+  TH1F* m_h_muon1_pT; //!
+  TH1F* m_h_muon1_eta; //!
+  TH1F* m_h_muon1_phi; //!
+  TH1F* m_h_muon2_pT; //!
+  TH1F* m_h_muon2_eta; //!
+  TH1F* m_h_muon2_phi; //!
+
   // histograms
-  TH1D* m_h_RunNumber; //!
-  TH1D* m_h_ZpT; //!
-  TH1D* m_h_ZM; //!
-  TH1D* m_h_Z_jet_dPhi; //!
-  TH1D* m_h_nJets; //!
-  TH1D* m_h_jet_eta; //!
-  TH1D* m_h_jet_pt; //!
-  TH1D* m_h_averageInteractionsPerCrossing; //!
-  TH2D* m_h_jet_pt_bin; //!
-  TH1D* m_h_pt_binning_info; //!
-  TH1D* m_h_eta_binning_info; //!
-  TH1D* m_h_prwfactor; //!
-  TH1D* m_h_njets_beforecut; //!
-  TH1D* m_h_jet_eta_beforecut; //!
-  TH1D* m_h_jet_pt_beforecut; //!
+  TH1F* m_h_RunNumber; //!
+  TH1F* m_h_ZpT; //!
+  TH1F* m_h_Zeta; //!
+  TH1F* m_h_Zphi; //!
+  TH1F* m_h_ZM; //!
+  TH1F* m_h_Z_jet_dPhi; //!
+  TH1F* m_h_Z_jet_dEta; //!
+  TH1F* m_h_nJets; //!
+  TH1F* m_h_jet_eta; //!
+  TH1F* m_h_jet_pt; //!
+  TH1F* m_h_jet_phi; //!
+  TH1F* m_h_averageInteractionsPerCrossing; //!
+  TH2F* m_h_jet_pt_bin; //!
+  TH1F* m_h_pt_binning_info; //!
+  TH1F* m_h_eta_binning_info; //!
+  TH1F* m_h_prwfactor; //!
+  TH1F* m_h_muonTrigFactor; //!
+  TH1F* m_h_muon1EffFactor; //!
+  TH1F* m_h_muon2EffFactor; //!
+  TH1F* m_h_nJets_beforecut; //!
+  TH1F* m_h_jet_eta_beforecut; //!
+  TH1F* m_h_jet_pt_beforecut; //!
   TH1F* m_h_cutflow; //!
   TH1F* m_h_cutflow_weighted; //!
   
@@ -67,6 +90,8 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Int_t           m_n_pT_binning; //!
   Double_t*       m_eta_binning; //!
   Int_t           m_n_eta_binning; //!
+
+  std::vector< TH1* > m_allHists; //!
   
  public:
   static void DecodeBinning(TString binning_str, Double_t* binning_array, Int_t& n_binning);
@@ -74,10 +99,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   int GetEtaBin(const double& _eta);
   double GetPileupReweightingFactor();
   std::pair<TH1F*, TH1F*> ReturnCutflowPointers();
-  std::vector< std::vector<TH1D*> > m_balance_hists;
-  
-  // Tree *myTree; //!
-  // TH1 *myHist; //!
+  std::vector< std::vector<TH1F*> > m_balance_hists;
   
   // this is a standard constructor
   ProcessZJetBalanceMiniTree ();
@@ -95,7 +117,33 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   
   // these are the functions not inherited from Algorithm
   virtual EL::StatusCode configure ();
-  
+  void SetBTagAddresses(TTree* tree);
+
+  // histogram functions
+  TH1F* book(std::string name, std::string title,
+      std::string xlabel, int xbins, double xlow, double xhigh);
+
+  TH2F* book(std::string name, std::string title,
+      std::string xlabel, int xbins, double xlow, double xhigh,
+      std::string xyabel, int ybins, double ylow, double yhigh);
+  //// Variable Binned Histograms ////
+  TH1F* book(std::string name, std::string title,
+      std::string xlabel, int xbins, const Double_t* xbinsArr);
+
+  TH2F* book(std::string name, std::string title,
+      std::string xlabel, int xbins, const Double_t* xbinsArr,
+      std::string ylabel, int ybins, double ylow, double yhigh);
+  TH2F* book(std::string name, std::string title,
+      std::string xyabel, int xbins, double xlow, double xhigh,
+      std::string ylabel, int ybins, const Double_t* ybinsArr);
+  TH2F* book(std::string name, std::string title,
+      std::string xyabel, int xbins, const Double_t* xbinsArr,
+      std::string ylabel, int ybins, const Double_t* ybinsArr);
+
+  // Record all histograms from m_allHists to the worker
+  void record(EL::Worker* wk);
+
+
   // this is needed to distribute the algorithm to the workers
   ClassDef(ProcessZJetBalanceMiniTree, 1);
 
@@ -129,8 +177,10 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Float_t         Zphi; //!
   Float_t         ZM; //!
   Float_t         dPhiZJet1; //!
+  Float_t         dEtaZJet1; //!
   Float_t         pTRef1; //!
   Float_t         dPhiZJet2; //!
+  Float_t         dEtaZJet2; //!
   Float_t         pTRef2; //!
   Float_t         jetDPhi; //!
   Float_t         jetDEta; //!
@@ -138,6 +188,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Float_t         weight; //!
   Float_t         weight_xs; //!
   Float_t         weight_prescale; //!
+  std::vector<double>  *weight_muon_trig; //!
   Int_t           njets; //!
   std::vector<float>   *jet_E; //!
   std::vector<float>   *jet_pt; //!
@@ -169,6 +220,16 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
+  std::vector<int>     *jet_MV2c20_is85; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF85; //!
+  std::vector<int>     *jet_MV2c20_is77; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF77; //!
+  std::vector<int>     *jet_MV2c20_is70; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF70; //!
+  std::vector<int>     *jet_MV2c20_is60; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SF60; //!
+  std::vector<int>     *jet_isBTag; //!
+  std::vector<std::vector<float> > *jet_SFBTag; //!
   std::vector<float>   *jet_GhostArea; //!
   std::vector<float>   *jet_ActiveArea; //!
   std::vector<float>   *jet_VoronoiArea; //!
@@ -193,6 +254,11 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_mucorrected_eta; //!
   std::vector<float>   *jet_mucorrected_phi; //!
   std::vector<float>   *jet_mucorrected_m; //!
+  std::vector<float>   *muon_pt; //!
+  std::vector<float>   *muon_eta; //!
+  std::vector<float>   *muon_phi; //!
+  std::vector<float>   *muon_m; //!
+  std::vector< std::vector<double> >  *muon_effSF; //!
   Int_t           nmuon; //!
 
   // List of branches
@@ -220,8 +286,10 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_Zphi;   //!
   TBranch        *b_ZM;   //!
   TBranch        *b_dPhiZJet1;   //!
+  TBranch        *b_dEtaZJet1;   //!
   TBranch        *b_pTRef1;   //!
   TBranch        *b_dPhiZJet2;   //!
+  TBranch        *b_dEtaZJet2;   //!
   TBranch        *b_pTRef2;   //!
   TBranch        *b_jetDPhi;   //!
   TBranch        *b_jetDEta;   //!
@@ -229,6 +297,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_weight;   //!
   TBranch        *b_weight_xs;   //!
   TBranch        *b_weight_prescale;   //!
+  TBranch        *b_weight_muon_trig;   //!
   TBranch        *b_njets;   //!
   TBranch        *b_jet_E;   //!
   TBranch        *b_jet_pt;   //!
@@ -260,6 +329,16 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_MV1;   //!
   TBranch        *b_jet_MV2c00;   //!
   TBranch        *b_jet_MV2c20;   //!
+  TBranch        *b_jet_MV2c20_is85;   //!
+  TBranch        *b_jet_MV2c20_SF85;   //!
+  TBranch        *b_jet_MV2c20_is77;   //!
+  TBranch        *b_jet_MV2c20_SF77;   //!
+  TBranch        *b_jet_MV2c20_is70;   //!
+  TBranch        *b_jet_MV2c20_SF70;   //!
+  TBranch        *b_jet_MV2c20_is60;   //!
+  TBranch        *b_jet_MV2c20_SF60;   //!
+  TBranch        *b_jet_isBTag;   //!
+  TBranch        *b_jet_SFBTag;   //!
   TBranch        *b_jet_GhostArea;   //!
   TBranch        *b_jet_ActiveArea;   //!
   TBranch        *b_jet_VoronoiArea;   //!
@@ -285,7 +364,22 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_mucorrected_phi;   //!
   TBranch        *b_jet_mucorrected_m;   //!
   TBranch        *b_nmuon;   //!
+  TBranch        *b_muon_pt;   //!
+  TBranch        *b_muon_eta;   //!
+  TBranch        *b_muon_phi;   //!
+  TBranch        *b_muon_m;   //!
+  TBranch        *b_muon_effSF;   //!
 
+  // Turn on Sumw2 for the histogram
+  void Sumw2(TH1* hist, bool flag=true);
+
+  // Push the new histogram to m_allHists
+  void record(TH1* hist);
+
+  // Set the xlabel
+  void SetLabel(TH1* hist, std::string xlabel);
+  // Set the xlabel, ylabel
+  void SetLabel(TH1* hist, std::string xlabel, std::string ylabel);
 
 };
 

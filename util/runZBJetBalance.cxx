@@ -312,10 +312,13 @@ int main( int argc, char* argv[] ) {
   // ADD ALGOS TO JOB
   job.algsAdd( baseEventSel );
   job.algsAdd( muonCalib    );
+  job.algsAdd( jetCalib     );
+  //job.algsAdd( overlap      );
+  // muon selection
   job.algsAdd( muonSelect   );
   job.algsAdd( muonSelectForMuonInJetCorrection   );
-  //job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
-  job.algsAdd( jetCalib     );
+  job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
+  // jet selection
   job.algsAdd( jetSelect    );
   job.algsAdd( bjetCorrectVeryLoose  );
   job.algsAdd( bjetCorrectLoose      );

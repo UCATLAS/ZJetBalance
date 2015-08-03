@@ -371,9 +371,11 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   eventInfo->auxdecor< float >( "Zphi" ) = Z.Phi();
   eventInfo->auxdecor< float >( "ZM" )   = Z.M() / GeV;
   eventInfo->auxdecor< float >( "dPhiZJet1" ) = Z.DeltaPhi( signalJets->at(0)->p4() );
+  eventInfo->auxdecor< float >( "dEtaZJet1" ) = Z.Eta() - signalJets->at(0)->eta();
   eventInfo->auxdecor< float >( "pTRef1" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(0)->p4() ) )) / GeV;
   if( signalJets->size() > 1 ){ 
     eventInfo->auxdecor< float >( "dPhiZJet2" ) = Z.DeltaPhi( signalJets->at(1)->p4() );
+    eventInfo->auxdecor< float >( "dEtaZJet2" ) = Z.Eta() - signalJets->at(1)->eta();
     eventInfo->auxdecor< float >( "pTRef2" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(1)->p4() ) )) / GeV; 
     eventInfo->auxdecor< float >( "jetDPhi" ) = signalJets->at(0)->p4().DeltaPhi( signalJets->at(1)->p4() );
     eventInfo->auxdecor< float >( "jetDEta" ) = signalJets->at(0)->eta() - signalJets->at(1)->eta();
