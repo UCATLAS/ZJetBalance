@@ -113,6 +113,12 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   m_h_nbjets_beforecut   = new TH1D("h_nbjets_beforecut", "", 7, -0.5, 6.5);
   m_h_bjet_eta_beforecut = new TH1D("h_bjet_eta_beforecut", "", 32, -3.2, 3.2);
   m_h_bjet_pt_beforecut  = new TH1D("h_bjet_pt_beforecut", "", 30, 0, 300);
+  m_h_bjet_eta_beforecut_b = new TH1D("h_bjet_eta_beforecut_b", "", 32, -3.2, 3.2);
+  m_h_bjet_pt_beforecut_b  = new TH1D("h_bjet_pt_beforecut_b", "", 30, 0, 300);
+  m_h_bjet_eta_beforecut_c = new TH1D("h_bjet_eta_beforecut_c", "", 32, -3.2, 3.2);
+  m_h_bjet_pt_beforecut_c  = new TH1D("h_bjet_pt_beforecut_c", "", 30, 0, 300);
+  m_h_bjet_eta_beforecut_l = new TH1D("h_bjet_eta_beforecut_l", "", 32, -3.2, 3.2);
+  m_h_bjet_pt_beforecut_l  = new TH1D("h_bjet_pt_beforecut_l", "", 30, 0, 300);
   
   wk()->addOutput( m_h_RunNumber );
   wk()->addOutput( m_h_ZpT );
@@ -125,7 +131,13 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   wk()->addOutput( m_h_jet_pt_beforecut );
   wk()->addOutput( m_h_nbjets_beforecut );
   wk()->addOutput( m_h_bjet_eta_beforecut );
-  wk()->addOutput( m_h_bjet_pt_beforecut );    
+  wk()->addOutput( m_h_bjet_pt_beforecut );
+  wk()->addOutput( m_h_bjet_eta_beforecut_b );
+  wk()->addOutput( m_h_bjet_pt_beforecut_b );
+  wk()->addOutput( m_h_bjet_eta_beforecut_c );
+  wk()->addOutput( m_h_bjet_pt_beforecut_c );
+  wk()->addOutput( m_h_bjet_eta_beforecut_l );
+  wk()->addOutput( m_h_bjet_pt_beforecut_l );
   
   const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();
   int nBinsCutflow = cutflows.first->GetNbinsX();
@@ -225,10 +237,17 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   m_h_eta_binning_info = new TH1D("h_eta_binning_info", "", m_n_eta_binning, m_eta_binning);
   wk()->addOutput( m_h_eta_binning_info );
   
-  m_h_jet_eta = new TH1D("h_jet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_jet_eta = new TH1D("h_jet_eta", "", 25, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
   m_h_jet_pt  = new TH1D("h_jet_pt",  "", 50, 0, 300.);
-  m_h_bjet_eta = new TH1D("h_bjet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
-  m_h_bjet_pt  = new TH1D("h_bjet_pt", "", 50, 0, 300.);
+  m_h_bjet_eta = new TH1D("h_bjet_eta", "", 10, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_bjet_pt  = new TH1D("h_bjet_pt", "", 25, 0, 300.);
+
+  m_h_bjet_eta_b = new TH1D("h_bjet_eta_b", "", 10, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_bjet_pt_b  = new TH1D("h_bjet_pt_b", "", 25, 0, 300.);
+  m_h_bjet_eta_c = new TH1D("h_bjet_eta_c", "", 10, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_bjet_pt_c  = new TH1D("h_bjet_pt_c", "", 25, 0, 300.);
+  m_h_bjet_eta_l = new TH1D("h_bjet_eta_l", "", 10, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_bjet_pt_l  = new TH1D("h_bjet_pt_l", "", 25, 0, 300.);
   
   m_h_averageInteractionsPerCrossing = new TH1D("h_averageInteractionsPerCrossing", "", 50, 0, 50.);
 
@@ -238,6 +257,13 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   wk()->addOutput( m_h_averageInteractionsPerCrossing );
   wk()->addOutput( m_h_bjet_eta );
   wk()->addOutput( m_h_bjet_pt );
+  
+  wk()->addOutput( m_h_bjet_eta_b );
+  wk()->addOutput( m_h_bjet_pt_b );
+  wk()->addOutput( m_h_bjet_eta_c );
+  wk()->addOutput( m_h_bjet_pt_c );
+  wk()->addOutput( m_h_bjet_eta_l );
+  wk()->addOutput( m_h_bjet_pt_l );
 
   // Pileup RW Tool //
   if ( m_doPUreweighting ) {
@@ -346,8 +372,22 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
       nBJetsBeforeCut++;
       m_h_bjet_eta_beforecut->Fill(eta, weight_final);
       m_h_bjet_pt_beforecut->Fill(pt, weight_final);
+      
+      double bsf = 1.0;
+      const int& ConeTruthLabelID = jet_ConeTruthLabelID->at(iJet);
+      
+      if (TMath::Abs(ConeTruthLabelID)==5) {
+	m_h_bjet_eta_beforecut_b->Fill(eta, weight_final*bsf);
+	m_h_bjet_pt_beforecut_b->Fill(pt, weight_final*bsf);
+      } else if (TMath::Abs(ConeTruthLabelID)==4) {
+	m_h_bjet_eta_beforecut_c->Fill(eta, weight_final*bsf);
+	m_h_bjet_pt_beforecut_c->Fill(pt, weight_final*bsf);
+      } else {
+	m_h_bjet_eta_beforecut_l->Fill(eta, weight_final*bsf);
+	m_h_bjet_pt_beforecut_l->Fill(pt, weight_final*bsf);
+      }
     }
-
+    
   }
   m_h_njets_beforecut->Fill(nJetsBeforeCut, weight_final);
   m_h_nbjets_beforecut->Fill(nBJetsBeforeCut, weight_final);
@@ -381,6 +421,20 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   if (jet_MV2c20->at(0)>m_MV2c20threshold) {
     m_h_bjet_eta->Fill(lead_jet_eta, weight_final);
     m_h_bjet_pt->Fill(lead_jet_pt, weight_final);
+    
+    double bsf = 1.0;
+    const int& label = jet_ConeTruthLabelID->at(0);
+    
+    if (TMath::Abs(label)==5) {
+      m_h_bjet_eta_b->Fill(lead_jet_eta, weight_final*bsf);
+      m_h_bjet_pt_b->Fill(lead_jet_pt, weight_final*bsf);
+    } else if (TMath::Abs(label)==4) {
+      m_h_bjet_eta_c->Fill(lead_jet_eta, weight_final*bsf);
+      m_h_bjet_pt_c->Fill(lead_jet_pt, weight_final*bsf);
+    } else {
+      m_h_bjet_eta_l->Fill(lead_jet_eta, weight_final*bsf);
+      m_h_bjet_pt_l->Fill(lead_jet_pt, weight_final*bsf);
+    }
   }
   
   return EL::StatusCode::SUCCESS;
