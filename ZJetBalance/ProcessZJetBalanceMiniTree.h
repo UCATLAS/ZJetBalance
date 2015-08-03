@@ -67,7 +67,18 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1D* m_h_bjet_pt_beforecut; //!
   TH1F* m_h_cutflow; //!
   TH1F* m_h_cutflow_weighted; //!
-  
+  TH1D* m_h_bjet_eta_b; //!
+  TH1D* m_h_bjet_pt_b; //!
+  TH1D* m_h_bjet_eta_c; //!
+  TH1D* m_h_bjet_pt_c; //!
+  TH1D* m_h_bjet_eta_l; //!
+  TH1D* m_h_bjet_pt_l; //!
+  TH1D* m_h_bjet_eta_beforecut_b; //!
+  TH1D* m_h_bjet_pt_beforecut_b; //!
+  TH1D* m_h_bjet_eta_beforecut_c; //!
+  TH1D* m_h_bjet_pt_beforecut_c; //!
+  TH1D* m_h_bjet_eta_beforecut_l; //!
+  TH1D* m_h_bjet_pt_beforecut_l; //!
   
   Double_t*       m_pT_binning; //!
   Int_t           m_n_pT_binning; //!
