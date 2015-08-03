@@ -268,6 +268,10 @@ int main( int argc, char* argv[] ) {
   // To automatically delete submitDir
   job.options()->setDouble(EL::Job::optRemoveSubmitDir, 1);
 
+  // Use TTreeCache to read-precache data files to speed up analysis
+  job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
+  job.options()->setDouble (EL::Job::optCacheLearnEntries, 20);
+
   // For Trigger
   job.options()->setString( EL::Job::optXaodAccessMode, EL::Job::optXaodAccessMode_branch );
 
