@@ -3,10 +3,10 @@ Run II studies for Z+Jet Balancing including b-tagging
 
 ```
 setupATLAS
-rcSetup Base,2.3.15
+rcSetup Base,2.3.21
 git clone https://github.com/UCATLAS/xAODAnaHelpers
 git clone https://github.com/UCATLAS/ZJetBalance
-python xAODAnaHelpers/scripts/checkoutASGtags.py 2.3.15
+python xAODAnaHelpers/scripts/checkoutASGtags.py 2.3.21
 rc checkout_pkg atlasperf/CombPerf/JetETMiss/JetCalibrationTools/JES_ResponseFitter/trunk JES_ResponseFitter
 patch -p0 -i ZJetBalance/patches/JESResponse.patch
 rc find_packages
