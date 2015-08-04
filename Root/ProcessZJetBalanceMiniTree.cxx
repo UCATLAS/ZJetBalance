@@ -348,7 +348,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   const int jentry = wk()->treeEntry();
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
-    
+  
   bool isMC = (mcChannelNumber!=-1);
   
   double weight_final=1.0;
@@ -364,8 +364,9 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
     weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
     
-    // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e",
-    // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final);
+    
+    // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e muon_effSF0=%f muon_effSF1=%f trigSF=%f",
+    // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final, muon_effSF->at(0)[0], muon_effSF->at(1)[0], weight_muon_trig->at(0));
   }
 
   // use non-weighted to check that the correct number of events was processes
