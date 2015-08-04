@@ -288,8 +288,14 @@ int main( int argc, char* argv[] ) {
   jetSelect->setName( "jetSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/jetSelect.config" );
 
   // bjet efficiecny corrector
-  BJetEfficiencyCorrector* bjetCorrect = new BJetEfficiencyCorrector();
-  bjetCorrect->setName( "bjetCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrect.config" );
+  BJetEfficiencyCorrector* bjetCorrectVeryLoose = new BJetEfficiencyCorrector();
+  bjetCorrectVeryLoose->setName( "bjetCorrectVeryLoose" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectVeryLoose.config" );
+  BJetEfficiencyCorrector* bjetCorrectLoose = new BJetEfficiencyCorrector();
+  bjetCorrectLoose->setName( "bjetCorrectLoose" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectLoose.config" );
+  BJetEfficiencyCorrector* bjetCorrectMedium = new BJetEfficiencyCorrector();
+  bjetCorrectMedium->setName( "bjetCorrectMedium" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectMedium.config" );
+  BJetEfficiencyCorrector* bjetCorrectTight = new BJetEfficiencyCorrector();
+  bjetCorrectTight->setName( "bjetCorrectTight" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectTight.config" );
   
 
   // zjet algo
@@ -306,12 +312,18 @@ int main( int argc, char* argv[] ) {
   // ADD ALGOS TO JOB
   job.algsAdd( baseEventSel );
   job.algsAdd( muonCalib    );
+  job.algsAdd( jetCalib     );
+  //job.algsAdd( overlap      );
+  // muon selection
   job.algsAdd( muonSelect   );
   job.algsAdd( muonSelectForMuonInJetCorrection   );
-  //job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
-  job.algsAdd( jetCalib     );
+  job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
+  // jet selection
   job.algsAdd( jetSelect    );
-  job.algsAdd( bjetCorrect  );
+  job.algsAdd( bjetCorrectVeryLoose  );
+  job.algsAdd( bjetCorrectLoose      );
+  job.algsAdd( bjetCorrectMedium     );
+  job.algsAdd( bjetCorrectTight      );
   job.algsAdd( balAlg       );
 
   if(f_grid){

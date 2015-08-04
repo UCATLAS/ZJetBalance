@@ -23,8 +23,10 @@ void MiniTree::AddEventUser(const std::string detailStr)
   m_tree->Branch("Zphi",  &m_Zphi,  "Zphi/F" );
   m_tree->Branch("ZM",    &m_ZM,    "ZM/F"   );
   m_tree->Branch("dPhiZJet1",  &m_dPhiZJet1,  "dPhiZJet1/F");
+  m_tree->Branch("dEtaZJet1",  &m_dEtaZJet1,  "dEtaZJet1/F");
   m_tree->Branch("pTRef1",     &m_pTRef1,     "pTRef1/F");
   m_tree->Branch("dPhiZJet2",  &m_dPhiZJet2,  "dPhiZJet2/F");
+  m_tree->Branch("dEtaZJet2",  &m_dEtaZJet2,  "dEtaZJet2/F");
   m_tree->Branch("pTRef2",     &m_pTRef2,     "pTRef2/F");
   m_tree->Branch("jetDPhi",    &m_jetDPhi,    "jetDPhi/F");
   m_tree->Branch("jetDEta",    &m_jetDEta,    "jetDEta/F");
@@ -54,8 +56,10 @@ void MiniTree::ClearEventUser() {
   m_ZM       = -999;
 
   m_dPhiZJet1  = -999.;
+  m_dEtaZJet1  = -999.;
   m_pTRef1     = -999.;
   m_dPhiZJet2  = -999.;
+  m_dEtaZJet2  = -999.;
   m_pTRef2     = -999.;
   m_jetDPhi    = -999.;
   m_jetDEta    = -999.;
@@ -90,10 +94,14 @@ void MiniTree::FillEventUser( const xAOD::EventInfo* eventInfo ) {
     m_ZM = eventInfo->auxdecor< float >( "ZM" );
   if( eventInfo->isAvailable< float >( "dPhiZJet1" ) ) 
     m_dPhiZJet1 = eventInfo->auxdecor< float >( "dPhiZJet1" );
+  if( eventInfo->isAvailable< float >( "dEtaZJet1" ) ) 
+    m_dEtaZJet1 = eventInfo->auxdecor< float >( "dEtaZJet1" );
   if( eventInfo->isAvailable< float >( "pTRef1" ) ) 
     m_pTRef1    = eventInfo->auxdecor< float >( "pTRef1" );
   if( eventInfo->isAvailable< float >( "dPhiZJet2" ) ) 
     m_dPhiZJet2 = eventInfo->auxdecor< float >( "dPhiZJet2" );
+  if( eventInfo->isAvailable< float >( "dEtaZJet2" ) ) 
+    m_dEtaZJet2 = eventInfo->auxdecor< float >( "dEtaZJet2" );
   if( eventInfo->isAvailable< float >( "pTRef2" ) ) 
     m_pTRef2    = eventInfo->auxdecor< float >( "pTRef2" );
   if( eventInfo->isAvailable< float >( "jetDPhi" ) ) 
