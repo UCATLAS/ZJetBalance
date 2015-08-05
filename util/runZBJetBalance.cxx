@@ -291,6 +291,9 @@ int main( int argc, char* argv[] ) {
   MuonCalibrator* muonCalib = new MuonCalibrator();
   muonCalib->setName( "muonCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCalib.config")->setSyst( systName, systVal );
 
+  MuonSelector* muonPreSelect = new MuonSelector();
+  muonPreSelect->setName( "muonPreSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonPreSelect.config");
+
   MuonSelector* muonSelect = new MuonSelector();
   muonSelect->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelect.config");
 
@@ -303,6 +306,9 @@ int main( int argc, char* argv[] ) {
   /// ELECTRONS ///
   ElectronCalibrator* electronCalib = new ElectronCalibrator();
   electronCalib->setName( "electronCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCalib.config")->setSyst( systName, systVal );
+
+  ElectronSelector* electronPreSelect = new ElectronSelector();
+  electronPreSelect->setName( "electronPreSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronPreSelect.config");
 
   ElectronSelector* electronSelect = new ElectronSelector();
   electronSelect->setName( "electronSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronSelect.config");
@@ -355,15 +361,12 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( baseEventSel );
 
   job.algsAdd( muonCalib    );
-  job.algsAdd( muonSelect   );
-  job.algsAdd( muonSelectForMuonInJetCorrection   );
-  //job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
-  
-  job.algsAdd ( electronCalib );
-  job.algsAdd ( electronSelect );
-  job.algsAdd ( electronSelectForElectronInJetCorrection );
-
+  job.algsAdd( muonPreSelect);
+  job.algsAdd( electronCalib     );
+  job.algsAdd( electronPreSelect );
   job.algsAdd( jetCalib     );
+  job.algsAdd( overlapRemover );
+
   job.algsAdd( jetSelect    );
   job.algsAdd( bjetCorrectFix60 );
   job.algsAdd( bjetCorrectFix70 );
@@ -372,13 +375,18 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFlt70 );
   job.algsAdd( balAlg       );
 
-  job.algsAdd( overlapRemover );
 
   if( useMuons ){
+    job.algsAdd( muonSelect      );
+    job.algsAdd( muonSelectForMuonInJetCorrection   );
+    job.algsAdd( muonCorrect     ); 
     balAlg = new BalanceAlgorithm();
     balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
     job.algsAdd( balAlg );
   }else{
+    job.algsAdd( electronSelect  );
+    job.algsAdd( electronSelectForElectronInJetCorrection );
+    job.algsAdd( electronCorrect );
     eebalAlg = new EEBalanceAlgorithm();
     eebalAlg->setName("ZeeJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zeejetAlgo.config" );
     job.algsAdd( eebalAlg );
