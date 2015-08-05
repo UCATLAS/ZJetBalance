@@ -297,6 +297,8 @@ int main( int argc, char* argv[] ) {
   BJetEfficiencyCorrector* bjetCorrectFix60 = new BJetEfficiencyCorrector();
   bjetCorrectFix60->setName( "bjetCorrectFix60" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix60.config" );
   
+  BJetEfficiencyCorrector* bjetCorrectFlt70 = new BJetEfficiencyCorrector();
+  bjetCorrectFlt70->setName( "bjetCorrectFlt70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFlt70.config" );
 
   // zjet algo
   BalanceAlgorithm* balAlg = new BalanceAlgorithm();
@@ -324,6 +326,7 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFix70 );
   job.algsAdd( bjetCorrectFix77 );
   job.algsAdd( bjetCorrectFix85 );
+  job.algsAdd( bjetCorrectFlt70 );
   job.algsAdd( balAlg       );
 
   if(f_grid){
