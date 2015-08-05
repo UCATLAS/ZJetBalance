@@ -288,14 +288,14 @@ int main( int argc, char* argv[] ) {
   jetSelect->setName( "jetSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/jetSelect.config" );
 
   // bjet efficiecny corrector
-  BJetEfficiencyCorrector* bjetCorrectVeryLoose = new BJetEfficiencyCorrector();
-  bjetCorrectVeryLoose->setName( "bjetCorrectVeryLoose" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectVeryLoose.config" );
-  BJetEfficiencyCorrector* bjetCorrectLoose = new BJetEfficiencyCorrector();
-  bjetCorrectLoose->setName( "bjetCorrectLoose" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectLoose.config" );
-  BJetEfficiencyCorrector* bjetCorrectMedium = new BJetEfficiencyCorrector();
-  bjetCorrectMedium->setName( "bjetCorrectMedium" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectMedium.config" );
-  BJetEfficiencyCorrector* bjetCorrectTight = new BJetEfficiencyCorrector();
-  bjetCorrectTight->setName( "bjetCorrectTight" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectTight.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix80 = new BJetEfficiencyCorrector();
+  bjetCorrectFix80->setName( "bjetCorrectFix80" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix80.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix70 = new BJetEfficiencyCorrector();
+  bjetCorrectFix70->setName( "bjetCorrectFix70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix70.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix60 = new BJetEfficiencyCorrector();
+  bjetCorrectFix60->setName( "bjetCorrectFix60" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix60.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix30 = new BJetEfficiencyCorrector();
+  bjetCorrectFix30->setName( "bjetCorrectFix30" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix30.config" );
   
 
   // zjet algo
@@ -320,10 +320,10 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
   // jet selection
   job.algsAdd( jetSelect    );
-  job.algsAdd( bjetCorrectVeryLoose  );
-  job.algsAdd( bjetCorrectLoose      );
-  job.algsAdd( bjetCorrectMedium     );
-  job.algsAdd( bjetCorrectTight      );
+  job.algsAdd( bjetCorrectFix30 );
+  job.algsAdd( bjetCorrectFix60 );
+  job.algsAdd( bjetCorrectFix70 );
+  job.algsAdd( bjetCorrectFix80 );
   job.algsAdd( balAlg       );
 
   if(f_grid){
