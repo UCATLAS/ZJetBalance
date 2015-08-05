@@ -98,23 +98,27 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
   
+  // set cutflow histogram
+  outputList.Add((TH1F*)f->Get("cutflow"));  
+  outputList.Add((TH1F*)f->Get("cutflow_weighted"));  
+  outputList.Add((TH1F*)f->Get("cutflow_weighted_final"));
+  
   Double_t* ptbins  = new Double_t[BUFSIZ];
   Double_t* etabins = new Double_t[BUFSIZ];
   
   int       nptbins  = -1;
   int       netabins = -1;
   
-  TH1F* hRef_pt = (TH1F*)f->Get("h_pt_binning_info");
+  TH1F* hRef_pt = (TH1F*)f->Get("pt_binning_info");
   GetBinningInformation(hRef_pt, ptbins, nptbins);
   
-  TH1F* hRef_eta = (TH1F*)f->Get("h_eta_binning_info");
+  TH1F* hRef_eta = (TH1F*)f->Get("eta_binning_info");
   GetBinningInformation(hRef_eta, etabins, netabins);
   
   
   double NsigmaForFit = 1.8;
   JES_BalanceFitter *myFitter = new JES_BalanceFitter(NsigmaForFit);
   myFitter->SetPoisson();
-  
   
   for (int iEtaBin=1; iEtaBin<netabins+1;++iEtaBin) {
     TH1F *h_mean  = new TH1F(Form("mean_pt_eta%d", iEtaBin), 

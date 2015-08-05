@@ -62,7 +62,7 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   m_fillMuonBefore           = config->GetValue("FillMuonBefore", false);
   m_btagJets                 = config->GetValue("BTagJets", false);
   m_btagOP                   = config->GetValue("BTagOP", "70"); // 85, 77, 70, 60
-
+  
   if( m_btagJets ) {
     if( m_btagOP != "85" && m_btagOP != "77" && m_btagOP != "70" && m_btagOP != "60" ) {
       std::cout << "Invalid b-tag operating point " << m_btagOP << std::endl;
@@ -128,9 +128,18 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   m_h_nJets_beforecut = book(m_name, "nJets_beforecut", "N Jets Before Cuts", 10, -0.5, 9.5);
   m_h_jet_eta_beforecut = book(m_name, "jet_eta_beforecut", "",   64, -3.2, 3.2);
   m_h_jet_pt_beforecut  = book(m_name, "jet_pt_beforecut", "",    30,    0, 300);
+  m_h_jet_eta_beforecut_b = book(m_name, "jet_eta_beforecut_b", "",   64, -3.2, 3.2);
+  m_h_jet_pt_beforecut_b  = book(m_name, "jet_pt_beforecut_b", "",    30,    0, 300);
+  m_h_jet_eta_beforecut_c = book(m_name, "jet_eta_beforecut_c", "",   64, -3.2, 3.2);
+  m_h_jet_pt_beforecut_c  = book(m_name, "jet_pt_beforecut_c", "",    30,    0, 300);
+  m_h_jet_eta_beforecut_l = book(m_name, "jet_eta_beforecut_l", "",   64, -3.2, 3.2);
+  m_h_jet_pt_beforecut_l  = book(m_name, "jet_pt_beforecut_l", "",    30,    0, 300);
   // after cuts
   m_h_nJets = book(m_name, "nJets",           "N Jets", 10, -0.5, 9.5);
   m_h_jet_phi   = book(m_name, "jet_phi", "jet_{1} #phi",   64, -TMath::Pi(), TMath::Pi());
+  m_h_jet_phi_b = book(m_name, "jet_phi_b", "jet_{1} #phi MC truth b",   64, -TMath::Pi(), TMath::Pi());
+  m_h_jet_phi_c = book(m_name, "jet_phi_c", "jet_{1} #phi MC truth c",   64, -TMath::Pi(), TMath::Pi());
+  m_h_jet_phi_l = book(m_name, "jet_phi_l", "jet_{1} #phi MC truth l",   64, -TMath::Pi(), TMath::Pi());
   // eta and phi instanted elsewhere as uses custom/configurable binning
   // Z-Jet relationship
   m_h_Z_jet_dPhi = book(m_name, "Z_jet_dPhi", "", 100, -TMath::Pi(), TMath::Pi());
@@ -149,16 +158,17 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   
   m_h_cutflow = new TH1F("cutflow", "", nBinsCutflow, xminCutflow, xmaxCutflow);
   m_h_cutflow->SetCanExtend( TH1::kXaxis );
-  m_h_cutflow_weighted = new TH1F("cutflow_weighted", "", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow_weighted = new TH1F("cutflow_weighted", "ONLY MC WEIGHT given by generator", nBinsCutflow, xminCutflow, xmaxCutflow);
   m_h_cutflow_weighted->SetCanExtend( TH1::kXaxis );
+  m_h_cutflow_weighted_final = new TH1F("cutflow_weighted_final", "", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow_weighted_final->SetCanExtend( TH1::kXaxis );
   
   wk()->addOutput( m_h_cutflow );
   wk()->addOutput( m_h_cutflow_weighted );
+  wk()->addOutput( m_h_cutflow_weighted_final );
 
-  // pass all histograms instanted with the book function are passed
-  // to the worker through 
-  this->record( wk() );
-
+  // histogram record will be done at the end of initialize()
+  
   Info("histInitialize()", "ends");
   return EL::StatusCode::SUCCESS;
 }
@@ -189,20 +199,24 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
   if ( m_h_cutflow->GetXaxis()->GetBinLabel(1) != cutflows.first->GetXaxis()->GetBinLabel(1) ) {
     std::cout << "Labels do not agree" << std::endl;
     for (int iBin=1, nBins=cutflows.first->GetNbinsX(); iBin<=nBins; iBin++) {
-      if( cutflows.first->GetXaxis()->GetBinLabel(iBin) == "" ) { continue; }
+      if( std::string(cutflows.first->GetXaxis()->GetBinLabel(iBin)) == "" ) { continue; }
       m_h_cutflow->GetXaxis()->SetBinLabel( iBin, 
           cutflows.first->GetXaxis()->GetBinLabel(iBin) );
       m_h_cutflow_weighted->GetXaxis()->SetBinLabel( iBin, 
           cutflows.first->GetXaxis()->GetBinLabel(iBin) );
+      m_h_cutflow_weighted_final->GetXaxis()->SetBinLabel( iBin, 
+          cutflows.first->GetXaxis()->GetBinLabel(iBin) );
       std::cout << "\t" << cutflows.first->GetXaxis()->GetBinLabel(iBin)  << std::endl;
     }
   }
-
-  for (int iBin=1, nBins=cutflows.first->GetNbinsX(); iBin<=nBins; iBin++) { // update
+  
+  for (int iBin=1, nBins=m_h_cutflow->GetNbinsX(); iBin<=nBins; iBin++) { // update
     m_h_cutflow->SetBinContent(iBin, m_h_cutflow->GetBinContent(iBin)+cutflows.first->GetBinContent(iBin)); 
+    Info("changeInput()", "iBin=%2d/%-2d new cutflow entry=%.1f (%s)", iBin, nBins, m_h_cutflow->GetBinContent(iBin), m_h_cutflow->GetXaxis()->GetBinLabel(iBin));
   }
-  for (int iBin=1, nBins=cutflows.second->GetNbinsX(); iBin<=nBins; iBin++) { // update
+  for (int iBin=1, nBins=m_h_cutflow_weighted->GetNbinsX(); iBin<=nBins; iBin++) { // update
     m_h_cutflow_weighted->SetBinContent(iBin, m_h_cutflow_weighted->GetBinContent(iBin)+cutflows.second->GetBinContent(iBin)); 
+    Info("changeInput()", "iBin=%2d/%-2d new cutflow entry=%.1f (%s) - weighted ", iBin, nBins, m_h_cutflow_weighted->GetBinContent(iBin), m_h_cutflow_weighted->GetXaxis()->GetBinLabel(iBin));
   }
   
   TTree *tree = wk()->tree();
@@ -239,6 +253,9 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   // additinoal histograms according to configuration parameters
   for (int iPtBin=1; iPtBin<m_n_pT_binning+1; iPtBin++) {
     std::vector<TH1F*> tmp_hist_container;
+    std::vector<TH1F*> tmp_hist_container_b;
+    std::vector<TH1F*> tmp_hist_container_c;
+    std::vector<TH1F*> tmp_hist_container_l;
     for (int iEtaBin=1; iEtaBin<m_n_eta_binning+1; iEtaBin++) {
       Info("Initialize()", "%s", Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
       TH1F* h = new TH1F(Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin), 
@@ -247,26 +264,63 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
 			      m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 			      ), 
 			 m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
+      TH1F* h_b = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_b", iEtaBin, iPtBin), 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
+				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
+				), 
+			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
+      TH1F* h_c = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_c", iEtaBin, iPtBin), 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
+				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
+			      ), 
+			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
+      TH1F* h_l = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_l", iEtaBin, iPtBin), 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
+				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
+				), 
+			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       tmp_hist_container.push_back(h);
+      tmp_hist_container_b.push_back(h_b);
+      tmp_hist_container_c.push_back(h_c);
+      tmp_hist_container_l.push_back(h_l);
       wk()->addOutput( h );
+      wk()->addOutput( h_b );
+      wk()->addOutput( h_c );
+      wk()->addOutput( h_l );
     }
+    
     m_balance_hists.push_back(tmp_hist_container);
+    m_balance_hists_b.push_back(tmp_hist_container_b);
+    m_balance_hists_c.push_back(tmp_hist_container_c);
+    m_balance_hists_l.push_back(tmp_hist_container_l);
   }
-  m_h_jet_pt_bin = new TH2F("h_jet_pt_bin", "", 100, 0, 500, m_n_pT_binning, -0.5, -0.5+m_n_pT_binning); // validation purpose
+  
+  m_h_jet_pt_bin = new TH2F("jet_pt_bin", "", 100, 0, 500, m_n_pT_binning, -0.5, -0.5+m_n_pT_binning); // validation purpose
   wk()->addOutput( m_h_jet_pt_bin );
-  m_h_pt_binning_info = new TH1F("h_pt_binning_info", "", m_n_pT_binning, m_pT_binning);
+  m_h_pt_binning_info = book(m_name, "pt_binning_info", "", m_n_pT_binning, m_pT_binning);
   wk()->addOutput( m_h_pt_binning_info );
-  m_h_eta_binning_info = new TH1F("h_eta_binning_info", "", m_n_eta_binning, m_eta_binning);
+  m_h_eta_binning_info = book(m_name, "eta_binning_info", "", m_n_eta_binning, m_eta_binning);
   wk()->addOutput( m_h_eta_binning_info );
   
-  m_h_jet_eta = new TH1F("h_jet_eta", "", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
-  m_h_jet_pt  = new TH1F("h_jet_pt",  "", 50, 0, 300.);
-  m_h_averageInteractionsPerCrossing = new TH1F("h_averageInteractionsPerCrossing", "", 50, 0, 50.);
+  m_h_jet_eta = book(m_name, "jet_eta", "jet^{1} #eta", 50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_jet_pt  = book(m_name, "jet_pt",  "jet^{1} p_{T}", 50, 0, 300.);
+  m_h_jet_eta_b = book(m_name, "jet_eta_b", "jet^{1} #eta MC truth b", 
+		       50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_jet_pt_b  = book(m_name, "jet_pt_b",  "jet^{1} p_{T} MC truth b", 
+		       50, 0, 300.);
+  m_h_jet_eta_c = book(m_name, "jet_eta_c", "jet^{1} #eta MC truth c", 
+		       50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_jet_pt_c  = book(m_name, "jet_pt_c",  "jet^{1} p_{T} MC truth c", 
+		       50, 0, 300.);
+  m_h_jet_eta_l = book(m_name, "jet_eta_l", "jet^{1} p_{T} MC truth l", 
+		       50, m_eta_binning[0], m_eta_binning[m_n_eta_binning]);
+  m_h_jet_pt_l  = book(m_name, "jet_pt_l",  "jet^{1} #eta MC truth l", 
+		       50, 0, 300.);
+  m_h_averageInteractionsPerCrossing = book(m_name, "averageInteractionsPerCrossing", "", 50, 0, 50.);
   
-  wk()->addOutput( m_h_jet_eta );
-  wk()->addOutput( m_h_jet_pt );
-  wk()->addOutput( m_h_averageInteractionsPerCrossing );
-
   // before cuts muon plots
   if( m_fillMuonBefore ) {
     m_h_muon1_pT_beforecut = book(m_name, "muon1_pT_beforecut", "#mu_{1} p_{T} [GeV]", 120, 0, 120);
@@ -326,6 +380,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
     std::cout << "ZJetBalance::initialize() Initialized PileupReweightingTool " << m_pileuptool->name() << std::endl; 
   }  
   
+
+  // pass all histograms instanted with the book function are passed
+  // to the worker through 
+  this->record( wk() );
   
   Info("initialize()", "Succesfully initialized! \n");
   return EL::StatusCode::SUCCESS;
@@ -348,7 +406,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   const int jentry = wk()->treeEntry();
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
-    
+  
   bool isMC = (mcChannelNumber!=-1);
   
   double weight_final=1.0;
@@ -363,16 +421,14 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
     m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
     weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
-    
-    // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e",
-    // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final);
+        
+    // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e muon_effSF0=%f muon_effSF1=%f trigSF=%f",
+    // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final, muon_effSF->at(0)[0], muon_effSF->at(1)[0], weight_muon_trig->at(0));
   }
 
   // use non-weighted to check that the correct number of events was processes
   // use weighted to see the effect of the weights calculated in xAH
-  static int m_cFlowBin_All = m_h_cutflow->GetXaxis()->FindBin("Process NTuple");
-  m_h_cutflow->Fill( m_cFlowBin_All, 1 );
-  m_h_cutflow_weighted->Fill( m_cFlowBin_All, weight_final );
+  FillCutflowHistograms("Process NTuple", mcEventWeight, weight_final);
   
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
@@ -388,12 +444,17 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
     const float& pt  = jet_pt->at(iJet);
     const float& eta = jet_eta->at(iJet);
+    const int& truthLabel = jet_ConeTruthLabelID->at(iJet);
     
     if ( pt < 30. ) continue;
     nJetsBeforeCut++;
     
     m_h_jet_eta_beforecut->Fill(eta, weight_final);
     m_h_jet_pt_beforecut->Fill(pt, weight_final);
+    FillFlavorHistograms(m_h_jet_pt_beforecut_b, m_h_jet_pt_beforecut_c, m_h_jet_pt_beforecut_l, 
+			 truthLabel, pt, weight_final);
+    FillFlavorHistograms(m_h_jet_eta_beforecut_b, m_h_jet_eta_beforecut_c, m_h_jet_eta_beforecut_l,
+			 truthLabel, eta, weight_final);
   }
   m_h_nJets_beforecut->Fill(nJetsBeforeCut, weight_final);
 
@@ -409,19 +470,16 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   
   // selection criteria need to be applied
   if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
-  static int m_cFlowBin_MZ = m_h_cutflow->GetXaxis()->FindBin("m_{Z} Window");
-  m_h_cutflow->Fill( m_cFlowBin_MZ, 1 );
-  m_h_cutflow_weighted->Fill( m_cFlowBin_MZ, weight_final );
+  FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
 
   if (TMath::Abs(dPhiZJet1)<m_cutDPhiZJet)  { return EL::StatusCode::SUCCESS; }
-  static int m_cFlowBin_dPhi = m_h_cutflow->GetXaxis()->FindBin("#Delta#phi(Z,jet)");
-  m_h_cutflow->Fill( m_cFlowBin_dPhi, 1 );
-  m_h_cutflow_weighted->Fill( m_cFlowBin_dPhi, weight_final );
+  FillCutflowHistograms("#Delta#phi(Z,jet)", mcEventWeight, weight_final);
   
   // 
   const float& lead_jet_pt      = jet_pt->at(0);
   const float& lead_jet_eta     = jet_eta->at(0);
   const float& lead_jet_phi     = jet_phi->at(0);
+  const int&   lead_jet_truthLabel = jet_ConeTruthLabelID->at(0);
   const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
   const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
   
@@ -429,28 +487,22 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
   
   if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
-  static int m_cFlowBin_Jet1Eta = m_h_cutflow->GetXaxis()->FindBin("jet_{1} #eta");
-  m_h_cutflow->Fill( m_cFlowBin_Jet1Eta, 1 );
-  m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1Eta, weight_final );
+  FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
   
   if (jet_pt->size()>1) { if (jet_pt->at(1)>pTRef1*0.2) {return EL::StatusCode::SUCCESS;} } // event with second jet is vetoed
-  static int m_cFlowBin_Jet2Pt = m_h_cutflow->GetXaxis()->FindBin("jet_{2} p_{T}");
-  m_h_cutflow->Fill( m_cFlowBin_Jet2Pt, 1 );
-  m_h_cutflow_weighted->Fill( m_cFlowBin_Jet2Pt, weight_final );
-
+  FillCutflowHistograms("jet_{2} p_{T}", mcEventWeight, weight_final);
+  
   if( m_btagJets ) {
     // b-tag if asked for
     if( !jet_isBTag->at(0) ) { return EL::StatusCode::SUCCESS; }
-    static int m_cFlowBin_Jet1BTag = m_h_cutflow->GetXaxis()->FindBin("jet_{1} b-tagged");
-    m_h_cutflow->Fill( m_cFlowBin_Jet1BTag, 1 );
-    m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1BTag, weight_final );
+    FillCutflowHistograms("jet_{1} b-tagged", mcEventWeight, weight_final);
     // apply b-tagging weight
     weight_final *= jet_SFBTag->at(0)[0]; // other weights are for systematics
-    static int m_cFlowBin_Jet1BTagWeight = m_h_cutflow->GetXaxis()->FindBin("jet_{1} b-tag SF");
-    m_h_cutflow->Fill( m_cFlowBin_Jet1BTagWeight, 1 );
-    m_h_cutflow_weighted->Fill( m_cFlowBin_Jet1BTagWeight, weight_final );
+    //Info("execute()", "jet_SFBTag->at(0)[0]=%f \n", jet_SFBTag->at(0)[0]);
+    
+    FillCutflowHistograms("jet_{1} b-tag SF", mcEventWeight, weight_final);
   }
-
+  
   // muon plots
   m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
   m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
@@ -469,11 +521,21 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   m_h_jet_eta->Fill(lead_jet_eta, weight_final);
   m_h_jet_pt->Fill(lead_jet_pt, weight_final);
   m_h_jet_phi->Fill(lead_jet_phi, weight_final);
+  FillFlavorHistograms(m_h_jet_pt_b, m_h_jet_pt_c, m_h_jet_pt_l, 
+		       lead_jet_truthLabel, lead_jet_pt, weight_final);
+  FillFlavorHistograms(m_h_jet_eta_b, m_h_jet_eta_c, m_h_jet_eta_l, 
+		       lead_jet_truthLabel, lead_jet_eta, weight_final);
+  FillFlavorHistograms(m_h_jet_phi_b, m_h_jet_phi_c, m_h_jet_phi_l, 
+		       lead_jet_truthLabel, lead_jet_phi, weight_final);
   // Z-Jet relationship
   m_h_Z_jet_dPhi->Fill(dPhiZJet1, weight_final);
   m_h_Z_jet_dEta->Fill(dEtaZJet1, weight_final);
   (m_balance_hists[lead_jet_pt_bin])[lead_jet_eta_bin]->Fill(lead_jet_pt/pTRef1, weight_final);
-
+  FillFlavorHistograms((m_balance_hists_b[lead_jet_pt_bin])[lead_jet_eta_bin],
+		       (m_balance_hists_c[lead_jet_pt_bin])[lead_jet_eta_bin],
+		       (m_balance_hists_l[lead_jet_pt_bin])[lead_jet_eta_bin],
+		       lead_jet_truthLabel, lead_jet_phi, weight_final);  
+  
   return EL::StatusCode::SUCCESS;
 }
 
@@ -590,6 +652,19 @@ std::pair<TH1F*, TH1F*> ProcessZJetBalanceMiniTree::ReturnCutflowPointers()
     }
   }//over Keys
   
+  // rebin
+  int nValidBins=0;
+  // if first time through - need to set bin labels
+  for (int iBin=1, nBins=rc.first->GetNbinsX(); iBin<=nBins; iBin++) {
+    if( std::string(rc.first->GetXaxis()->GetBinLabel(iBin)) == "" ) { continue; }
+    nValidBins++;
+  }
+  
+  // reset bins = in order to avoid bins without label set (needed for TH1::FindBin(label) function )
+  Info("ReturnCutflowPointers()", "New Binning nBins=%d min=%f max=%f", nValidBins, 0.5, nValidBins+0.5);
+  rc.first->SetBins(nValidBins, 0.5, nValidBins+0.5);
+  rc.second->SetBins(nValidBins, 0.5, nValidBins+0.5);
+
   return rc;
 }
 
@@ -794,7 +869,7 @@ void ProcessZJetBalanceMiniTree :: SetBTagAddresses(TTree* tree)
 TH1F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
                              std::string xlabel, int xbins, double xlow, double xhigh)
 {
-  TH1F* tmp = new TH1F( (name + title).c_str(), title.c_str(), xbins, xlow, xhigh);
+  TH1F* tmp = new TH1F( (name+title).c_str(), title.c_str(), xbins, xlow, xhigh);
   SetLabel(tmp, xlabel);
   this->Sumw2(tmp);
   this->record(tmp);
@@ -805,7 +880,7 @@ TH2F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
                              std::string xlabel, int xbins, double xlow, double xhigh,
                              std::string ylabel, int ybins, double ylow, double yhigh)
 {
-  TH2F* tmp = new TH2F( (name + title).c_str(), title.c_str(), xbins, xlow, xhigh, ybins, ylow, yhigh);
+  TH2F* tmp = new TH2F( (name+title).c_str(), title.c_str(), xbins, xlow, xhigh, ybins, ylow, yhigh);
   SetLabel(tmp, xlabel, ylabel);
   this->Sumw2(tmp);
   this->record(tmp);
@@ -817,7 +892,7 @@ TH2F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
 TH1F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
     std::string xlabel, int xbins, const Double_t* xbinArr)
 {
-  TH1F* tmp = new TH1F( (name + title).c_str(), title.c_str(), xbins, xbinArr);
+  TH1F* tmp = new TH1F( (name+title).c_str(), title.c_str(), xbins, xbinArr);
   SetLabel(tmp, xlabel);
   this->Sumw2(tmp);
   this->record(tmp);
@@ -828,7 +903,7 @@ TH2F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
     std::string xlabel, int xbins, const Double_t* xbinArr,
     std::string ylabel, int ybins, double ylow, double yhigh)
 {
-  TH2F* tmp = new TH2F( (name + title).c_str(), title.c_str(), xbins, xbinArr, ybins, ylow, yhigh);
+  TH2F* tmp = new TH2F( (name+title).c_str(), title.c_str(), xbins, xbinArr, ybins, ylow, yhigh);
   SetLabel(tmp, xlabel, ylabel);
   this->Sumw2(tmp);
   this->record(tmp);
@@ -839,7 +914,7 @@ TH2F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
     std::string xlabel, int xbins, double xlow, double xhigh,
     std::string ylabel, int ybins, const Double_t* ybinArr)
 {
-  TH2F* tmp = new TH2F( (name + title).c_str(), title.c_str(), xbins, xlow, xhigh, ybins, ybinArr);
+  TH2F* tmp = new TH2F( (name+title).c_str(), title.c_str(), xbins, xlow, xhigh, ybins, ybinArr);
   SetLabel(tmp, xlabel, ylabel);
   this->Sumw2(tmp);
   this->record(tmp);
@@ -850,7 +925,7 @@ TH2F* ProcessZJetBalanceMiniTree::book(std::string name, std::string title,
     std::string xlabel, int xbins, const Double_t* xbinArr,
     std::string ylabel, int ybins, const Double_t* ybinArr)
 {
-  TH2F* tmp = new TH2F( (name + title).c_str(), title.c_str(), xbins, xbinArr, ybins, ybinArr);
+  TH2F* tmp = new TH2F( (name+title).c_str(), title.c_str(), xbins, xbinArr, ybins, ybinArr);
   SetLabel(tmp, xlabel, ylabel);
   this->Sumw2(tmp);
   this->record(tmp);
@@ -878,6 +953,37 @@ void ProcessZJetBalanceMiniTree::record(TH1* hist) {
 
 void ProcessZJetBalanceMiniTree::record(EL::Worker* wk) {
   for( auto hist : m_allHists ){
+    Info("record()", "histogram record : %s", hist->GetName());
     wk->addOutput(hist);
   }
+}
+
+void ProcessZJetBalanceMiniTree::FillFlavorHistograms(TH1F* h_b, TH1F* h_c, TH1F* h_l, const int& truthLabel, const float& value, const float& weight)
+{
+  switch (TMath::Abs(truthLabel)) {
+  case 5:
+    h_b->Fill(value, weight);
+    break;
+  case 4:
+    h_c->Fill(value, weight);
+    break;
+  default:
+    h_l->Fill(value, weight);
+    break;
+  }
+}
+
+void ProcessZJetBalanceMiniTree::FillCutflowHistograms(const std::string& label, const double& xAHWeight, const double& weightFinal)
+{
+  // create first for both
+  m_h_cutflow->GetXaxis()->FindBin(label.c_str());
+  m_h_cutflow_weighted->GetXaxis()->FindBin(label.c_str());
+  m_h_cutflow_weighted_final->GetXaxis()->FindBin(label.c_str());
+  
+  const int bin = m_h_cutflow->GetXaxis()->FindBin(label.c_str());
+  const double xx = m_h_cutflow->GetXaxis()->GetBinCenter(bin);
+  
+  m_h_cutflow->Fill( xx, 1 );
+  m_h_cutflow_weighted->Fill( xx, xAHWeight );
+  m_h_cutflow_weighted_final->Fill( xx, weightFinal );
 }
