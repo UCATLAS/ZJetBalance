@@ -71,6 +71,15 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1F* m_h_jet_eta; //!
   TH1F* m_h_jet_pt; //!
   TH1F* m_h_jet_phi; //!
+  TH1F* m_h_jet_eta_b; //!
+  TH1F* m_h_jet_pt_b; //!
+  TH1F* m_h_jet_phi_b; //!
+  TH1F* m_h_jet_eta_c; //!
+  TH1F* m_h_jet_pt_c; //!
+  TH1F* m_h_jet_phi_c; //!
+  TH1F* m_h_jet_eta_l; //!
+  TH1F* m_h_jet_pt_l; //!
+  TH1F* m_h_jet_phi_l; //!
   TH1F* m_h_averageInteractionsPerCrossing; //!
   TH2F* m_h_jet_pt_bin; //!
   TH1F* m_h_pt_binning_info; //!
@@ -82,8 +91,15 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1F* m_h_nJets_beforecut; //!
   TH1F* m_h_jet_eta_beforecut; //!
   TH1F* m_h_jet_pt_beforecut; //!
+  TH1F* m_h_jet_eta_beforecut_b; //!
+  TH1F* m_h_jet_pt_beforecut_b; //!
+  TH1F* m_h_jet_eta_beforecut_c; //!
+  TH1F* m_h_jet_pt_beforecut_c; //!
+  TH1F* m_h_jet_eta_beforecut_l; //!
+  TH1F* m_h_jet_pt_beforecut_l; //!
   TH1F* m_h_cutflow; //!
   TH1F* m_h_cutflow_weighted; //!
+  TH1F* m_h_cutflow_weighted_final; //!
   
   
   Double_t*       m_pT_binning; //!
@@ -92,14 +108,21 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Int_t           m_n_eta_binning; //!
 
   std::vector< TH1* > m_allHists; //!
+  inline void FillCutflowHistograms(const std::string& label, const double& xAHWeight, const double& weightFinal);
+
   
  public:
   static void DecodeBinning(TString binning_str, Double_t* binning_array, Int_t& n_binning);
   int GetPtBin(const double& _pt);
   int GetEtaBin(const double& _eta);
   double GetPileupReweightingFactor();
+  inline void FillFlavorHistograms(TH1F* h_b, TH1F* h_c, TH1F* h_l, const int& truthLabel, const float& value, const float& weight);
+
   std::pair<TH1F*, TH1F*> ReturnCutflowPointers();
   std::vector< std::vector<TH1F*> > m_balance_hists;
+  std::vector< std::vector<TH1F*> > m_balance_hists_b;
+  std::vector< std::vector<TH1F*> > m_balance_hists_c;
+  std::vector< std::vector<TH1F*> > m_balance_hists_l;
   
   // this is a standard constructor
   ProcessZJetBalanceMiniTree ();
