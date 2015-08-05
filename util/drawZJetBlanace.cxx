@@ -341,7 +341,7 @@ void DrawValidationPlots(TCanvas& c1,
 
 void print_usage(const std::string commandname)
 {
-  printf("%s -d <data histogram file> -m <MC histogram file> -l <luminosity in fb> \n",
+  printf("%s -d <data histogram file> -m <MC histogram file> -l <luminosity in fb-1> \n",
 	 commandname.c_str());
   printf("options: \n");
   printf("-s <draw function selection (default 1)>\n");
