@@ -26,6 +26,9 @@
 #include "xAODAnaHelpers/JetSelector.h"
 #include "xAODAnaHelpers/BJetEfficiencyCorrector.h"
 
+// xAH Overlap Removal
+#include "xAODAnaHelpers/OverlapRemover.h"
+
 // Our Balancing Algorithm
 #include "ZJetBalance/BalanceAlgorithm.h"
 #include "ZJetBalance/EEBalanceAlgorithm.h"
@@ -317,6 +320,12 @@ int main( int argc, char* argv[] ) {
   
   BJetEfficiencyCorrector* bjetCorrectFlt70 = new BJetEfficiencyCorrector();
   bjetCorrectFlt70->setName( "bjetCorrectFlt70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFlt70.config" );
+  /// OVERLAP REMOVAL ///
+  OverlapRemover* overlapRemoverElectrons;
+  OverlapRemover* overlapRemoverMuons;
+
+
+  /// BALANCING ALGORITHM ///
   // Declare both analyses. Again, initialization comes later.
   BalanceAlgorithm* balAlg; 
   EEBalanceAlgorithm* eebalAlg;
@@ -335,6 +344,9 @@ int main( int argc, char* argv[] ) {
     muonCorrect = new MuonEfficiencyCorrector();
     muonCorrect->setName( "muonCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCorrect.config");
     
+    overlapRemoverMuons = new OverlapRemover();
+    overlapRemoverMuons->setName( "overlapRemoverMuons" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/overlapRemovalMuons.config" );
+
     balAlg = new BalanceAlgorithm();
     balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
   } else{ // Else, use electros for Z->ee
@@ -349,6 +361,9 @@ int main( int argc, char* argv[] ) {
 
     electronCorrect = new ElectronEfficiencyCorrector();
     electronCorrect->setName( "electronCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCorrect.config");
+    
+    overlapRemoverElectrons = new OverlapRemover();
+    overlapRemoverElectrons->setName( "overlapRemoverElectrons" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/overlapRemovalElectrons.config" );
 
     eebalAlg = new EEBalanceAlgorithm();
     eebalAlg->setName("ZeeJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zeejetAlgo.config" );
@@ -385,10 +400,13 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFlt70 );
   job.algsAdd( balAlg       );
 
-  if( useMuons )
+  if( useMuons ){
+    job.algsAdd( overlapRemoverMuons );
     job.algsAdd( balAlg );
-  else
+  }else{
+    job.algsAdd( overlapRemoverElectrons );
     job.algsAdd( eebalAlg );
+  }
 
   if(f_grid){
     EL::PrunDriver driver;
