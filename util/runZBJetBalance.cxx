@@ -373,7 +373,6 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFix77 );
   job.algsAdd( bjetCorrectFix85 );
   job.algsAdd( bjetCorrectFlt70 );
-  job.algsAdd( balAlg       );
 
 
   if( useMuons ){
