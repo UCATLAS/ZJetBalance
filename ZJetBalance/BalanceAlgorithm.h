@@ -24,8 +24,6 @@
 
 #include <sstream>
 
-static float GeV = 1000.;
-
 class BalanceAlgorithm : public xAH::Algorithm
 {
   // put your configuration variables here as public variables.
@@ -42,6 +40,7 @@ class BalanceAlgorithm : public xAH::Algorithm
 
   private:
     //configuration variables
+    const float m_GeV;  //!
     bool m_useMuons;        //! if true, use muon for balancing. if false, use electrons
     std::string m_inputJetContainerName;    //! input container name
     std::string m_inputJetAlgo;             //! input algo for when running systs
