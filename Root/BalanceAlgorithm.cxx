@@ -90,7 +90,7 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
     Error("configure()", "Muon InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
-  if( !m_useMuons && m_inputElectronContainerName.empty() ) {
+  if( (!m_useMuons) && m_inputElectronContainerName.empty() ) {
     Error("configure()", "Electron InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
