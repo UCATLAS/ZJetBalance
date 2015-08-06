@@ -28,6 +28,7 @@ ClassImp(BalanceAlgorithm)
 BalanceAlgorithm :: BalanceAlgorithm () :
   m_cutflowHist(0),
   m_cutflowHistW(0),
+  m_GeV(1000.),
   m_treeStream("tree")
 {
 //  // Here you put any code for the base initialization of variables,
@@ -411,17 +412,17 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   ///////////////////////// Add final variables ////////////////////////////////
-  eventInfo->auxdecor< float >( "ZpT" )  = Z.Pt() / GeV;
+  eventInfo->auxdecor< float >( "ZpT" )  = Z.Pt() / m_GeV;
   eventInfo->auxdecor< float >( "Zeta" ) = Z.Eta();
   eventInfo->auxdecor< float >( "Zphi" ) = Z.Phi();
-  eventInfo->auxdecor< float >( "ZM" )   = Z.M() / GeV;
+  eventInfo->auxdecor< float >( "ZM" )   = Z.M() / m_GeV;
   eventInfo->auxdecor< float >( "dPhiZJet1" ) = Z.DeltaPhi( signalJets->at(0)->p4() );
   eventInfo->auxdecor< float >( "dEtaZJet1" ) = Z.Eta() - signalJets->at(0)->eta();
-  eventInfo->auxdecor< float >( "pTRef1" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(0)->p4() ) )) / GeV;
+  eventInfo->auxdecor< float >( "pTRef1" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(0)->p4() ) )) / m_GeV;
   if( signalJets->size() > 1 ){ 
     eventInfo->auxdecor< float >( "dPhiZJet2" ) = Z.DeltaPhi( signalJets->at(1)->p4() );
     eventInfo->auxdecor< float >( "dEtaZJet2" ) = Z.Eta() - signalJets->at(1)->eta();
-    eventInfo->auxdecor< float >( "pTRef2" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(1)->p4() ) )) / GeV; 
+    eventInfo->auxdecor< float >( "pTRef2" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(1)->p4() ) )) / m_GeV; 
     eventInfo->auxdecor< float >( "jetDPhi" ) = signalJets->at(0)->p4().DeltaPhi( signalJets->at(1)->p4() );
     eventInfo->auxdecor< float >( "jetDEta" ) = signalJets->at(0)->eta() - signalJets->at(1)->eta();
     eventInfo->auxdecor< float >( "jetPtRatio" ) = signalJets->at(1)->pt() / signalJets->at(0)->pt();
@@ -508,15 +509,15 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   ///////////////////////// Add final variables ////////////////////////////////
-  eventInfo->auxdecor< float >( "ZpT" )  = Z.Pt() / GeV;
+  eventInfo->auxdecor< float >( "ZpT" )  = Z.Pt() / m_GeV;
   eventInfo->auxdecor< float >( "Zeta" ) = Z.Eta();
   eventInfo->auxdecor< float >( "Zphi" ) = Z.Phi();
-  eventInfo->auxdecor< float >( "ZM" )   = Z.M() / GeV;
+  eventInfo->auxdecor< float >( "ZM" )   = Z.M() / m_GeV;
   eventInfo->auxdecor< float >( "dPhiZJet1" ) = Z.DeltaPhi( signalJets->at(0)->p4() );
-  eventInfo->auxdecor< float >( "pTRef1" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(0)->p4() ) )) / GeV;
+  eventInfo->auxdecor< float >( "pTRef1" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(0)->p4() ) )) / m_GeV;
   if( signalJets->size() > 1 ){ 
     eventInfo->auxdecor< float >( "dPhiZJet2" ) = Z.DeltaPhi( signalJets->at(1)->p4() );
-    eventInfo->auxdecor< float >( "pTRef2" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(1)->p4() ) )) / GeV; 
+    eventInfo->auxdecor< float >( "pTRef2" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(1)->p4() ) )) / m_GeV; 
     eventInfo->auxdecor< float >( "jetDPhi" ) = signalJets->at(0)->p4().DeltaPhi( signalJets->at(1)->p4() );
     eventInfo->auxdecor< float >( "jetDEta" ) = signalJets->at(0)->eta() - signalJets->at(1)->eta();
     eventInfo->auxdecor< float >( "jetPtRatio" ) = signalJets->at(1)->pt() / signalJets->at(0)->pt();
