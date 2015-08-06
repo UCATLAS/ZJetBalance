@@ -24,6 +24,8 @@
 
 #include <sstream>
 
+static float GeV = 1000.;
+
 class BalanceAlgorithm : public xAH::Algorithm
 {
   // put your configuration variables here as public variables.
@@ -70,7 +72,6 @@ class BalanceAlgorithm : public xAH::Algorithm
     int m_mcChannelNumber; //!
     std::stringstream m_ss; //!
 
-    const float GeV = 1000.;
     std::string m_treeStream;
     void passCut();
     TLorentzVector getFourMomentumOfMuonInJet(const xAOD::Muon* muon);
