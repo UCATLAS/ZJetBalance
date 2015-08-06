@@ -56,7 +56,7 @@ int main( int argc, char* argv[] ) {
   float systVal = 0;
 
   // True -> use Muons; False -> Use Electrons
-  bool useMuons = false;
+  bool useMuons = true;
 
   /////////// Retrieve arguments //////////////////////////
   std::vector< std::string> options;
