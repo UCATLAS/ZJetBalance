@@ -383,14 +383,18 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
 
   // detector eta and punch-through-variable
-//  if( !m_truthLevelOnly ) {
-//    for( auto iJet : *signalJets ) {
-//      xAOD::JetFourMom_t jetConstitScaleP4 = iJet->getAttribute<xAOD::JetFourMom_t>("JetConstitScaleMomentum");
-//      xAOD::JetFourMom_t jetEMScaleP4 = iJet->getAttribute<xAOD::JetFourMom_t>("JetEMScaleMomentum");
-//      iJet->auxdecor< float >( "constitScaleEta") = jetConstitScaleP4.eta();
-//      iJet->auxdecor< float >( "emScaleEta")      = jetEMScaleP4.eta();
-//    }
-//  }
+  if( !m_truthLevelOnly ) {
+    xAOD::JetFourMom_t fourVec;
+    bool status(false);
+    for( auto iJet : *signalJets ) {
+      status = iJet->getAttribute<xAOD::JetFourMom_t>( "JetEMScaleMomentum", fourVec );
+      if( status ) { iJet->auxdecor< float >( "emScaleEta") = fourVec.eta(); }
+      else         { iJet->auxdecor< float >( "emScaleEta") = -999; }
+      status = iJet->getAttribute<xAOD::JetFourMom_t>( "JetConstitScaleMomentum", fourVec );
+      if( status ) { iJet->auxdecor< float >( "constitScaleEta") = fourVec.eta(); }
+      else         { iJet->auxdecor< float >( "constitScaleEta") = -999; }
+    }
+  }
 
 
   if(m_debug){
