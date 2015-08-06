@@ -194,6 +194,9 @@ EL::StatusCode BalanceAlgorithm :: initialize ()
     m_cutflowFirst = m_cutflowHist->GetXaxis()->FindBin("LeadingJetPtCut");
     m_cutflowHistW->GetXaxis()->FindBin("LeadingJetPtCut");
 
+    m_cutflowHist->GetXaxis()->FindBin("OppositeSignLeptonCut");
+    m_cutflowHist->GetXaxis()->FindBin("OppositeSignLeptonCut");
+
     m_cutflowHist->GetXaxis()->FindBin("ZMassLoose");
     m_cutflowHistW->GetXaxis()->FindBin("ZMassLoose");
 
@@ -387,6 +390,12 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
   if(doCutflow) passCut(); //Leading jet pT cut
 
+  if( (signalMuons->at(0)->charge() < 0 && signalMuons->at(1)->charge() < 0) ||
+      (signalMuons->at(0)->charge() > 0 && signalMuons->at(1)->charge() > 0) ){
+      wk()->skipEvent();  return EL::StatusCode::SUCCESS;
+  }
+  if(doCutflow) passCut(); // Opposite sign leptons cut.
+
   // create the Z-Object
   TLorentzVector Z = TLorentzVector();
   Z += signalMuons->at(0)->p4();
@@ -474,7 +483,13 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
       wk()->skipEvent();  return EL::StatusCode::SUCCESS;
   }
   if(doCutflow) passCut(); //Leading jet pT cut
-
+  
+  if( (signalElectrons->at(0)->charge() < 0 && signalElectrons->at(1)->charge() < 0) ||
+      (signalElectrons->at(0)->charge() > 0 && signalElectrons->at(1)->charge() > 0) ){
+      wk()->skipEvent();  return EL::StatusCode::SUCCESS;
+  }
+  if(doCutflow) passCut(); // Opposite sign leptons cut.
+  
   // create the Z-Object
   TLorentzVector Z = TLorentzVector();
   Z += signalElectrons->at(0)->p4();

@@ -31,7 +31,6 @@
 
 // Our Balancing Algorithm
 #include "ZJetBalance/BalanceAlgorithm.h"
-#include "ZJetBalance/EEBalanceAlgorithm.h"
 
 #include <string>
 #include <sys/stat.h>
