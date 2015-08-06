@@ -390,8 +390,7 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
   if(doCutflow) passCut(); //Leading jet pT cut
 
-  if( (signalMuons->at(0)->charge() < 0 && signalMuons->at(1)->charge() < 0) ||
-      (signalMuons->at(0)->charge() > 0 && signalMuons->at(1)->charge() > 0) ){
+  if( ( (signalMuons->at(0)->charge()) * (signalMuons->at(1)->charge()) ) > 0 ){
       wk()->skipEvent();  return EL::StatusCode::SUCCESS;
   }
   if(doCutflow) passCut(); // Opposite sign leptons cut.
@@ -484,8 +483,7 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
   if(doCutflow) passCut(); //Leading jet pT cut
   
-  if( (signalElectrons->at(0)->charge() < 0 && signalElectrons->at(1)->charge() < 0) ||
-      (signalElectrons->at(0)->charge() > 0 && signalElectrons->at(1)->charge() > 0) ){
+  if( ( (signalElectrons->at(0)->charge()) * (signalElectrons->at(1)->charge()) ) > 0 ){
       wk()->skipEvent();  return EL::StatusCode::SUCCESS;
   }
   if(doCutflow) passCut(); // Opposite sign leptons cut.

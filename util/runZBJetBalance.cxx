@@ -356,7 +356,6 @@ int main( int argc, char* argv[] ) {
 
   job.algsAdd( muonCalib    );
   job.algsAdd( muonPreSelect);
-  job.algsAdd( muonSelectForMuonInJetCorrection   );
   job.algsAdd( electronCalib     );
   job.algsAdd( electronPreSelect );
   job.algsAdd( jetCalib     );
@@ -368,6 +367,7 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFix77 );
   job.algsAdd( bjetCorrectFix85 );
   job.algsAdd( bjetCorrectFlt70 );
+  job.algsAdd( muonSelectForMuonInJetCorrection   );
 
   if( useMuons ){
     job.algsAdd( muonSelect      );
