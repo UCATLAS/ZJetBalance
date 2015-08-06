@@ -294,10 +294,10 @@ EL::StatusCode BalanceAlgorithm :: execute ()
   bool pass(false);
   bool doCutflow(m_useCutFlow); // will only stay true for nominal
   const xAOD::JetContainer*  signalJets  = 0;
-  if( m_useMuons )
-    const xAOD::MuonContainer* signalMuons = 0;
-  else   
-    const xAOD::ElectronContainer* signalElectrons = 0;
+  
+  // Declare both containers, so we have them in the scope.
+  const xAOD::MuonContainer* signalMuons = 0; 
+  const xAOD::ElectronContainer* signalElectrons = 0;
 
   // if input comes from xAOD, or just running one collection,
   // then get the one collection and be done with it
@@ -459,7 +459,7 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   return true;
 }
 
-bool EEBalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
+bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
     const xAOD::JetContainer* signalJets,
     const xAOD::ElectronContainer* signalElectrons,
     const xAOD::VertexContainer* vertices,
@@ -484,8 +484,8 @@ bool EEBalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
   }
   if(doCutflow) passCut(); //Z mass cut
 
-  if ( electronInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
-    Error("executeAnalysis()", "failure in electronInJetCorrection()");
+  if ( muonInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
+    Error("executeAnalysis()", "failure in muonInJetCorrection()");
   }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

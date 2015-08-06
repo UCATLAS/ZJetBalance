@@ -109,6 +109,12 @@ public:
       const xAOD::VertexContainer* vertices,
       bool count,
       std::string systName = "");
+  bool executeAnalysis( const xAOD::EventInfo* eventInfo,
+      const xAOD::JetContainer* signalJets,
+      const xAOD::ElectronContainer* signalElectrons,
+      const xAOD::VertexContainer* vertices,
+      bool count,
+      std::string systName = "");
 #endif // not __CINT__
   void AddTree( std::string );
 

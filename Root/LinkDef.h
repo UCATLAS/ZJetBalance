@@ -1,5 +1,4 @@
 #include <ZJetBalance/ProcessZJetBalanceMiniTree.h>
-#include <ZJetBalance/EEBalanceAlgorithm.h>
 #include <ZJetBalance/BalanceAlgorithm.h>
 #include <ZJetBalance/MiniTree.h>
 
@@ -10,7 +9,6 @@
 #pragma link off all functions;
 #pragma link C++ nestedclass;
 
-#pragma link C++ class EEBalanceAlgorithm+;
 #pragma link C++ class BalanceAlgorithm+;
 #pragma link C++ class MiniTree+;
 
