@@ -6,6 +6,7 @@
 #include "xAODTracking/VertexContainer.h"
 #include "xAODJet/JetContainer.h"
 #include "xAODMuon/MuonContainer.h"
+#include "xAODEgamma/ElectronContainer.h"
 #include "xAODEventInfo/EventInfo.h"
 #include <ZJetBalance/BalanceAlgorithm.h>
 #include <xAODAnaHelpers/HelperFunctions.h>
@@ -52,10 +53,10 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
   }
 
   // read debug flag from .config file
+  m_useMuons                 = config->GetValue("UseMuons", true);
   m_inputJetContainerName    = config->GetValue("InputJetContainer",  "");
   m_inputJetAlgo             = config->GetValue("InputJetAlgo",       "");
-  m_inputMuonContainerName   = config->GetValue("InputMuonContainer",  "");
-  m_inputMuonAlgo            = config->GetValue("InputMuonAlgo",       "");
+
   m_inputMuonForMuonInJetCorrectionContainerName   = config->GetValue("InputMuonForMuonInJetCorrectionContainer",  "");
   m_inputMuonForMuonInJetCorrectionAlgo            = config->GetValue("InputMuonForMuonInJetCorrectionAlgo",       "");
   m_debug                    = config->GetValue("Debug" ,      false );
@@ -67,7 +68,16 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
   m_trigDetailStr            = config->GetValue("TrigDetailStr", "");
   m_jetDetailStr             = config->GetValue("JetDetailStr", "kinematic clean energy truth flavorTag layer");
   m_jetDetailStrSyst         = config->GetValue("JetDetailStrSyst", "kinematic clean energy");
-  m_muonDetailStr            = config->GetValue("MuonDetailStr", "kinematic");
+  
+  if( m_useMuons ){
+    m_inputMuonContainerName   = config->GetValue("InputMuonContainer",  "");
+    m_inputMuonAlgo            = config->GetValue("InputMuonAlgo",       "");
+    m_muonDetailStr            = config->GetValue("MuonDetailStr", "kinematic");
+  } else{
+    m_inputElectronContainerName   = config->GetValue("InputElectronContainer",  "");
+    m_inputElectronAlgo            = config->GetValue("InputElectronAlgo",       "");
+    m_electronDetailStr        = config->GetValue("ElectronDetailStr", "kinematic");
+  }
 
   config->Print();
   Info("configure()", "BalanceAlgorithm Interface succesfully configured! \n");
@@ -76,8 +86,12 @@ EL::StatusCode  BalanceAlgorithm :: configure ()
     Error("configure()", "Jet InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
-  if( m_inputMuonContainerName.empty() ) {
+  if( m_useMuons && m_inputMuonContainerName.empty() ) {
     Error("configure()", "Muon InputContainer is empty!");
+    return EL::StatusCode::FAILURE;
+  }
+  if( !m_useMuons && m_inputElectronContainerName.empty() ) {
+    Error("configure()", "Electron InputContainer is empty!");
     return EL::StatusCode::FAILURE;
   }
   if( m_inputMuonForMuonInJetCorrectionContainerName.empty() ) {
@@ -216,7 +230,10 @@ void BalanceAlgorithm::AddTree( std::string name ) {
       //miniTree->AddMuons( m_muonDetailStrSyst );
     } else {
       miniTree->AddJets ( m_jetDetailStr );
-      miniTree->AddMuons( m_muonDetailStr );
+      if( m_useMuons )
+        miniTree->AddMuons( m_muonDetailStr );
+      else 
+        miniTree->AddElectrons( m_electronDetailStr );
     }
   }
   m_myTrees[name] = miniTree;
@@ -277,14 +294,25 @@ EL::StatusCode BalanceAlgorithm :: execute ()
   bool pass(false);
   bool doCutflow(m_useCutFlow); // will only stay true for nominal
   const xAOD::JetContainer*  signalJets  = 0;
-  const xAOD::MuonContainer* signalMuons = 0;
+  if( m_useMuons )
+    const xAOD::MuonContainer* signalMuons = 0;
+  else   
+    const xAOD::ElectronContainer* signalElectrons = 0;
+
   // if input comes from xAOD, or just running one collection,
   // then get the one collection and be done with it
-  if( (m_inputJetAlgo.empty() && m_inputMuonAlgo.empty()) || m_truthLevelOnly ) {
+  if( (m_inputJetAlgo.empty() && 
+      (( m_useMuons && m_inputMuonAlgo.empty() ) || ( !m_useMuons && m_inputElectronAlgo.empty() ))) 
+      || m_truthLevelOnly ) {
     RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalJets, m_inputJetContainerName, m_event, m_store), "");
-    RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalMuons, m_inputMuonContainerName, m_event, m_store), "");
-    pass = this->executeAnalysis( eventInfo, signalJets, signalMuons, vertices, doCutflow, "" );
-
+    
+    if( m_useMuons ){
+      RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalMuons, m_inputMuonContainerName, m_event, m_store), "");
+      pass = this->executeAnalysis( eventInfo, signalJets, signalMuons, vertices, doCutflow, "" );
+    }else{
+      RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalElectrons, m_inputElectronContainerName, m_event, m_store), "");
+      pass = this->executeAnalysis( eventInfo, signalJets, signalElectrons, vertices, doCutflow, "" );
+    }
   }
   else { // get the list of systematics to run over
 
@@ -298,7 +326,10 @@ EL::StatusCode BalanceAlgorithm :: execute ()
     }
     
     // Add loop over muon systematics !!! TODO
-    RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalMuons, m_inputMuonContainerName, m_event, m_store), "");
+    if( m_useMuons )
+      RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalMuons, m_inputMuonContainerName, m_event, m_store), "");
+    else
+      RETURN_CHECK("BalanceAlgorithm::execute()", HelperFunctions::retrieve(signalElectrons, m_inputElectronContainerName, m_event, m_store), "");
 
     // loop over systematics
     bool saveContainerNames(false);
@@ -314,7 +345,12 @@ EL::StatusCode BalanceAlgorithm :: execute ()
       // allign with Dijet naming conventions
       if( systName.empty() ) { doCutflow = m_useCutFlow; } // only doCutflow for nominal
       else { doCutflow = false; }
-      passOne = this->executeAnalysis( eventInfo, signalJets, signalMuons, vertices, doCutflow, systName );
+
+      if( m_useMuons )
+        passOne = this->executeAnalysis( eventInfo, signalJets, signalMuons, vertices, doCutflow, systName );
+      else
+        passOne = this->executeAnalysis( eventInfo, signalJets, signalElectrons, vertices, doCutflow, systName );
+      
       // save the string if passing the selection
       if( saveContainerNames && passOne ) { vecOutContainerNames->push_back( systName ); }
       // the final decision - if at least one passes keep going!
@@ -334,6 +370,7 @@ EL::StatusCode BalanceAlgorithm :: execute ()
   
 }
 
+// We overload the executeAnalysis function to use muons or electrons, depending on the input container
 bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
     const xAOD::JetContainer* signalJets,
     const xAOD::MuonContainer* signalMuons,
@@ -415,6 +452,92 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
       int pVLoc = HelperFunctions::getPrimaryVertexLocation( vertices );
       if(signalJets)  m_myTrees[systName]->FillJets( signalJets, pVLoc );
       if(signalMuons) m_myTrees[systName]->FillMuons( signalMuons, vertices->at(pVLoc) );
+    }
+    m_myTrees[systName]->Fill();
+  }
+
+  return true;
+}
+
+bool EEBalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
+    const xAOD::JetContainer* signalJets,
+    const xAOD::ElectronContainer* signalElectrons,
+    const xAOD::VertexContainer* vertices,
+    bool doCutflow,
+    std::string systName) {
+
+  /////////////////////////// Begin Selections  ///////////////////////////////
+
+
+  ////  leadingJetPt trigger efficiency BEFORE MCCLEANING ////
+  if( signalJets->at(0)->pt() < m_leadingJetPtCut){
+      wk()->skipEvent();  return EL::StatusCode::SUCCESS;
+  }
+  if(doCutflow) passCut(); //Leading jet pT cut
+
+  // create the Z-Object
+  TLorentzVector Z = TLorentzVector();
+  Z += signalElectrons->at(0)->p4();
+  Z += signalElectrons->at(1)->p4();
+  if( fabs(Z.M() - 90e3) > 35e3 ) {
+      wk()->skipEvent();  return EL::StatusCode::SUCCESS;
+  }
+  if(doCutflow) passCut(); //Z mass cut
+
+  if ( electronInJetCorrection (signalJets) == EL::StatusCode::FAILURE ) {
+    Error("executeAnalysis()", "failure in electronInJetCorrection()");
+  }
+
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% End Selections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  ///////////////////////// Add final variables ////////////////////////////////
+  eventInfo->auxdecor< float >( "ZpT" )  = Z.Pt() / GeV;
+  eventInfo->auxdecor< float >( "Zeta" ) = Z.Eta();
+  eventInfo->auxdecor< float >( "Zphi" ) = Z.Phi();
+  eventInfo->auxdecor< float >( "ZM" )   = Z.M() / GeV;
+  eventInfo->auxdecor< float >( "dPhiZJet1" ) = Z.DeltaPhi( signalJets->at(0)->p4() );
+  eventInfo->auxdecor< float >( "pTRef1" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(0)->p4() ) )) / GeV;
+  if( signalJets->size() > 1 ){ 
+    eventInfo->auxdecor< float >( "dPhiZJet2" ) = Z.DeltaPhi( signalJets->at(1)->p4() );
+    eventInfo->auxdecor< float >( "pTRef2" ) = Z.Pt()*fabs(cos( Z.DeltaPhi( signalJets->at(1)->p4() ) )) / GeV; 
+    eventInfo->auxdecor< float >( "jetDPhi" ) = signalJets->at(0)->p4().DeltaPhi( signalJets->at(1)->p4() );
+    eventInfo->auxdecor< float >( "jetDEta" ) = signalJets->at(0)->eta() - signalJets->at(1)->eta();
+    eventInfo->auxdecor< float >( "jetPtRatio" ) = signalJets->at(1)->pt() / signalJets->at(0)->pt();
+  }
+
+  // detector eta and punch-through-variable
+//  if( !m_truthLevelOnly ) {
+//    for( auto iJet : *signalJets ) {
+//      xAOD::JetFourMom_t jetConstitScaleP4 = iJet->getAttribute<xAOD::JetFourMom_t>("JetConstitScaleMomentum");
+//      xAOD::JetFourMom_t jetEMScaleP4 = iJet->getAttribute<xAOD::JetFourMom_t>("JetEMScaleMomentum");
+//      iJet->auxdecor< float >( "constitScaleEta") = jetConstitScaleP4.eta();
+//      iJet->auxdecor< float >( "emScaleEta")      = jetEMScaleP4.eta();
+//    }
+//  }
+
+
+  if(m_debug){
+    std::cout << "Event # " << m_eventCounter << std::endl;
+  }
+
+  /////////////////////////////////////// Output Plots ////////////////////////////////
+  float weight(1);
+  if( eventInfo->isAvailable< float >( "weight" ) ) {
+    weight = eventInfo->auxdecor< float >( "weight" );
+  }
+
+
+  ///////////////////////////// fill the tree ////////////////////////////////////////////
+  if(m_writeTree){
+    if( m_myTrees.find( systName ) == m_myTrees.end() ) { AddTree( systName ); }
+    if(eventInfo)   m_myTrees[systName]->FillEvent( eventInfo, m_event );
+    if( m_truthLevelOnly ) {
+      if(signalJets)  m_myTrees[systName]->FillJets( signalJets, -1 );
+    } else {
+      m_myTrees[systName]->FillTrigger( eventInfo );
+      int pVLoc = HelperFunctions::getPrimaryVertexLocation( vertices );
+      if(signalJets)  m_myTrees[systName]->FillJets( signalJets, pVLoc );
+      if(signalElectrons) m_myTrees[systName]->FillElectrons( signalElectrons, vertices->at(pVLoc) );
     }
     m_myTrees[systName]->Fill();
   }

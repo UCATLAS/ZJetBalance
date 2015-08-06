@@ -313,9 +313,6 @@ int main( int argc, char* argv[] ) {
   ElectronSelector* electronSelect = new ElectronSelector();
   electronSelect->setName( "electronSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronSelect.config");
 
-  ElectronSelector* electronSelectForElectronInJetCorrection = new ElectronSelector();
-  electronSelectForElectronInJetCorrection->setName( "electronSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronSelectForElectronInJetCorrection.config");
-
   ElectronEfficiencyCorrector* electronCorrect = new ElectronEfficiencyCorrector();
   electronCorrect->setName( "electronCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCorrect.config");
     
@@ -346,9 +343,7 @@ int main( int argc, char* argv[] ) {
   overlapRemover->setName( "overlapRemover" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/overlapRemoval.config" );
 
   /// BALANCING ALGORITHM ///
-  // Declare both analyses. Initialization comes later.
   BalanceAlgorithm* balAlg; 
-  EEBalanceAlgorithm* eebalAlg;
 
 //  muonCalib->m_debug    = true;
 //  muonSelect->m_debug   = true;
@@ -373,23 +368,22 @@ int main( int argc, char* argv[] ) {
   job.algsAdd( bjetCorrectFix77 );
   job.algsAdd( bjetCorrectFix85 );
   job.algsAdd( bjetCorrectFlt70 );
-
+  job.algsAdd( muonSelectForMuonInJetCorrection   );
 
   if( useMuons ){
     job.algsAdd( muonSelect      );
-    job.algsAdd( muonSelectForMuonInJetCorrection   );
     job.algsAdd( muonCorrect     ); 
     balAlg = new BalanceAlgorithm();
     balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
-    job.algsAdd( balAlg );
   }else{
     job.algsAdd( electronSelect  );
-    job.algsAdd( electronSelectForElectronInJetCorrection );
     job.algsAdd( electronCorrect );
-    eebalAlg = new EEBalanceAlgorithm();
-    eebalAlg->setName("ZeeJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zeejetAlgo.config" );
-    job.algsAdd( eebalAlg );
+    balAlg = new BalanceAlgorithm();
+    balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zeejetAlgo.config" );
   }
+
+  job.algsAdd( balAlg );
+
 
   if(f_grid){
     EL::PrunDriver driver;
