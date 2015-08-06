@@ -42,8 +42,11 @@ class BalanceAlgorithm : public xAH::Algorithm
 
   private:
     //configuration variables
+    bool m_useMuons;        //! if true, use muon for balancing. if false, use electrons
     std::string m_inputJetContainerName;    //! input container name
     std::string m_inputJetAlgo;             //! input algo for when running systs
+    std::string m_inputElectronContainerName;   //! input container name
+    std::string m_inputElectronAlgo;            //! input algo for when running systs
     std::string m_inputMuonContainerName;   //! input container name
     std::string m_inputMuonAlgo;            //! input algo for when running systs
     std::string m_inputMuonForMuonInJetCorrectionContainerName; //! input container name
@@ -59,6 +62,9 @@ class BalanceAlgorithm : public xAH::Algorithm
     std::string m_jetDetailStrSyst;   //! jetsyst info add to tree
     std::string m_muonDetailStr;      //! muon info add to tree
     std::string m_muonDetailStrSyst;  //! muonsyst info add to tree
+    std::string m_electronDetailStr;      //! electron info add to tree
+    std::string m_electronDetailStrSyst;  //! electronsyst info add to tree
+
 
     float m_xs; //!
     float m_filtEff; //!
@@ -101,6 +107,12 @@ public:
   bool executeAnalysis( const xAOD::EventInfo* eventInfo,
       const xAOD::JetContainer* signalJets,
       const xAOD::MuonContainer* signalMuons,
+      const xAOD::VertexContainer* vertices,
+      bool count,
+      std::string systName = "");
+  bool executeAnalysis( const xAOD::EventInfo* eventInfo,
+      const xAOD::JetContainer* signalJets,
+      const xAOD::ElectronContainer* signalElectrons,
       const xAOD::VertexContainer* vertices,
       bool count,
       std::string systName = "");

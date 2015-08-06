@@ -8,14 +8,28 @@
 #include "SampleHandler/DiskListEOS.h"
 #include <TSystem.h>
 
+// xAH Event Selection
 #include "xAODAnaHelpers/BasicEventSelection.h"
+
+// xAH Muons
 #include "xAODAnaHelpers/MuonCalibrator.h"
 #include "xAODAnaHelpers/MuonSelector.h"
 #include "xAODAnaHelpers/MuonEfficiencyCorrector.h"
+
+// xAH Electrons
+#include "xAODAnaHelpers/ElectronCalibrator.h"
+#include "xAODAnaHelpers/ElectronSelector.h"
+#include "xAODAnaHelpers/ElectronEfficiencyCorrector.h"
+
+// xAH Jets
 #include "xAODAnaHelpers/JetCalibrator.h"
 #include "xAODAnaHelpers/JetSelector.h"
 #include "xAODAnaHelpers/BJetEfficiencyCorrector.h"
 
+// xAH Overlap Removal
+#include "xAODAnaHelpers/OverlapRemover.h"
+
+// Our Balancing Algorithm
 #include "ZJetBalance/BalanceAlgorithm.h"
 
 #include <string>
@@ -39,6 +53,9 @@ int main( int argc, char* argv[] ) {
 
   std::string systName = "None";
   float systVal = 0;
+
+  // True -> use Muons; False -> Use Electrons
+  bool useMuons = true;
 
   /////////// Retrieve arguments //////////////////////////
   std::vector< std::string> options;
@@ -164,7 +181,7 @@ int main( int argc, char* argv[] ) {
 
   } else {  //if it is a file
     if( samplePath.substr( samplePath.size()-4 ).find(".txt") != std::string::npos){ //It is a text file of samples
-      if( samplePath.find("grid") != std::string::npos ) //It is samples for the grid
+      if( samplePath.find("grid") != string::npos || samplePath.find("Grid") != string::npos || samplePath.find("GRID") != string::npos ) //It is samples for the grid
         f_grid = true;
 
       std::ifstream inFile( samplePath );
@@ -185,7 +202,10 @@ int main( int argc, char* argv[] ) {
             namePosition = containerName.find_first_of(".", namePosition)+1;
             std::string outstr = "user."+userName+"."+containerName.substr(startPosition, namePosition)+outputTag+"/";
             outputContainerNames.push_back( outstr );
-          }else{
+          } else if ( containerName.find("filelist") != string::npos){
+            SH::readFileList( sh , "sample", samplePath );
+            break;
+          } else{
             //Get full path of file
             char fullPath[300];
             realpath( containerName.c_str(), fullPath );
@@ -204,20 +224,19 @@ int main( int argc, char* argv[] ) {
           }
         }
       }
-
     }else{ //It is a single root file to run on
-    //Get full path of file
-    char fullPath[300];
-    realpath( samplePath.c_str(), fullPath );
-    string thisPath = fullPath;
-    //split into fileName and directory two levels above file
-    string fileName = thisPath.substr(thisPath.find_last_of("/")+1);
-    thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
-    thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
+      //Get full path of file
+      char fullPath[300];
+      realpath( samplePath.c_str(), fullPath );
+      string thisPath = fullPath;
+      //split into fileName and directory two levels above file
+      string fileName = thisPath.substr(thisPath.find_last_of("/")+1);
+      thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
+      thisPath = thisPath.substr(0, thisPath.find_last_of("/"));
 
-    std::cout << "path and file " << thisPath << " and " << fileName << std::endl;
-    SH::DiskListLocal list (thisPath);
-    SH::scanDir (sh, list, fileName); // specifying one particular file for testing
+      std::cout << "path and file " << thisPath << " and " << fileName << std::endl;
+      SH::DiskListLocal list (thisPath);
+      SH::scanDir (sh, list, fileName); // specifying one particular file for testing
 
     }
   }//it's a file
@@ -245,8 +264,15 @@ int main( int argc, char* argv[] ) {
   EL::Job job;
   job.sampleHandler( sh );
 
+  // For debugging purposes, limit the amount of events that we loop over.
+  // job.options()->setDouble (EL::Job::optMaxEvents, 5000);
+
   // To automatically delete submitDir
   job.options()->setDouble(EL::Job::optRemoveSubmitDir, 1);
+
+  // Use TTreeCache to read-precache data files to speed up analysis
+  job.options()->setDouble (EL::Job::optCacheSize, 10*1024*1024);
+  job.options()->setDouble (EL::Job::optCacheLearnEntries, 20);
 
   // For Trigger
   job.options()->setString( EL::Job::optXaodAccessMode, EL::Job::optXaodAccessMode_branch );
@@ -259,9 +285,13 @@ int main( int argc, char* argv[] ) {
   BasicEventSelection* baseEventSel = new BasicEventSelection();
   baseEventSel->setName("baseEventSel")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/baseEvent.config" );
 
+  // Declare all lepton operations first, initialization comes later. Slightly inconsistent with other algos, but saves system resources.
   /// MUONS ///
   MuonCalibrator* muonCalib = new MuonCalibrator();
   muonCalib->setName( "muonCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCalib.config")->setSyst( systName, systVal );
+
+  MuonSelector* muonPreSelect = new MuonSelector();
+  muonPreSelect->setName( "muonPreSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonPreSelect.config");
 
   MuonSelector* muonSelect = new MuonSelector();
   muonSelect->setName( "muonSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonSelect.config");
@@ -271,6 +301,20 @@ int main( int argc, char* argv[] ) {
 
   MuonEfficiencyCorrector* muonCorrect = new MuonEfficiencyCorrector();
   muonCorrect->setName( "muonCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/muonCorrect.config");
+  
+  /// ELECTRONS ///
+  ElectronCalibrator* electronCalib = new ElectronCalibrator();
+  electronCalib->setName( "electronCalib" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCalib.config")->setSyst( systName, systVal );
+
+  ElectronSelector* electronPreSelect = new ElectronSelector();
+  electronPreSelect->setName( "electronPreSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronPreSelect.config");
+
+  ElectronSelector* electronSelect = new ElectronSelector();
+  electronSelect->setName( "electronSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronSelect.config");
+
+  ElectronEfficiencyCorrector* electronCorrect = new ElectronEfficiencyCorrector();
+  electronCorrect->setName( "electronCorrect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/electronCorrect.config");
+    
 
   /// JETS ///
   // jet calibrator
@@ -293,10 +337,12 @@ int main( int argc, char* argv[] ) {
   
   BJetEfficiencyCorrector* bjetCorrectFlt70 = new BJetEfficiencyCorrector();
   bjetCorrectFlt70->setName( "bjetCorrectFlt70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFlt70.config" );
+  /// OVERLAP REMOVAL ///
+  OverlapRemover* overlapRemover = new OverlapRemover();
+  overlapRemover->setName( "overlapRemover" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/overlapRemoval.config" );
 
-  // zjet algo
-  BalanceAlgorithm* balAlg = new BalanceAlgorithm();
-  balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
+  /// BALANCING ALGORITHM ///
+  BalanceAlgorithm* balAlg; 
 
 //  muonCalib->m_debug    = true;
 //  muonSelect->m_debug   = true;
@@ -307,21 +353,36 @@ int main( int argc, char* argv[] ) {
 
   // ADD ALGOS TO JOB
   job.algsAdd( baseEventSel );
+
   job.algsAdd( muonCalib    );
+  job.algsAdd( muonPreSelect);
+  job.algsAdd( electronCalib     );
+  job.algsAdd( electronPreSelect );
   job.algsAdd( jetCalib     );
-  //job.algsAdd( overlap      );
-  // muon selection
-  job.algsAdd( muonSelect   );
-  job.algsAdd( muonSelectForMuonInJetCorrection   );
-  job.algsAdd( muonCorrect  );
-  // jet selection
+  job.algsAdd( overlapRemover );
+
   job.algsAdd( jetSelect    );
   job.algsAdd( bjetCorrectFix60 );
   job.algsAdd( bjetCorrectFix70 );
   job.algsAdd( bjetCorrectFix77 );
   job.algsAdd( bjetCorrectFix85 );
   job.algsAdd( bjetCorrectFlt70 );
-  job.algsAdd( balAlg       );
+  job.algsAdd( muonSelectForMuonInJetCorrection   );
+
+  if( useMuons ){
+    job.algsAdd( muonSelect      );
+    job.algsAdd( muonCorrect     ); 
+    balAlg = new BalanceAlgorithm();
+    balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zjetAlgo.config" );
+  }else{
+    job.algsAdd( electronSelect  );
+    job.algsAdd( electronCorrect );
+    balAlg = new BalanceAlgorithm();
+    balAlg->setName("ZJetBalanceAlgo")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/zeejetAlgo.config" );
+  }
+
+  job.algsAdd( balAlg );
+
 
   if(f_grid){
     EL::PrunDriver driver;
