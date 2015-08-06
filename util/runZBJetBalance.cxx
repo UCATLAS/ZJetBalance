@@ -56,7 +56,7 @@ int main( int argc, char* argv[] ) {
   float systVal = 0;
 
   // True -> use Muons; False -> Use Electrons
-  bool useMuons = true;
+  bool useMuons = false;
 
   /////////// Retrieve arguments //////////////////////////
   std::vector< std::string> options;
@@ -203,7 +203,7 @@ int main( int argc, char* argv[] ) {
             namePosition = containerName.find_first_of(".", namePosition)+1;
             std::string outstr = "user."+userName+"."+containerName.substr(startPosition, namePosition)+outputTag+"/";
             outputContainerNames.push_back( outstr );
-          } else if ( containerName.find("root://") != string::npos){
+          } else if ( containerName.find("filelist") != string::npos){
             SH::readFileList( sh , "sample", samplePath );
             break;
           } else{
