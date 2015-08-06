@@ -282,15 +282,17 @@ int main( int argc, char* argv[] ) {
   jetSelect->setName( "jetSelect" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/jetSelect.config" );
 
   // bjet efficiecny corrector
-  BJetEfficiencyCorrector* bjetCorrectVeryLoose = new BJetEfficiencyCorrector();
-  bjetCorrectVeryLoose->setName( "bjetCorrectVeryLoose" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectVeryLoose.config" );
-  BJetEfficiencyCorrector* bjetCorrectLoose = new BJetEfficiencyCorrector();
-  bjetCorrectLoose->setName( "bjetCorrectLoose" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectLoose.config" );
-  BJetEfficiencyCorrector* bjetCorrectMedium = new BJetEfficiencyCorrector();
-  bjetCorrectMedium->setName( "bjetCorrectMedium" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectMedium.config" );
-  BJetEfficiencyCorrector* bjetCorrectTight = new BJetEfficiencyCorrector();
-  bjetCorrectTight->setName( "bjetCorrectTight" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectTight.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix85 = new BJetEfficiencyCorrector();
+  bjetCorrectFix85->setName( "bjetCorrectFix85" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix85.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix77 = new BJetEfficiencyCorrector();
+  bjetCorrectFix77->setName( "bjetCorrectFix77" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix77.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix70 = new BJetEfficiencyCorrector();
+  bjetCorrectFix70->setName( "bjetCorrectFix70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix70.config" );
+  BJetEfficiencyCorrector* bjetCorrectFix60 = new BJetEfficiencyCorrector();
+  bjetCorrectFix60->setName( "bjetCorrectFix60" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFix60.config" );
   
+  BJetEfficiencyCorrector* bjetCorrectFlt70 = new BJetEfficiencyCorrector();
+  bjetCorrectFlt70->setName( "bjetCorrectFlt70" )->setConfig( "$ROOTCOREBIN/data/ZJetBalance/bjetCorrectFlt70.config" );
 
   // zjet algo
   BalanceAlgorithm* balAlg = new BalanceAlgorithm();
@@ -311,13 +313,14 @@ int main( int argc, char* argv[] ) {
   // muon selection
   job.algsAdd( muonSelect   );
   job.algsAdd( muonSelectForMuonInJetCorrection   );
-  job.algsAdd( muonCorrect  ); // commented out to avoid crash so far
+  job.algsAdd( muonCorrect  );
   // jet selection
   job.algsAdd( jetSelect    );
-  job.algsAdd( bjetCorrectVeryLoose  );
-  job.algsAdd( bjetCorrectLoose      );
-  job.algsAdd( bjetCorrectMedium     );
-  job.algsAdd( bjetCorrectTight      );
+  job.algsAdd( bjetCorrectFix60 );
+  job.algsAdd( bjetCorrectFix70 );
+  job.algsAdd( bjetCorrectFix77 );
+  job.algsAdd( bjetCorrectFix85 );
+  job.algsAdd( bjetCorrectFlt70 );
   job.algsAdd( balAlg       );
 
   if(f_grid){
