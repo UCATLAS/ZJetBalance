@@ -49,7 +49,7 @@ int main( int argc, char* argv[] ) {
   std::string inputTag = "";
   std::string outputTag = "";
   std::string submitDir = "submitDir";
-  std::string configName = "$ROOTCOREBIN/data/ZJetBalance/master.config";
+  std::string leptonChoice = "Muon";
 
   std::string systName = "None";
   float systVal = 0;
@@ -73,7 +73,7 @@ int main( int argc, char* argv[] ) {
          << "  -inputTag        A wildcarded file name to run on" << std::endl
          << "  -outputTag       Version string to be appended to job name" << std::endl
          << "  -submitDir       Name of output directory" << std::endl
-         << "  -configName      Path to config file" << std::endl
+         << "  -leptonChoice    Choose channel to run on, either Muon or Electron" << std::endl
          << "  -syst            Name AND value for systematic" << std::endl
          << std::endl;
     exit(1);
@@ -116,12 +116,12 @@ int main( int argc, char* argv[] ) {
          submitDir = options.at(iArg+1);
          iArg += 2;
        }
-    } else if (options.at(iArg).compare("-configName") == 0) {
+    } else if (options.at(iArg).compare("-leptonChoice") == 0) {
        if (iArg+1 == argc || iArg+1 == (int)options.size() || options.at(iArg+1)[0] == '-' ) {
-         std::cout << " -configName should be followed by a config file" << std::endl;
+         std::cout << " -leptonChoice should be followed by either Muon or Electron" << std::endl;
          return 1;
        } else {
-         configName = options.at(iArg+1);
+         leptonChoice = options.at(iArg+1);
          iArg += 2;
        }
     } else if (options.at(iArg).compare("-syst") == 0) {
@@ -145,6 +145,13 @@ int main( int argc, char* argv[] ) {
       return 1;
     }
   }//while arguments
+
+  // parse lepton choice
+  if ( leptonChoice.find( "Electron" ) != string::npos || leptonChoice.find( "electron" ) != string::npos ){
+    useMuons = false;
+    cout << "Using Electrons for Balance Algorithm" << endl;
+  } else cout << "Using Muons for Balance Algorithm" << endl;
+
 
   //if grid job
   bool f_grid = false;
@@ -276,14 +283,13 @@ int main( int argc, char* argv[] ) {
 
   // For Trigger
   job.options()->setString( EL::Job::optXaodAccessMode, EL::Job::optXaodAccessMode_branch );
-
-  // if want to read jet calib config from config...do this if more than 1 thing to config
-  //TEnv* config = new TEnv(gSystem->ExpandPathName( configName.c_str() ));
-  //std::string m_jetCalibConfig = config->GetValue("jetCalibConfig",  "$ROOTCOREBIN/data/ZJetBalance/jetCalib_AntiKt4EMTopo.config" );
-
+  
   // basic event selection : GRL, event cleaning, NPV
   BasicEventSelection* baseEventSel = new BasicEventSelection();
-  baseEventSel->setName("baseEventSel")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/baseEvent.config" );
+  if ( useMuons )
+    baseEventSel->setName("baseEventSel")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/baseEventForMuons.config" );
+  else
+    baseEventSel->setName("baseEventSel")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/baseEventForElectrons.config" );
 
   // Declare all lepton operations first, initialization comes later. Slightly inconsistent with other algos, but saves system resources.
   /// MUONS ///
