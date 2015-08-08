@@ -81,6 +81,11 @@ void MyDrawTH1FForTruthFlavors(TCanvas& c1,
   hData_orig->Copy(hData);
   
   // Scale MC
+  hData.SetMinimum(hData.GetMinimum()<0 ? hData.GetMinimum() : 0.);
+  hMC_b.SetMinimum(hMC_b.GetMinimum()<0 ? hMC_b.GetMinimum() : 0.);
+  hMC_c.SetMinimum(hMC_c.GetMinimum()<0 ? hMC_c.GetMinimum() : 0.);
+  hMC_l.SetMinimum(hMC_l.GetMinimum()<0 ? hMC_l.GetMinimum() : 0.);
+  
   hData.SetTitle("");
   hMC_b.SetTitle("");
   hMC_c.SetTitle("");
@@ -163,7 +168,7 @@ void MyDrawTH1F(TCanvas& c1,
   TH1F hMC, hData;
   hMC_orig->Copy(hMC);
   hData_orig->Copy(hData);
-  
+    
   hMC.SetTitle("");
   hData.SetTitle("");
   
@@ -177,11 +182,13 @@ void MyDrawTH1F(TCanvas& c1,
   hData.SetMarkerColor(kBlack);
   
   if (hMC.GetMaximum()<hData.GetMaximum()) {
+    hData.SetMinimum(hData.GetMinimum()<0 ? hData.GetMinimum() : 0.);
     hData.GetXaxis()->SetTitle(xtitle.c_str());
     hData.Draw("PE");
     hMC.Draw("H SAME");
     hData.Draw("PE SAME");
   } else {
+    hMC.SetMinimum(hMC.GetMinimum()<0 ? hMC.GetMinimum() : 0.);
     hMC.GetXaxis()->SetTitle(xtitle.c_str());
     hMC.Draw("H");
     hData.Draw("PE SAME");
@@ -346,6 +353,7 @@ void print_usage(const std::string commandname)
   printf("%s -d <data histogram file> -m <MC histogram file> -l <luminosity in fb-1> \n",
 	 commandname.c_str());
   printf("options: \n");
+  printf("-a <additional weight i.e. skiming efficiency in DxAOD (default 1.)>");
   printf("-s <draw function selection (default 1)>\n");
   printf("  1: call DrawValidationPlots \n");
   printf("  2: call DrawPtBalanceForEachEtaPtBin \n");
@@ -360,10 +368,11 @@ int main(int argc, char* argv[])
   int result;
   int modeSelection = 1;
   float luminosity = -1000.;
+  float additional_weight = 1.0;
   bool useWeightedForNormalization = false;
   std::string data_file(""), mc_file(""), outputfile("drawZJetBalanceOutput");
   
-  while((result=getopt(argc,argv,"d:m:l:o:s:w"))!=-1){
+  while((result=getopt(argc,argv,"d:m:l:o:s:a:w"))!=-1){
     switch(result){  
     case 'd':
       data_file = optarg;
@@ -379,6 +388,9 @@ int main(int argc, char* argv[])
       break;
     case 'w':
       useWeightedForNormalization = true;
+      break;
+    case 'a':
+      additional_weight = strtof(optarg, NULL);
       break;
     case 's':
       modeSelection = strtoull(optarg, NULL, 0);
@@ -404,7 +416,7 @@ int main(int argc, char* argv[])
   double MCTotal = useWeightedForNormalization ? 
     ((TH1F*)GetObject(fMC, "cutflow_weighted"))->GetBinContent(1) : 
     ((TH1F*)GetObject(fMC, "cutflow"))->GetBinContent(1);
-  const double McLuminosityWeight = luminosity/MCTotal;
+  const double McLuminosityWeight = luminosity/MCTotal*additional_weight;
   
   TCanvas c1;
   CustimizeCampus(c1);
