@@ -68,19 +68,24 @@ void MyDrawTH1FForTruthFlavors(TCanvas& c1,
 			       const double& weight
 			       )
 {
-  TH1D* hMC_b_orig = (TH1D*)GetObject(fMC, histoname+"_b");
-  TH1D* hMC_c_orig = (TH1D*)GetObject(fMC, histoname+"_c");
-  TH1D* hMC_l_orig = (TH1D*)GetObject(fMC, histoname+"_l");
-  TH1D* hData_orig = (TH1D*)GetObject(fData, histoname);
+  TH1F* hMC_b_orig = (TH1F*)GetObject(fMC, histoname+"_b");
+  TH1F* hMC_c_orig = (TH1F*)GetObject(fMC, histoname+"_c");
+  TH1F* hMC_l_orig = (TH1F*)GetObject(fMC, histoname+"_l");
+  TH1F* hData_orig = (TH1F*)GetObject(fData, histoname);
   
   // copy in order to avoid scaling original one
-  TH1D hMC_b, hMC_b2, hMC_c, hMC_l, hData;
+  TH1F hMC_b, hMC_b2, hMC_c, hMC_l, hData;
   hMC_b_orig->Copy(hMC_b);
   hMC_c_orig->Copy(hMC_c);
   hMC_l_orig->Copy(hMC_l);
   hData_orig->Copy(hData);
   
   // Scale MC
+  hData.SetMinimum(hData.GetMinimum()<0 ? hData.GetMinimum() : 0.);
+  hMC_b.SetMinimum(hMC_b.GetMinimum()<0 ? hMC_b.GetMinimum() : 0.);
+  hMC_c.SetMinimum(hMC_c.GetMinimum()<0 ? hMC_c.GetMinimum() : 0.);
+  hMC_l.SetMinimum(hMC_l.GetMinimum()<0 ? hMC_l.GetMinimum() : 0.);
+  
   hData.SetTitle("");
   hMC_b.SetTitle("");
   hMC_c.SetTitle("");
@@ -89,6 +94,11 @@ void MyDrawTH1FForTruthFlavors(TCanvas& c1,
   hMC_b.Scale(weight);
   hMC_c.Scale(weight);
   hMC_l.Scale(weight);
+  
+  const double entry_b = hMC_b.Integral(-1, -1);
+  const double entry_c = hMC_c.Integral(-1, -1);
+  const double entry_l = hMC_l.Integral(-1, -1);
+  
   hMC_b = hMC_b + hMC_c + hMC_l;
   hMC_c = hMC_c + hMC_l;
   hMC_b.Copy(hMC_b2);
@@ -125,9 +135,6 @@ void MyDrawTH1FForTruthFlavors(TCanvas& c1,
   }
   
   TLegend leg(0.76, 0.15, 0.98, 0.90);
-  const double entry_b = hMC_b.Integral(-1, -1) - hMC_c.Integral(-1, -1) - hMC_l.Integral(-1, -1);
-  const double entry_c = hMC_c.Integral(-1, -1) - hMC_l.Integral(-1, -1);
-  const double entry_l = hMC_l.Integral(-1, -1);
   
   leg.AddEntry(&hData, Form("#splitline{#splitline{Data}{(%.0f)}}{#splitline{mean=%.1f}{RMS=%.1f}}", hData.Integral(-1, -1), hData.GetMean(), hData.GetRMS()), "PE");
   leg.AddEntry(&hMC_b, Form("#splitline{#splitline{MC - b}{(%.0f)}}{#splitline{mean=%.1f}{RMS=%.1f}}", entry_b, hMC_b.GetMean(), hMC_b.GetRMS()), "F");
@@ -144,7 +151,7 @@ void MyDrawTH1FForTruthFlavors(TCanvas& c1,
 }
 
 // ======================================
-void MyDrawTH1D(TCanvas& c1, 
+void MyDrawTH1F(TCanvas& c1, 
 		const std::string& outputfile,
 		TFile* fMC,
 		TFile* fData,
@@ -154,14 +161,14 @@ void MyDrawTH1D(TCanvas& c1,
 		const double& weight
 		)
 {
-  TH1D* hMC_orig   = (TH1D*)GetObject(fMC, histoname);
-  TH1D* hData_orig = (TH1D*)GetObject(fData, histoname);
+  TH1F* hMC_orig   = (TH1F*)GetObject(fMC, histoname);
+  TH1F* hData_orig = (TH1F*)GetObject(fData, histoname);
   
   // copy in order to avoid scaling original one
-  TH1D hMC, hData;
+  TH1F hMC, hData;
   hMC_orig->Copy(hMC);
   hData_orig->Copy(hData);
-  
+    
   hMC.SetTitle("");
   hData.SetTitle("");
   
@@ -175,11 +182,13 @@ void MyDrawTH1D(TCanvas& c1,
   hData.SetMarkerColor(kBlack);
   
   if (hMC.GetMaximum()<hData.GetMaximum()) {
+    hData.SetMinimum(hData.GetMinimum()<0 ? hData.GetMinimum() : 0.);
     hData.GetXaxis()->SetTitle(xtitle.c_str());
     hData.Draw("PE");
     hMC.Draw("H SAME");
     hData.Draw("PE SAME");
   } else {
+    hMC.SetMinimum(hMC.GetMinimum()<0 ? hMC.GetMinimum() : 0.);
     hMC.GetXaxis()->SetTitle(xtitle.c_str());
     hMC.Draw("H");
     hData.Draw("PE SAME");
@@ -292,7 +301,7 @@ void DrawPtBalanceForEachEtaPtBin(TCanvas& c1,
     
     if (!foundBalacePlot) continue;
     std::string title = ((TH1F*)GetObject(fMC, keyName))->GetTitle();
-    MyDrawTH1D(c1, outputfile, fMC, fData, keyName, Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), 
+    MyDrawTH1F(c1, outputfile, fMC, fData, keyName, Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), 
 	       "Jet p_{T} / p_{T}^{ref}", mcLuminosityWeight);
   }//over Keys
   
@@ -311,29 +320,31 @@ void DrawValidationPlots(TCanvas& c1,
   TFile* fMC   = GetTFile(mc_file);
   TFile* fData = GetTFile(data_file);
   
-  MyDrawTH1D(c1, outputfile, fMC, fData, "ZpT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{Z} [GeV]", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "ZM", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "M_{Z} Z [GeV]", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "Z_jet_dPhi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#Delta (jet, Z)", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "nJets_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "N_{jets} (preselection)", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "jet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "jet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ZpT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{Z} [GeV]", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ZM", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "M_{Z} Z [GeV]", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "Z_jet_dPhi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#Delta (jet, Z)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "muon1_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "muon1_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "muon1_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "muon2_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "muon2_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "muon2_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
+  
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
+  
+  MyDrawTH1F(c1, outputfile, fMC, fData, "averageInteractionsPerCrossing", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "Average Interaction per Bunch Crossing (preselection) ", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "nJets_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "N_{jets} (preselection)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
   
   MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
   MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
   
-  MyDrawTH1D(c1, outputfile, fMC, fData, "jet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "jet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "jet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "muon1_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon1}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "muon1_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon1}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "muon1_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon1}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "muon2_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon2}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "muon2_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon2}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "muon2_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon2}", mcLuminosityWeight);
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
-  MyDrawTH1D(c1, outputfile, fMC, fData, "averageInteractionsPerCrossing", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "Average Interaction per Bunch Crossing", mcLuminosityWeight);
   
   fMC->Close();
   fData->Close();
@@ -344,6 +355,7 @@ void print_usage(const std::string commandname)
   printf("%s -d <data histogram file> -m <MC histogram file> -l <luminosity in fb-1> \n",
 	 commandname.c_str());
   printf("options: \n");
+  printf("-a <additional weight i.e. skiming efficiency in DxAOD (default 1.)>");
   printf("-s <draw function selection (default 1)>\n");
   printf("  1: call DrawValidationPlots \n");
   printf("  2: call DrawPtBalanceForEachEtaPtBin \n");
@@ -358,10 +370,11 @@ int main(int argc, char* argv[])
   int result;
   int modeSelection = 1;
   float luminosity = -1000.;
+  float additional_weight = 1.0;
   bool useWeightedForNormalization = false;
   std::string data_file(""), mc_file(""), outputfile("drawZJetBalanceOutput");
   
-  while((result=getopt(argc,argv,"d:m:l:o:s:w"))!=-1){
+  while((result=getopt(argc,argv,"d:m:l:o:s:a:w"))!=-1){
     switch(result){  
     case 'd':
       data_file = optarg;
@@ -377,6 +390,9 @@ int main(int argc, char* argv[])
       break;
     case 'w':
       useWeightedForNormalization = true;
+      break;
+    case 'a':
+      additional_weight = strtof(optarg, NULL);
       break;
     case 's':
       modeSelection = strtoull(optarg, NULL, 0);
@@ -402,7 +418,7 @@ int main(int argc, char* argv[])
   double MCTotal = useWeightedForNormalization ? 
     ((TH1F*)GetObject(fMC, "cutflow_weighted"))->GetBinContent(1) : 
     ((TH1F*)GetObject(fMC, "cutflow"))->GetBinContent(1);
-  const double McLuminosityWeight = luminosity/MCTotal;
+  const double McLuminosityWeight = luminosity/MCTotal*additional_weight;
   
   TCanvas c1;
   CustimizeCampus(c1);
