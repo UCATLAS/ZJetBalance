@@ -238,7 +238,8 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   // doesn't get called if no events are processed.  So any objects
   // you create here won't be available in the output if you have no
   // input events.
-  m_eventCounter = 0;
+  m_eventCounter  =  0;
+  mcChannelNumber = -1; // needs for isMC decision
   
   // create object before configuration
   m_pT_binning = new Double_t[BUFSIZ];
@@ -408,9 +409,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   tree->GetEntry (jentry);
   
   bool isMC = (mcChannelNumber!=-1);
-  
+
   double weight_final=1.0;
   if (isMC) {
+  
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     m_h_prwfactor->Fill(pileup_reweighting_factor);
     weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
@@ -429,22 +431,22 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   // use non-weighted to check that the correct number of events was processes
   // use weighted to see the effect of the weights calculated in xAH
   FillCutflowHistograms("Process NTuple", mcEventWeight, weight_final);
-  
+
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
   if (m_eventCounter%10000==0) {
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
-  
+
   m_h_RunNumber->Fill(runNumber, weight_final);
   m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
-  
+
   // for valiadtion
   int nJetsBeforeCut = 0;
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
     const float& pt  = jet_pt->at(iJet);
     const float& eta = jet_eta->at(iJet);
-    const int& truthLabel = jet_ConeTruthLabelID->at(iJet);
+    const int& truthLabel = isMC ? jet_ConeTruthLabelID->at(iJet) : -1;
     
     if ( pt < 30. ) continue;
     nJetsBeforeCut++;
@@ -467,31 +469,31 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     m_h_muon2_eta_beforecut->Fill( muon_eta->at(1), weight_final );
     m_h_muon2_phi_beforecut->Fill( muon_phi->at(1), weight_final );
   }
-  
+
   // selection criteria need to be applied
   if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
 
   if (TMath::Abs(dPhiZJet1)<m_cutDPhiZJet)  { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("#Delta#phi(Z,jet)", mcEventWeight, weight_final);
-  
+
   // 
   const float& lead_jet_pt      = jet_pt->at(0);
   const float& lead_jet_eta     = jet_eta->at(0);
   const float& lead_jet_phi     = jet_phi->at(0);
-  const int&   lead_jet_truthLabel = jet_ConeTruthLabelID->at(0);
+  const int&   lead_jet_truthLabel = isMC ? jet_ConeTruthLabelID->at(0) : -1;
   const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
   const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
-  
+
   //Info("execute()", "lead_jet_eta=%.1f (%d) lead_jet_pt=%.1f (%d)",
   //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
-  
+
   if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
   FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
-  
+
   if (jet_pt->size()>1) { if (jet_pt->at(1)>pTRef1*0.2) {return EL::StatusCode::SUCCESS;} } // event with second jet is vetoed
   FillCutflowHistograms("jet_{2} p_{T}", mcEventWeight, weight_final);
-  
+
   if( m_btagJets ) {
     // b-tag if asked for
     if( !jet_isBTag->at(0) ) { return EL::StatusCode::SUCCESS; }
@@ -502,7 +504,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     
     FillCutflowHistograms("jet_{1} b-tag SF", mcEventWeight, weight_final);
   }
-  
+
   // muon plots
   m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
   m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
@@ -535,7 +537,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
 		       (m_balance_hists_c[lead_jet_pt_bin])[lead_jet_eta_bin],
 		       (m_balance_hists_l[lead_jet_pt_bin])[lead_jet_eta_bin],
 		       lead_jet_truthLabel, lead_jet_phi, weight_final);  
-  
+
   return EL::StatusCode::SUCCESS;
 }
 
