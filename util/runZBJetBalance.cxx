@@ -393,7 +393,8 @@ int main( int argc, char* argv[] ) {
   if(f_grid){
     EL::PrunDriver driver;
     driver.options()->setString("nc_outputSampleName", outputName);
-
+    driver.options()->setString (EL::Job::optSubmitFlags, "--forceStaged");
+    
     driver.options()->setDouble(EL::Job::optGridNFilesPerJob, 2);
     //driver.options()->setString(EL::Job::optRootVer, "5.34.25");
     //driver.options()->setString(EL::Job::optCmtConfig, "x86_64-slc6-gcc48-opt");
