@@ -57,15 +57,8 @@ EL::StatusCode  ZJetBalanceMiniTreeAnaSkeleton :: configure ()
     return EL::StatusCode::FAILURE;
   }
   
-  if( m_btagJets ) {
-    if( m_btagOP != "85" && m_btagOP != "77" && m_btagOP != "70" && m_btagOP != "60" ) {
-      std::cout << "Invalid b-tag operating point " << m_btagOP << std::endl;
-      return EL::StatusCode::FAILURE;
-    }
-    std::cout << "BTagging using the " << m_btagOP << "% operating point" << std::endl;
-  }
-  
-  
+  //  m_XXX  = config->GetValue("XXX" , false );
+
   config->Print();
   Info("configure()", "ZJetBalanceMiniTreeAnaSkeleton Interface succesfully configured! \n");
   
@@ -100,6 +93,10 @@ EL::StatusCode ZJetBalanceMiniTreeAnaSkeleton :: histInitialize ()
   // add your own histgrams
   m_h_ZM = this->book("ZM", "M_{Z} [GeV]", 60, 60, 120);
   
+  // pass all histograms instanted with the book function are passed
+  // to the worker through 
+  this->record( wk() );
+  
   Info("histInitialize()", "ends");
   return EL::StatusCode::SUCCESS;
 }
@@ -126,10 +123,6 @@ EL::StatusCode ZJetBalanceMiniTreeAnaSkeleton :: initialize ()
     return EL::StatusCode::FAILURE;      
   }
   
-  
-  // pass all histograms instanted with the book function are passed
-  // to the worker through 
-  this->record( wk() );
   
   Info("initialize()", "Succesfully initialized! \n");
   return EL::StatusCode::SUCCESS;
