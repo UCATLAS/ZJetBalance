@@ -240,11 +240,11 @@ void ZJetBalanceMiniTreeAnaBase::InitializeCutflows()
   int xminCutflow  = cutflows.first->GetXaxis()->GetXmin();
   int xmaxCutflow  = cutflows.first->GetXaxis()->GetXmax();
   
-  m_h_cutflow = new TH1F("cutflow", "", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow = new TH1F(Form("%scutflow",m_histPrefix.c_str()), "", nBinsCutflow, xminCutflow, xmaxCutflow);
   m_h_cutflow->SetCanExtend( TH1::kXaxis );
-  m_h_cutflow_weighted = new TH1F("cutflow_weighted", "ONLY MC WEIGHT given by generator", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow_weighted = new TH1F(Form("%scutflow_weighted",m_histPrefix.c_str()), "ONLY MC WEIGHT given by generator", nBinsCutflow, xminCutflow, xmaxCutflow);
   m_h_cutflow_weighted->SetCanExtend( TH1::kXaxis );
-  m_h_cutflow_weighted_final = new TH1F("cutflow_weighted_final", "", nBinsCutflow, xminCutflow, xmaxCutflow);
+  m_h_cutflow_weighted_final = new TH1F(Form("%scutflow_weighted_final",m_histPrefix.c_str()), "", nBinsCutflow, xminCutflow, xmaxCutflow);
   m_h_cutflow_weighted_final->SetCanExtend( TH1::kXaxis );
   
   wk()->addOutput( m_h_cutflow );
