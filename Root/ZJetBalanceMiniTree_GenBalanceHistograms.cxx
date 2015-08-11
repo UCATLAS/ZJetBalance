@@ -383,7 +383,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   FillFlavorHistograms((m_balance_hists_b[lead_jet_pt_bin])[lead_jet_eta_bin],
 		       (m_balance_hists_c[lead_jet_pt_bin])[lead_jet_eta_bin],
 		       (m_balance_hists_l[lead_jet_pt_bin])[lead_jet_eta_bin],
-		       lead_jet_truthLabel, lead_jet_phi, weight_final);    
+		       lead_jet_truthLabel, lead_jet_pt/pTRef1, weight_final);    
   
   return EL::StatusCode::SUCCESS;
 }
