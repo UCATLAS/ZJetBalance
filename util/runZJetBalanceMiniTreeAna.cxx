@@ -10,6 +10,7 @@
 #include <EventLoop/OutputStream.h>
 #include <EventLoopGrid/PrunDriver.h>
 #include <ZJetBalance/ZJetBalanceMiniTreeAnaSkeleton.h>
+#include <ZJetBalance/ZJetBalanceMiniTree_GenBalanceHistograms.h>
 
 #include <string>
 #include <sys/stat.h>
@@ -39,6 +40,7 @@ int main( int argc, char* argv[] ) {
   std::string samplePath = ".";
   std::string inputTag;
   std::string outputTag = "";
+  int algoId = -1;
   
   //
   // Set up various job options
@@ -52,16 +54,17 @@ int main( int argc, char* argv[] ) {
   
   if (argc > 1 && options.at(0).compare("-h") == 0) {
     std::cout << std::endl
-         << " job submission" << std::endl
-         << std::endl
-         << " Optional arguments:" << std::endl
-         << "  -h               Prints this menu" << std::endl
-         << "  -inFile          Path to a folder, root file, or text file" << std::endl
-         << "  -outputTag       Version string to be appended to job name" << std::endl
-         << "  -submitDir       Name of output directory" << std::endl
-         << "  -configName      Path to config file" << std::endl
-         << "  -syst            Name AND value for systematic" << std::endl
-         << std::endl;
+	      << " job submission" << std::endl
+	      << std::endl
+	      << " Optional arguments:" << std::endl
+	      << "  -h               Prints this menu" << std::endl
+	      << "  -inFile          Path to a folder, root file, or text file" << std::endl
+	      << "  -algorithm       Algorithm ID ([1]=Skeleton [2]=GenHists)" << std::endl
+	      << "  -outputTag       Version string to be appended to job name" << std::endl
+	      << "  -submitDir       Name of output directory" << std::endl
+	      << "  -configName      Path to config file" << std::endl
+	      << "  -syst            Name AND value for systematic" << std::endl
+	      << std::endl;
     exit(1);
   }
   
@@ -122,6 +125,17 @@ int main( int argc, char* argv[] ) {
          iArg += 2;
        }
 
+    } else if (options.at(iArg).compare("-algorithm") == 0) {
+       char tmpChar = options.at(iArg+1)[0];
+       if (iArg+1 == argc || tmpChar == '-' ) {
+         std::cout << " -treeName should be followed by a tree name" << std::endl;
+         return 1;
+       } else {
+         algoId = strtol(options.at(iArg+1).c_str(), NULL, 0);
+         iArg += 2;
+       }
+       
+       
     } else{
       std::cout << "Couldn't understand argument " << options.at(iArg) << std::endl;
       return 1;
@@ -250,17 +264,30 @@ int main( int argc, char* argv[] ) {
   //
   // Now the Event/Objection Selection
   //
+  ZJetBalanceMiniTreeAnaSkeleton* analysisSkeleton = new ZJetBalanceMiniTreeAnaSkeleton();
+  analysisSkeleton->setName("analysisSkeleton")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTreeAnaSkeleton.config" );
 
+  ZJetBalanceMiniTree_GenBalanceHistograms* analysisGenHistograms = new ZJetBalanceMiniTree_GenBalanceHistograms();
+  analysisGenHistograms->setName("BalanceHistograms")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTree_GenBalanceHistograms.config" );
   
-  //
-  // The Multijet analysis 
-  ZJetBalanceMiniTreeAnaSkeleton* procMiniTree = new ZJetBalanceMiniTreeAnaSkeleton();
-  procMiniTree->setName("ProcZJetBalance")->setConfig( configName.c_str() );
   
   //
   // Add configured algos to event loop job
   //
-  job.algsAdd( procMiniTree );
+  // !! UNFORTUNATELY, currently we cannot several algorithm in a singl job !!
+  // (owing to how to access to TTree, to be modified in future)
+  switch (algoId) {
+  case 1:
+    job.algsAdd( analysisSkeleton );
+    break;
+  case 2:
+    job.algsAdd( analysisGenHistograms );
+    break;
+  default:
+    Error("runZJetBalanceMiniTreeAna", "NO ALGORITHM IS SELECTED WITH ALGORITHM ID=%d", algoId);
+    exit(EXIT_FAILURE);
+  }  
+
   
   //
   // Submit the job
