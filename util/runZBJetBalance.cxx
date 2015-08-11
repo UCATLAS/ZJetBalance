@@ -50,6 +50,7 @@ int main( int argc, char* argv[] ) {
   std::string outputTag = "";
   std::string submitDir = "submitDir";
   std::string leptonChoice = "Muon";
+  int limitEvents = -1;
 
   std::string systName = "None";
   float systVal = 0;
@@ -74,6 +75,7 @@ int main( int argc, char* argv[] ) {
          << "  -outputTag       Version string to be appended to job name" << std::endl
          << "  -submitDir       Name of output directory" << std::endl
          << "  -leptonChoice    Choose channel to run on, either Muon or Electron" << std::endl
+         << "  -limitEvents     Limit the number of events processed for debugging" << std::endl
          << "  -syst            Name AND value for systematic" << std::endl
          << std::endl;
     exit(1);
@@ -122,6 +124,14 @@ int main( int argc, char* argv[] ) {
          return 1;
        } else {
          leptonChoice = options.at(iArg+1);
+         iArg += 2;
+       }
+    }  else if (options.at(iArg).compare("-limitEvents") == 0) {
+       if (iArg+1 == argc || iArg+1 == (int)options.size() || options.at(iArg+1)[0] == '-' ) {
+         std::cout << " -limitEvents should be followed by either Muon or Electron" << std::endl;
+         return 1;
+       } else {
+         limitEvents = stoi(options.at(iArg+1));
          iArg += 2;
        }
     } else if (options.at(iArg).compare("-syst") == 0) {
@@ -272,7 +282,7 @@ int main( int argc, char* argv[] ) {
   job.sampleHandler( sh );
 
   // For debugging purposes, limit the amount of events that we loop over.
-  // job.options()->setDouble (EL::Job::optMaxEvents, 5000);
+  if(limitEvents > -1) job.options()->setDouble (EL::Job::optMaxEvents, limitEvents);
 
   // To automatically delete submitDir
   job.options()->setDouble(EL::Job::optRemoveSubmitDir, 1);
