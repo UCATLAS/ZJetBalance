@@ -196,7 +196,7 @@ EL::StatusCode BalanceAlgorithm :: initialize ()
     m_cutflowHistW->GetXaxis()->FindBin("LeadingJetPtCut");
 
     m_cutflowHist->GetXaxis()->FindBin("OppositeSignLeptonCut");
-    m_cutflowHist->GetXaxis()->FindBin("OppositeSignLeptonCut");
+    m_cutflowHistW->GetXaxis()->FindBin("OppositeSignLeptonCut");
 
     m_cutflowHist->GetXaxis()->FindBin("ZMassLoose");
     m_cutflowHistW->GetXaxis()->FindBin("ZMassLoose");
