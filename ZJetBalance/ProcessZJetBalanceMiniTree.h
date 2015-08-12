@@ -43,7 +43,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   double m_ZMassWindow; //! configurable parameter
   bool m_btagJets;      //! configurable parameter
   std::string m_btagOP; //! configurable parameter
-  bool m_fillMuonBefore; //! configurable parameter
+  bool m_fillLeptonBefore; //! configurable parameter
   
   CP::PileupReweightingTool* m_pileuptool; //!
 
@@ -377,14 +377,16 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_MV1;   //!
   TBranch        *b_jet_MV2c00;   //!
   TBranch        *b_jet_MV2c20;   //!
-  TBranch        *b_jet_MV2c20_is85;   //!
-  TBranch        *b_jet_MV2c20_SF85;   //!
-  TBranch        *b_jet_MV2c20_is77;   //!
-  TBranch        *b_jet_MV2c20_SF77;   //!
-  TBranch        *b_jet_MV2c20_is70;   //!
-  TBranch        *b_jet_MV2c20_SF70;   //!
-  TBranch        *b_jet_MV2c20_is60;   //!
-  TBranch        *b_jet_MV2c20_SF60;   //!
+  TBranch        *b_jet_MV2c20_isFix60;   //!
+  TBranch        *b_jet_MV2c20_SFFix60;   //!
+  TBranch        *b_jet_MV2c20_isFix70;   //!
+  TBranch        *b_jet_MV2c20_SFFix70;   //!
+  TBranch        *b_jet_MV2c20_isFix77;   //!
+  TBranch        *b_jet_MV2c20_SFFix77;   //!
+  TBranch        *b_jet_MV2c20_isFix85;   //!
+  TBranch        *b_jet_MV2c20_SFFix85;   //!
+  TBranch        *b_jet_MV2c20_isFlt70;   //!
+  TBranch        *b_jet_MV2c20_SFFlt70;   //!
   TBranch        *b_jet_isBTag;   //!
   TBranch        *b_jet_SFBTag;   //!
   TBranch        *b_jet_GhostArea;   //!
