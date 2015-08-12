@@ -500,7 +500,7 @@ EL::StatusCode ZJetBalanceMiniTreeAnaBase::LoadBasicConfiguration()
   m_histPrefix               = config->GetValue("HistPrefix" ,      "" );
   
   if( m_btagJets ) {
-    if( m_btagOP != "85" && m_btagOP != "77" && m_btagOP != "70" && m_btagOP != "60" ) {
+    if( m_btagOP != "Fix85" && m_btagOP != "Fix77" && m_btagOP != "Fix70" && m_btagOP != "Fix60" && m_btagOP != "Flt70" ) {
       std::cout << "Invalid b-tag operating point " << m_btagOP << std::endl;
       return EL::StatusCode::FAILURE;
     }
@@ -538,6 +538,12 @@ void ZJetBalanceMiniTreeAnaBase :: SetBTagAddresses(TTree* tree)
 
 void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
 {
+  // isBTag SFBTag needs special treatment
+  jet_isBTag = 0;
+  jet_SFBTag = 0;
+  if(m_btagJets && !m_btagOP.empty() ) { this->SetBTagAddresses(tree); }
+  
+  // copied from MakeClass function and add //! for all the variables
   // Set object pointer
   weight_muon_trig = 0;
   jet_E = 0;
@@ -553,6 +559,13 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   jet_LowEtConstituentsFrac = 0;
   jet_GhostMuonSegmentCount = 0;
   jet_Width = 0;
+  jet_emScalePt = 0;
+  jet_constScalePt = 0;
+  jet_pileupScalePt = 0;
+  jet_originConstitScalePt = 0;
+  jet_etaJESScalePt = 0;
+  jet_gscScalePt = 0;
+  jet_insituScalePt = 0;
   jet_NumTrkPt1000PV = 0;
   jet_SumPtTrkPt1000PV = 0;
   jet_TrackWidthPt1000PV = 0;
@@ -570,16 +583,17 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   jet_MV1 = 0;
   jet_MV2c00 = 0;
   jet_MV2c20 = 0;
-  jet_MV2c20_is85 = 0;
-  jet_MV2c20_SF85 = 0;
-  jet_MV2c20_is77 = 0;
-  jet_MV2c20_SF77 = 0;
-  jet_MV2c20_is70 = 0;
-  jet_MV2c20_SF70 = 0;
-  jet_MV2c20_is60 = 0;
-  jet_MV2c20_SF60 = 0;
-  jet_isBTag = 0;
-  jet_SFBTag = 0;
+  jet_HadronConeExclTruthLabelID = 0;
+  jet_MV2c20_isFix60 = 0;
+  jet_MV2c20_SFFix60 = 0;
+  jet_MV2c20_isFix70 = 0;
+  jet_MV2c20_SFFix70 = 0;
+  jet_MV2c20_isFix77 = 0;
+  jet_MV2c20_SFFix77 = 0;
+  jet_MV2c20_isFix85 = 0;
+  jet_MV2c20_SFFix85 = 0;
+  jet_MV2c20_isFlt70 = 0;
+  jet_MV2c20_SFFlt70 = 0;
   jet_GhostArea = 0;
   jet_ActiveArea = 0;
   jet_VoronoiArea = 0;
@@ -605,10 +619,12 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   jet_mucorrected_phi = 0;
   jet_mucorrected_m = 0;
   muon_pt = 0;
-  muon_eta = 0;
   muon_phi = 0;
+  muon_eta = 0;
   muon_m = 0;
+  muon_isTrigMatched = 0;
   muon_effSF = 0;
+  // Set branch addresses and branch pointers
    
   tree->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
   tree->SetBranchAddress("eventNumber", &eventNumber, &b_eventNumber);
@@ -629,6 +645,7 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("x2", &x2, &b_x2);
   tree->SetBranchAddress("xf1", &xf1, &b_xf1);
   tree->SetBranchAddress("xf2", &xf2, &b_xf2);
+  tree->SetBranchAddress("weight_muon_trig", &weight_muon_trig, &b_weight_muon_trig);
   tree->SetBranchAddress("ZpT", &ZpT, &b_ZpT);
   tree->SetBranchAddress("Zeta", &Zeta, &b_Zeta);
   tree->SetBranchAddress("Zphi", &Zphi, &b_Zphi);
@@ -645,7 +662,6 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("weight", &weight, &b_weight);
   tree->SetBranchAddress("weight_xs", &weight_xs, &b_weight_xs);
   tree->SetBranchAddress("weight_prescale", &weight_prescale, &b_weight_prescale);
-  tree->SetBranchAddress("weight_muon_trig", &weight_muon_trig, &b_weight_muon_trig);
   tree->SetBranchAddress("njets", &njets, &b_njets);
   tree->SetBranchAddress("jet_E", &jet_E, &b_jet_E);
   tree->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
@@ -660,6 +676,13 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("jet_LowEtConstituentsFrac", &jet_LowEtConstituentsFrac, &b_jet_LowEtConstituentsFrac);
   tree->SetBranchAddress("jet_GhostMuonSegmentCount", &jet_GhostMuonSegmentCount, &b_jet_GhostMuonSegmentCount);
   tree->SetBranchAddress("jet_Width", &jet_Width, &b_jet_Width);
+  tree->SetBranchAddress("jet_emScalePt", &jet_emScalePt, &b_jet_emScalePt);
+  tree->SetBranchAddress("jet_constScalePt", &jet_constScalePt, &b_jet_constScalePt);
+  tree->SetBranchAddress("jet_pileupScalePt", &jet_pileupScalePt, &b_jet_pileupScalePt);
+  tree->SetBranchAddress("jet_originConstitScalePt", &jet_originConstitScalePt, &b_jet_originConstitScalePt);
+  tree->SetBranchAddress("jet_etaJESScalePt", &jet_etaJESScalePt, &b_jet_etaJESScalePt);
+  tree->SetBranchAddress("jet_gscScalePt", &jet_gscScalePt, &b_jet_gscScalePt);
+  tree->SetBranchAddress("jet_insituScalePt", &jet_insituScalePt, &b_jet_insituScalePt);
   tree->SetBranchAddress("jet_NumTrkPt1000PV", &jet_NumTrkPt1000PV, &b_jet_NumTrkPt1000PV);
   tree->SetBranchAddress("jet_SumPtTrkPt1000PV", &jet_SumPtTrkPt1000PV, &b_jet_SumPtTrkPt1000PV);
   tree->SetBranchAddress("jet_TrackWidthPt1000PV", &jet_TrackWidthPt1000PV, &b_jet_TrackWidthPt1000PV);
@@ -677,15 +700,17 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("jet_MV1", &jet_MV1, &b_jet_MV1);
   tree->SetBranchAddress("jet_MV2c00", &jet_MV2c00, &b_jet_MV2c00);
   tree->SetBranchAddress("jet_MV2c20", &jet_MV2c20, &b_jet_MV2c20);
-  tree->SetBranchAddress("jet_MV2c20_is85", &jet_MV2c20_is85, &b_jet_MV2c20_is85);
-  tree->SetBranchAddress("jet_MV2c20_SF85", &jet_MV2c20_SF85, &b_jet_MV2c20_SF85);
-  tree->SetBranchAddress("jet_MV2c20_is77", &jet_MV2c20_is77, &b_jet_MV2c20_is77);
-  tree->SetBranchAddress("jet_MV2c20_SF77", &jet_MV2c20_SF77, &b_jet_MV2c20_SF77);
-  tree->SetBranchAddress("jet_MV2c20_is70", &jet_MV2c20_is70, &b_jet_MV2c20_is70);
-  tree->SetBranchAddress("jet_MV2c20_SF70", &jet_MV2c20_SF70, &b_jet_MV2c20_SF70);
-  tree->SetBranchAddress("jet_MV2c20_is60", &jet_MV2c20_is60, &b_jet_MV2c20_is60);
-  tree->SetBranchAddress("jet_MV2c20_SF60", &jet_MV2c20_SF60, &b_jet_MV2c20_SF60);
-  if(m_btagJets && !m_btagOP.empty() ) { this->SetBTagAddresses(tree); }
+  tree->SetBranchAddress("jet_HadronConeExclTruthLabelID", &jet_HadronConeExclTruthLabelID, &b_jet_HadronConeExclTruthLabelID);
+  tree->SetBranchAddress("jet_MV2c20_isFix60", &jet_MV2c20_isFix60, &b_jet_MV2c20_isFix60);
+  tree->SetBranchAddress("jet_MV2c20_SFFix60", &jet_MV2c20_SFFix60, &b_jet_MV2c20_SFFix60);
+  tree->SetBranchAddress("jet_MV2c20_isFix70", &jet_MV2c20_isFix70, &b_jet_MV2c20_isFix70);
+  tree->SetBranchAddress("jet_MV2c20_SFFix70", &jet_MV2c20_SFFix70, &b_jet_MV2c20_SFFix70);
+  tree->SetBranchAddress("jet_MV2c20_isFix77", &jet_MV2c20_isFix77, &b_jet_MV2c20_isFix77);
+  tree->SetBranchAddress("jet_MV2c20_SFFix77", &jet_MV2c20_SFFix77, &b_jet_MV2c20_SFFix77);
+  tree->SetBranchAddress("jet_MV2c20_isFix85", &jet_MV2c20_isFix85, &b_jet_MV2c20_isFix85);
+  tree->SetBranchAddress("jet_MV2c20_SFFix85", &jet_MV2c20_SFFix85, &b_jet_MV2c20_SFFix85);
+  tree->SetBranchAddress("jet_MV2c20_isFlt70", &jet_MV2c20_isFlt70, &b_jet_MV2c20_isFlt70);
+  tree->SetBranchAddress("jet_MV2c20_SFFlt70", &jet_MV2c20_SFFlt70, &b_jet_MV2c20_SFFlt70);
   tree->SetBranchAddress("jet_GhostArea", &jet_GhostArea, &b_jet_GhostArea);
   tree->SetBranchAddress("jet_ActiveArea", &jet_ActiveArea, &b_jet_ActiveArea);
   tree->SetBranchAddress("jet_VoronoiArea", &jet_VoronoiArea, &b_jet_VoronoiArea);
@@ -715,5 +740,6 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("muon_phi", &muon_phi, &b_muon_phi);
   tree->SetBranchAddress("muon_eta", &muon_eta, &b_muon_eta);
   tree->SetBranchAddress("muon_m", &muon_m, &b_muon_m);
+  tree->SetBranchAddress("muon_isTrigMatched", &muon_isTrigMatched, &b_muon_isTrigMatched);
   tree->SetBranchAddress("muon_effSF", &muon_effSF, &b_muon_effSF);
 }

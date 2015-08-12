@@ -126,10 +126,15 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
  protected:
   // commmon functin related to TTree access
   void            SetBTagAddresses(TTree* tree);  
+  std::vector<int>     *jet_isBTag; //!
+  std::vector<std::vector<float> > *jet_SFBTag; //!
+  TBranch        *b_jet_isBTag;   //!
+  TBranch        *b_jet_SFBTag;   //!
+  
+  
+  // copied from MakeClass function and add //! **** for all the variables ****
+  // modify vector -> std::vector
   void            InitTree(TTree* tree);
-  // copied from MakeClass function and add //! for all the variables
-  // Declaration of leaf types
-
   // Declaration of leaf types
   Int_t           runNumber; //!
   Int_t           eventNumber; //!
@@ -150,6 +155,7 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   Float_t         x2; //!
   Float_t         xf1; //!
   Float_t         xf2; //!
+  std::vector<double>  *weight_muon_trig; //!
   Float_t         ZpT; //!
   Float_t         Zeta; //!
   Float_t         Zphi; //!
@@ -166,7 +172,6 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   Float_t         weight; //!
   Float_t         weight_xs; //!
   Float_t         weight_prescale; //!
-  std::vector<double>  *weight_muon_trig; //!
   Int_t           njets; //!
   std::vector<float>   *jet_E; //!
   std::vector<float>   *jet_pt; //!
@@ -181,6 +186,13 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   std::vector<float>   *jet_LowEtConstituentsFrac; //!
   std::vector<float>   *jet_GhostMuonSegmentCount; //!
   std::vector<float>   *jet_Width; //!
+  std::vector<float>   *jet_emScalePt; //!
+  std::vector<float>   *jet_constScalePt; //!
+  std::vector<float>   *jet_pileupScalePt; //!
+  std::vector<float>   *jet_originConstitScalePt; //!
+  std::vector<float>   *jet_etaJESScalePt; //!
+  std::vector<float>   *jet_gscScalePt; //!
+  std::vector<float>   *jet_insituScalePt; //!
   std::vector<int>     *jet_NumTrkPt1000PV; //!
   std::vector<float>   *jet_SumPtTrkPt1000PV; //!
   std::vector<float>   *jet_TrackWidthPt1000PV; //!
@@ -198,16 +210,17 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
-  std::vector<int>     *jet_MV2c20_is85; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF85; //!
-  std::vector<int>     *jet_MV2c20_is77; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF77; //!
-  std::vector<int>     *jet_MV2c20_is70; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF70; //!
-  std::vector<int>     *jet_MV2c20_is60; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF60; //!
-  std::vector<int>     *jet_isBTag; //!
-  std::vector<std::vector<float> > *jet_SFBTag; //!
+  std::vector<int>     *jet_HadronConeExclTruthLabelID; //!
+  std::vector<int>     *jet_MV2c20_isFix60; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SFFix60; //!
+  std::vector<int>     *jet_MV2c20_isFix70; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SFFix70; //!
+  std::vector<int>     *jet_MV2c20_isFix77; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SFFix77; //!
+  std::vector<int>     *jet_MV2c20_isFix85; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SFFix85; //!
+  std::vector<int>     *jet_MV2c20_isFlt70; //!
+  std::vector<std::vector<float> > *jet_MV2c20_SFFlt70; //!
   std::vector<float>   *jet_GhostArea; //!
   std::vector<float>   *jet_ActiveArea; //!
   std::vector<float>   *jet_VoronoiArea; //!
@@ -232,12 +245,13 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   std::vector<float>   *jet_mucorrected_eta; //!
   std::vector<float>   *jet_mucorrected_phi; //!
   std::vector<float>   *jet_mucorrected_m; //!
-  std::vector<float>   *muon_pt; //!
-  std::vector<float>   *muon_eta; //!
-  std::vector<float>   *muon_phi; //!
-  std::vector<float>   *muon_m; //!
-  std::vector< std::vector<double> >  *muon_effSF; //!
   Int_t           nmuon; //!
+  std::vector<float>   *muon_pt; //!
+  std::vector<float>   *muon_phi; //!
+  std::vector<float>   *muon_eta; //!
+  std::vector<float>   *muon_m; //!
+  std::vector<int>     *muon_isTrigMatched; //!
+  std::vector<std::vector<double> > *muon_effSF; //!
 
   // List of branches
   TBranch        *b_runNumber;   //!
@@ -259,6 +273,7 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_x2;   //!
   TBranch        *b_xf1;   //!
   TBranch        *b_xf2;   //!
+  TBranch        *b_weight_muon_trig;   //!
   TBranch        *b_ZpT;   //!
   TBranch        *b_Zeta;   //!
   TBranch        *b_Zphi;   //!
@@ -275,7 +290,6 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_weight;   //!
   TBranch        *b_weight_xs;   //!
   TBranch        *b_weight_prescale;   //!
-  TBranch        *b_weight_muon_trig;   //!
   TBranch        *b_njets;   //!
   TBranch        *b_jet_E;   //!
   TBranch        *b_jet_pt;   //!
@@ -290,6 +304,13 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_jet_LowEtConstituentsFrac;   //!
   TBranch        *b_jet_GhostMuonSegmentCount;   //!
   TBranch        *b_jet_Width;   //!
+  TBranch        *b_jet_emScalePt;   //!
+  TBranch        *b_jet_constScalePt;   //!
+  TBranch        *b_jet_pileupScalePt;   //!
+  TBranch        *b_jet_originConstitScalePt;   //!
+  TBranch        *b_jet_etaJESScalePt;   //!
+  TBranch        *b_jet_gscScalePt;   //!
+  TBranch        *b_jet_insituScalePt;   //!
   TBranch        *b_jet_NumTrkPt1000PV;   //!
   TBranch        *b_jet_SumPtTrkPt1000PV;   //!
   TBranch        *b_jet_TrackWidthPt1000PV;   //!
@@ -307,16 +328,17 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_jet_MV1;   //!
   TBranch        *b_jet_MV2c00;   //!
   TBranch        *b_jet_MV2c20;   //!
-  TBranch        *b_jet_MV2c20_is85;   //!
-  TBranch        *b_jet_MV2c20_SF85;   //!
-  TBranch        *b_jet_MV2c20_is77;   //!
-  TBranch        *b_jet_MV2c20_SF77;   //!
-  TBranch        *b_jet_MV2c20_is70;   //!
-  TBranch        *b_jet_MV2c20_SF70;   //!
-  TBranch        *b_jet_MV2c20_is60;   //!
-  TBranch        *b_jet_MV2c20_SF60;   //!
-  TBranch        *b_jet_isBTag;   //!
-  TBranch        *b_jet_SFBTag;   //!
+  TBranch        *b_jet_HadronConeExclTruthLabelID;   //!
+  TBranch        *b_jet_MV2c20_isFix60;   //!
+  TBranch        *b_jet_MV2c20_SFFix60;   //!
+  TBranch        *b_jet_MV2c20_isFix70;   //!
+  TBranch        *b_jet_MV2c20_SFFix70;   //!
+  TBranch        *b_jet_MV2c20_isFix77;   //!
+  TBranch        *b_jet_MV2c20_SFFix77;   //!
+  TBranch        *b_jet_MV2c20_isFix85;   //!
+  TBranch        *b_jet_MV2c20_SFFix85;   //!
+  TBranch        *b_jet_MV2c20_isFlt70;   //!
+  TBranch        *b_jet_MV2c20_SFFlt70;   //!
   TBranch        *b_jet_GhostArea;   //!
   TBranch        *b_jet_ActiveArea;   //!
   TBranch        *b_jet_VoronoiArea;   //!
@@ -343,9 +365,11 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_jet_mucorrected_m;   //!
   TBranch        *b_nmuon;   //!
   TBranch        *b_muon_pt;   //!
-  TBranch        *b_muon_eta;   //!
   TBranch        *b_muon_phi;   //!
+  TBranch        *b_muon_eta;   //!
   TBranch        *b_muon_m;   //!
+  TBranch        *b_muon_isTrigMatched;   //!
   TBranch        *b_muon_effSF;   //!
+
 };  
 #endif
