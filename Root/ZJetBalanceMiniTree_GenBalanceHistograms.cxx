@@ -122,6 +122,12 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
   m_h_Zeta  = book("Zeta",  "Z #eta",         60,  -3.0, 3.0);
   m_h_Zphi  = book("Zphi",  "Z #phi",         64, -TMath::Pi(), TMath::Pi());
   m_h_ZM    = book("ZM",    "m_{Z} [GeV]",    60, 60, 120);
+
+  m_h_ZpT_beforecut   = book("ZpT_beforecut",   "Z p_{T} [GeV]",  120,  0,    240);
+  m_h_Zeta_beforecut  = book("Zeta_beforecut",  "Z #eta",         60,  -3.0, 3.0);
+  m_h_Zphi_beforecut  = book("Zphi_beforecut",  "Z #phi",         64, -TMath::Pi(), TMath::Pi());
+  m_h_ZM_beforecut    = book("ZM_beforecut",    "m_{Z} [GeV]",    60, 60, 120);
+
   // Jet Plots
   // before cuts
   m_h_nJets_beforecut = book("nJets_beforecut", "N Jets Before Cuts", 10, -0.5, 9.5);
@@ -133,6 +139,18 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
   m_h_jet_pt_beforecut_c  = book("jet_pt_beforecut_c", "",    30,    0, 300);
   m_h_jet_eta_beforecut_l = book("jet_eta_beforecut_l", "",   64, -3.2, 3.2);
   m_h_jet_pt_beforecut_l  = book("jet_pt_beforecut_l", "",    30,    0, 300);
+  
+  // leading Jet Plots
+  // before cuts  
+  m_h_1st_jet_eta_beforecut = book("1st_jet_eta_beforecut", "",   64, -3.2, 3.2);
+  m_h_1st_jet_pt_beforecut  = book("1st_jet_pt_beforecut", "",    30,    0, 300);
+  m_h_1st_jet_eta_beforecut_b = book("1st_jet_eta_beforecut_b", "",   64, -3.2, 3.2);
+  m_h_1st_jet_pt_beforecut_b  = book("1st_jet_pt_beforecut_b", "",    30,    0, 300);
+  m_h_1st_jet_eta_beforecut_c = book("1st_jet_eta_beforecut_c", "",   64, -3.2, 3.2);
+  m_h_1st_jet_pt_beforecut_c  = book("1st_jet_pt_beforecut_c", "",    30,    0, 300);
+  m_h_1st_jet_eta_beforecut_l = book("1st_jet_eta_beforecut_l", "",   64, -3.2, 3.2);
+  m_h_1st_jet_pt_beforecut_l  = book("1st_jet_pt_beforecut_l", "",    30,    0, 300);
+
   // after cuts
   m_h_nJets = book("nJets",           "N Jets", 10, -0.5, 9.5);
   m_h_jet_phi   = book("jet_phi", "jet_{1} #phi",   64, -TMath::Pi(), TMath::Pi());
@@ -290,6 +308,16 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
 
   // for valiadtion
   int nJetsBeforeCut = 0;
+  
+  m_h_1st_jet_eta_beforecut->Fill(jet_eta->at(0), weight_final);
+  m_h_1st_jet_pt_beforecut->Fill(jet_eta->at(0), weight_final);
+  if (m_isMC) {    
+    FillFlavorHistograms(m_h_1st_jet_pt_beforecut_b, m_h_1st_jet_pt_beforecut_c, m_h_1st_jet_pt_beforecut_l, 
+			 jet_ConeTruthLabelID->at(0), jet_pt->at(0), weight_final);
+    FillFlavorHistograms(m_h_1st_jet_eta_beforecut_b, m_h_1st_jet_eta_beforecut_c, m_h_1st_jet_eta_beforecut_l,
+			 jet_ConeTruthLabelID->at(0), jet_eta->at(0), weight_final);
+  }
+  
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
     const float& pt  = jet_pt->at(iJet);
     const float& eta = jet_eta->at(iJet);
@@ -306,6 +334,10 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
 			 truthLabel, eta, weight_final);
   }
   m_h_nJets_beforecut->Fill(nJetsBeforeCut, weight_final);
+  m_h_ZpT_beforecut->Fill(ZpT, weight_final);
+  m_h_Zeta_beforecut->Fill(Zeta, weight_final);
+  m_h_Zphi_beforecut->Fill(Zphi, weight_final);
+  m_h_ZM_beforecut->Fill(ZM, weight_final);
 
   // muon before cut
   if( m_fillMuonBefore ) {

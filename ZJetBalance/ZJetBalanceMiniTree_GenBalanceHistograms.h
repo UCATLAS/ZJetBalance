@@ -55,6 +55,10 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   TH1F* m_h_Zeta; //!
   TH1F* m_h_Zphi; //!
   TH1F* m_h_ZM; //!
+  TH1F* m_h_ZpT_beforecut; //!
+  TH1F* m_h_Zeta_beforecut; //!
+  TH1F* m_h_Zphi_beforecut; //!
+  TH1F* m_h_ZM_beforecut; //!
   TH1F* m_h_Z_jet_dPhi; //!
   TH1F* m_h_Z_jet_dEta; //!
   TH1F* m_h_nJets; //!
@@ -87,6 +91,14 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   TH1F* m_h_jet_pt_beforecut_c; //!
   TH1F* m_h_jet_eta_beforecut_l; //!
   TH1F* m_h_jet_pt_beforecut_l; //!
+  TH1F* m_h_1st_jet_eta_beforecut; //!
+  TH1F* m_h_1st_jet_pt_beforecut; //!
+  TH1F* m_h_1st_jet_eta_beforecut_b; //!
+  TH1F* m_h_1st_jet_pt_beforecut_b; //!
+  TH1F* m_h_1st_jet_eta_beforecut_c; //!
+  TH1F* m_h_1st_jet_pt_beforecut_c; //!
+  TH1F* m_h_1st_jet_eta_beforecut_l; //!
+  TH1F* m_h_1st_jet_pt_beforecut_l; //!
   TH1F* m_h_cutflow; //!
   TH1F* m_h_cutflow_weighted; //!
   TH1F* m_h_cutflow_weighted_final; //!

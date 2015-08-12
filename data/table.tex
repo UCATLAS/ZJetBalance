@@ -1,0 +1,45 @@
+\documentclass[12pt]{article}
+
+\usepackage{pdflscape}
+
+\begin{document}
+
+\input{constants}
+
+\begin{landscape}
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\label{my-label}
+\begin{tabular}{|r|r|r|r||r|r|}
+\hline
+Selection  & $Z \rightarrow \mu \mu$ & $Z \rightarrow \tau \tau$ & $t\bar{t}$ & MC total & Data\\ \hline \hline
+Preselection                      & \DiMuonCFALZmumu & \DiMuonCFALZtautau & \DiMuonCFALTt & \DiMuonCFALMCTotal & \DiMuonCFAPData \\ \hline
+$|M_{\mu\mu}-M_{Z}|<15~{\rm GeV}$ & \DiMuonCFAMZmumu & \DiMuonCFAMZtautau & \DiMuonCFAMTt & \DiMuonCFAMMCTotal & \DiMuonCFAQData \\ \hline
+$\Delta \phi (Z, jet)$            & \DiMuonCFANZmumu & \DiMuonCFANZtautau & \DiMuonCFANTt & \DiMuonCFANMCTotal & \DiMuonCFARData \\ \hline
+$\eta^{j1}$                       & \DiMuonCFAOZmumu & \DiMuonCFAOZtautau & \DiMuonCFAOTt & \DiMuonCFAOMCTotal & \DiMuonCFASData \\ \hline
+$p_{T}^{j2}<0.2p_{T}^{j1}$        & \DiMuonCFAPZmumu & \DiMuonCFAPZtautau & \DiMuonCFAPTt & \DiMuonCFAPMCTotal & \DiMuonCFATData \\ \hline
+\end{tabular}
+\caption{$\mu\mu$ channel cutflow. Normalized to \DiMuonLuminosityPb$~{\rm pb^{-1}}$.}
+\end{table}
+
+\begin{table}[h!]
+\centering
+\footnotesize
+\label{my-label}
+\begin{tabular}{|r|rr|rr|rr||rr|rr|}
+\hline
+Selection  & \multicolumn{2}{|c}{$Z \rightarrow \mu \mu$} & \multicolumn{2}{|c}{$Z \rightarrow \tau \tau$} & \multicolumn{2}{|c}{$t\bar{t}$} & \multicolumn{2}{|c|}{MC total} & \multicolumn{2}{|c|}{Data}\\ \hline \hline
+Preselection                      & \DiMuonCFALZmumu& (\DiMuonCFALZmumuRelEff) & \DiMuonCFALZtautau& (\DiMuonCFALZtautauRelEff) & \DiMuonCFALTt& (\DiMuonCFALTtRelEff) &  \DiMuonCFALMCTotal& (\DiMuonCFALMCTotalRelEff) &  \DiMuonCFAPData& (\DiMuonCFAPDataRelEff) \\ \hline
+$|M_{\mu\mu}-M_{Z}|<15~{\rm GeV}$ & \DiMuonCFAMZmumu& (\DiMuonCFAMZmumuRelEff) & \DiMuonCFAMZtautau& (\DiMuonCFAMZtautauRelEff) & \DiMuonCFAMTt& (\DiMuonCFAMTtRelEff) &  \DiMuonCFAMMCTotal& (\DiMuonCFAMMCTotalRelEff) &  \DiMuonCFAQData& (\DiMuonCFAQDataRelEff) \\ \hline
+$\Delta \phi (Z, jet)$            & \DiMuonCFANZmumu& (\DiMuonCFANZmumuRelEff) & \DiMuonCFANZtautau& (\DiMuonCFANZtautauRelEff) & \DiMuonCFANTt& (\DiMuonCFANTtRelEff) &  \DiMuonCFANMCTotal& (\DiMuonCFANMCTotalRelEff) &  \DiMuonCFARData& (\DiMuonCFARDataRelEff) \\ \hline
+$\eta^{j1}$                       & \DiMuonCFAOZmumu& (\DiMuonCFAOZmumuRelEff) & \DiMuonCFAOZtautau& (\DiMuonCFAOZtautauRelEff) & \DiMuonCFAOTt& (\DiMuonCFAOTtRelEff) &  \DiMuonCFAOMCTotal& (\DiMuonCFAOMCTotalRelEff) &  \DiMuonCFASData& (\DiMuonCFASDataRelEff) \\ \hline
+$p_{T}^{j2}<0.2p_{T}^{j1}$        & \DiMuonCFAPZmumu& (\DiMuonCFAPZmumuRelEff) & \DiMuonCFAPZtautau& (\DiMuonCFAPZtautauRelEff) & \DiMuonCFAPTt& (\DiMuonCFAPTtRelEff) &  \DiMuonCFAPMCTotal& (\DiMuonCFAPMCTotalRelEff) &  \DiMuonCFATData& (\DiMuonCFATDataRelEff) \\ \hline
+\end{tabular}
+\caption{$\mu\mu$ channel cutflow with relative efficiency to the previous cut stage. Normalized to \DiMuonLuminosityPb$~{\rm pb^{-1}}$.}
+\end{table}
+
+\end{landscape}
+
+\end{document}
