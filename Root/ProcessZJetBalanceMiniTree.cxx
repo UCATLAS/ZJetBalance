@@ -61,10 +61,10 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   m_ZMassWindow              = config->GetValue("ZMassWindow", 15);
   m_fillLeptonBefore         = config->GetValue("FillLeptonBefore", false);
   m_btagJets                 = config->GetValue("BTagJets", false);
-  m_btagOP                   = config->GetValue("BTagOP", "70"); // 85, 77, 70, 60
+  m_btagOP                   = config->GetValue("BTagOP", "Fix70"); // Fix60, Fix70, Fix77, Fix85, Flt70
   
   if( m_btagJets ) {
-    if( m_btagOP != "85" && m_btagOP != "77" && m_btagOP != "70" && m_btagOP != "60" ) {
+    if( m_btagOP != "Fix85" && m_btagOP != "Fix77" && m_btagOP != "Fix70" && m_btagOP != "Fix60" && m_btagOP != "Flt70") {
       std::cout << "Invalid b-tag operating point " << m_btagOP << std::endl;
       return EL::StatusCode::FAILURE;
     }
