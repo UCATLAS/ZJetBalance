@@ -33,6 +33,7 @@ int main( int argc, char* argv[] ) {
   // Init various job options
   //
   std::string configName = "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTreeAnaSkeleton.config";
+  std::string algorithmConfigName = "";
   std::string treeName   = "outTree";
   std::string submitDir  = "submitDir";
   std::string outputName = "";
@@ -60,6 +61,7 @@ int main( int argc, char* argv[] ) {
 	      << "  -h               Prints this menu" << std::endl
 	      << "  -inFile          Path to a folder, root file, or text file" << std::endl
 	      << "  -algorithm       Algorithm ID ([1]=Skeleton [2]=GenHists)" << std::endl
+	      << "  -algoConfig      Configfile for algorithm ID ([1]=Skeleton [2]=GenHists)" << std::endl
 	      << "  -outputTag       Version string to be appended to job name" << std::endl
 	      << "  -submitDir       Name of output directory" << std::endl
 	      << "  -configName      Path to config file" << std::endl
@@ -92,6 +94,16 @@ int main( int argc, char* argv[] ) {
          return 1;
        } else {
          outputTag = options.at(iArg+1);
+         iArg += 2;
+       }
+
+    } else if (options.at(iArg).compare("-algoConfig") == 0) {
+       char tmpChar = options.at(iArg+1)[0];
+       if (iArg+1 == argc || tmpChar == '-' ) {
+         std::cout << " -outputTag should be followed by a job version string" << std::endl;
+         return 1;
+       } else {
+         algorithmConfigName = options.at(iArg+1);
          iArg += 2;
        }
 
@@ -265,11 +277,14 @@ int main( int argc, char* argv[] ) {
   // Now the Event/Objection Selection
   //
   ZJetBalanceMiniTreeAnaSkeleton* analysisSkeleton = new ZJetBalanceMiniTreeAnaSkeleton();
-  analysisSkeleton->setName("analysisSkeleton")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTreeAnaSkeleton.config" );
+  analysisSkeleton->setName("analysisSkeleton")->setConfig( (algorithmConfigName.empty() ? 
+							     "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTreeAnaSkeleton.config" :
+							     algorithmConfigName.c_str()) );
 
   ZJetBalanceMiniTree_GenBalanceHistograms* analysisGenHistograms = new ZJetBalanceMiniTree_GenBalanceHistograms();
-  analysisGenHistograms->setName("BalanceHistograms")->setConfig( "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTree_GenBalanceHistograms.config" );
-  
+  analysisGenHistograms->setName("BalanceHistograms")->setConfig( (algorithmConfigName.empty() ? 
+								   "$ROOTCOREBIN/data/ZJetBalance/ZJetBalanceMiniTree_GenBalanceHistograms.config" :
+								   algorithmConfigName.c_str()) );
   
   //
   // Add configured algos to event loop job
