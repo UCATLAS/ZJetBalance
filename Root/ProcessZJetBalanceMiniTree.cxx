@@ -564,7 +564,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: finalize ()
   // submission node after all your histogram outputs have been
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
-  std::cout << "Finialize!" << std::endl;
+  std::cout << "Finalize!" << std::endl;
   
   return EL::StatusCode::SUCCESS;
 }
@@ -782,6 +782,7 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("weight_xs", &weight_xs, &b_weight_xs);
   tree->SetBranchAddress("weight_prescale", &weight_prescale, &b_weight_prescale);
   tree->SetBranchAddress("weight_muon_trig", &weight_muon_trig, &b_weight_muon_trig);
+  tree->SetBranchAddress("weight_electron_trig", &weight_electron_trig, &b_weight_electron_trig);
   tree->SetBranchAddress("njets", &njets, &b_njets);
   tree->SetBranchAddress("jet_E", &jet_E, &b_jet_E);
   tree->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
@@ -852,7 +853,14 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("muon_eta", &muon_eta, &b_muon_eta);
   tree->SetBranchAddress("muon_m", &muon_m, &b_muon_m);
   tree->SetBranchAddress("muon_effSF", &muon_effSF, &b_muon_effSF);
-}
+  tree->SetBranchAddress("nel", &nel, &b_nel);
+  tree->SetBranchAddress("el_pt", &el_pt, &b_el_pt);
+  tree->SetBranchAddress("el_phi", &el_phi, &b_el_phi);
+  tree->SetBranchAddress("el_eta", &el_eta, &b_el_eta);
+  tree->SetBranchAddress("el_m", &el_m, &b_el_m);
+  tree->SetBranchAddress("el_pidSF", &el_pidSF, &b_el_pidSF);
+  tree->SetBranchAddress("el_recoSF", &el_recoSF, &b_el_recoSF);
+} 
 
 void ProcessZJetBalanceMiniTree :: SetBTagAddresses(TTree* tree)
 {

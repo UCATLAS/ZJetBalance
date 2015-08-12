@@ -59,7 +59,21 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1F* m_h_muon1_phi; //!
   TH1F* m_h_muon2_pT; //!
   TH1F* m_h_muon2_eta; //!
-  TH1F* m_h_muon2_phi; //!
+  TH1F* m_h_muon2_phi; //!  
+
+  // electrons histograms
+  TH1F* m_h_electron1_pT_beforecut; //!
+  TH1F* m_h_electron1_eta_beforecut; //!
+  TH1F* m_h_electron1_phi_beforecut; //!
+  TH1F* m_h_electron2_pT_beforecut; //!
+  TH1F* m_h_electron2_eta_beforecut; //!
+  TH1F* m_h_electron2_phi_beforecut; //!
+  TH1F* m_h_electron1_pT; //!
+  TH1F* m_h_electron1_eta; //!
+  TH1F* m_h_electron1_phi; //!
+  TH1F* m_h_electron2_pT; //!
+  TH1F* m_h_electron2_eta; //!
+  TH1F* m_h_electron2_phi; //!
 
   // histograms
   TH1F* m_h_RunNumber; //!
@@ -214,6 +228,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Float_t         weight_xs; //!
   Float_t         weight_prescale; //!
   std::vector<double>  *weight_muon_trig; //!
+  std::vector<double>  *weight_electron_trig; //!
   Int_t           njets; //!
   std::vector<float>   *jet_E; //!
   std::vector<float>   *jet_pt; //!
@@ -285,6 +300,13 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *muon_m; //!
   std::vector< std::vector<double> >  *muon_effSF; //!
   Int_t           nmuon; //!
+  Int_t           nel; //!
+  std::vector<float>   *el_pt; //!
+  std::vector<float>   *el_phi; //!
+  std::vector<float>   *el_eta; //!
+  std::vector<float>   *el_m; //!
+  std::vector< std::vector<double> > *el_pidSF; //!
+  std::vector< std::vector<double> > *el_recoSF; //!
 
   // List of branches
   TBranch        *b_runNumber;   //!
@@ -323,6 +345,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_weight_xs;   //!
   TBranch        *b_weight_prescale;   //!
   TBranch        *b_weight_muon_trig;   //!
+  TBranch        *b_weight_electron_trig;   //!
   TBranch        *b_njets;   //!
   TBranch        *b_jet_E;   //!
   TBranch        *b_jet_pt;   //!
@@ -394,6 +417,13 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_muon_phi;   //!
   TBranch        *b_muon_m;   //!
   TBranch        *b_muon_effSF;   //!
+  TBranch        *b_nel;   //!
+  TBranch        *b_el_pt;   //!
+  TBranch        *b_el_phi;   //!
+  TBranch        *b_el_eta;   //!
+  TBranch        *b_el_m;   //!  
+  TBranch        *b_el_pidSF;   //!
+  TBranch        *b_el_recoSF;   //!
 
   // Turn on Sumw2 for the histogram
   void Sumw2(TH1* hist, bool flag=true);
