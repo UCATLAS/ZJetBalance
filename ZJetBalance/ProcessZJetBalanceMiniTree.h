@@ -104,6 +104,9 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1F* m_h_muonTrigFactor; //!
   TH1F* m_h_muon1EffFactor; //!
   TH1F* m_h_muon2EffFactor; //!
+  TH1F* m_h_electronTrigFactor; //!
+  TH1F* m_h_electron1EffFactor; //!
+  TH1F* m_h_electron2EffFactor; //!
   TH1F* m_h_nJets_beforecut; //!
   TH1F* m_h_jet_eta_beforecut; //!
   TH1F* m_h_jet_pt_beforecut; //!
@@ -260,14 +263,16 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
-  std::vector<int>     *jet_MV2c20_is85; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF85; //!
-  std::vector<int>     *jet_MV2c20_is77; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF77; //!
-  std::vector<int>     *jet_MV2c20_is70; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF70; //!
-  std::vector<int>     *jet_MV2c20_is60; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF60; //!
+  std::vector<int>     *jet_MV2c20_isFix60;
+  std::vector< std::vector<float> > *jet_MV2c20_SFFix60;
+  std::vector<int>     *jet_MV2c20_isFix70;
+  std::vector< std::vector<float> > *jet_MV2c20_SFFix70;
+  std::vector<int>     *jet_MV2c20_isFix77;
+  std::vector< std::vector<float> > *jet_MV2c20_SFFix77;
+  std::vector<int>     *jet_MV2c20_isFix85;
+  std::vector< std::vector<float> > *jet_MV2c20_SFFix85;
+  std::vector<int>     *jet_MV2c20_isFlt70;
+  std::vector< std::vector<float> > *jet_MV2c20_SFFlt70;
   std::vector<int>     *jet_isBTag; //!
   std::vector<std::vector<float> > *jet_SFBTag; //!
   std::vector<float>   *jet_GhostArea; //!

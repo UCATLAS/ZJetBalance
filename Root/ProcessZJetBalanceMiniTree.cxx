@@ -797,7 +797,6 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   el_phi = 0;
   el_eta = 0;
   el_m = 0;
-  el_isTrigMatched
   el_pidSF = 0;
   el_recoSF = 0;
 
