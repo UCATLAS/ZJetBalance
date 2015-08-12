@@ -31,6 +31,8 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   
  private:
   bool m_debug; //! set verbose mode
+  bool m_isMC; //! set automatically for each input file
+  bool m_isMuonSample; //! set automatically for each input file
   int    m_nBinsXForResponseHist; //! configurable parameter
   double m_maxXForResponseHist; //! configurable parameter
   double m_minXForResponseHist; //! configurable parameter
@@ -404,6 +406,10 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   // Set the xlabel, ylabel
   void SetLabel(TH1* hist, std::string xlabel, std::string ylabel);
 
+  // Set flag for whether the sample is MC or data
+  void IsMC();
+
+  void IsMuonSample();
 };
 
 #endif

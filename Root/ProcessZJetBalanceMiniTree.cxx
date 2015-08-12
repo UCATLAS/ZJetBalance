@@ -218,7 +218,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
     m_h_cutflow_weighted->SetBinContent(iBin, m_h_cutflow_weighted->GetBinContent(iBin)+cutflows.second->GetBinContent(iBin)); 
     Info("changeInput()", "iBin=%2d/%-2d new cutflow entry=%.1f (%s) - weighted ", iBin, nBins, m_h_cutflow_weighted->GetBinContent(iBin), m_h_cutflow_weighted->GetXaxis()->GetBinLabel(iBin));
   }
-  
+
+  IsMC(); // Set flag for whether the sample is MC or data.
+  IsMuonSample(); // Set flag for whether the sample is for muons or electrons
+
   TTree *tree = wk()->tree();
   InitTree(tree);
   return EL::StatusCode::SUCCESS;
@@ -408,10 +411,8 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
   
-  bool isMC = (mcChannelNumber!=-1);
-
   double weight_final=1.0;
-  if (isMC) {
+  if (m_isMC) {
   
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     m_h_prwfactor->Fill(pileup_reweighting_factor);
@@ -446,7 +447,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
     const float& pt  = jet_pt->at(iJet);
     const float& eta = jet_eta->at(iJet);
-    const int& truthLabel = isMC ? jet_ConeTruthLabelID->at(iJet) : -1;
+    const int& truthLabel = m_isMC ? jet_ConeTruthLabelID->at(iJet) : -1;
     
     if ( pt < 30. ) continue;
     nJetsBeforeCut++;
@@ -481,7 +482,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   const float& lead_jet_pt      = jet_pt->at(0);
   const float& lead_jet_eta     = jet_eta->at(0);
   const float& lead_jet_phi     = jet_phi->at(0);
-  const int&   lead_jet_truthLabel = isMC ? jet_ConeTruthLabelID->at(0) : -1;
+  const int&   lead_jet_truthLabel = m_isMC ? jet_ConeTruthLabelID->at(0) : -1;
   const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
   const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
 
@@ -988,4 +989,24 @@ void ProcessZJetBalanceMiniTree::FillCutflowHistograms(const std::string& label,
   m_h_cutflow->Fill( xx, 1 );
   m_h_cutflow_weighted->Fill( xx, xAHWeight );
   m_h_cutflow_weighted_final->Fill( xx, weightFinal );
+}
+
+void ProcessZJetBalanceMiniTree::IsMC()
+{
+  TFile* inputFile = wk()->inputFile();
+  m_isMC = ((TTree*)inputFile->Get("outTree"))->GetBranch("mcChannelNumber");
+  if( true ){
+    std::string info = m_isMC?"Processing MC sample":"Processing data sample";
+    Info("IsMC()", info.c_str());
+  }
+}
+
+void ProcessZJetBalanceMiniTree::IsMuonSample()
+{
+  TFile* inputFile = wk()->inputFile();
+  m_isMuonSample = ((TTree*)inputFile->Get("outTree"))->GetBranch("muon_pt");
+  if( true ){
+    std::string info = m_isMuonSample?"Processing muon sample":"Processing electron sample";
+    Info("IsMuonSample()", info.c_str());
+  }
 }
