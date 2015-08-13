@@ -496,7 +496,7 @@ EL::StatusCode ZJetBalanceMiniTreeAnaBase::LoadBasicConfiguration()
   m_PRWFileNames             = config->GetValue("PRWFiles", "");
   m_additional_weight        = config->GetValue("AdditionalWeight", 1.0);
   m_btagJets                 = config->GetValue("BTagJets", false);
-  m_btagOP                   = config->GetValue("BTagOP", "70"); // 85, 77, 70, 60
+  m_btagOP                   = config->GetValue("BTagOP", "Fix70"); // 85, 77, 70, 60
   m_histPrefix               = config->GetValue("HistPrefix" ,      "" );
   
   if( m_btagJets ) {
@@ -624,6 +624,12 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   muon_m = 0;
   muon_isTrigMatched = 0;
   muon_effSF = 0;
+  el_pt = 0;
+  el_phi = 0;
+  el_eta = 0;
+  el_m = 0;
+  el_pidSF = 0;
+  el_recoSF = 0;
   // Set branch addresses and branch pointers
    
   tree->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
@@ -742,4 +748,11 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("muon_m", &muon_m, &b_muon_m);
   tree->SetBranchAddress("muon_isTrigMatched", &muon_isTrigMatched, &b_muon_isTrigMatched);
   tree->SetBranchAddress("muon_effSF", &muon_effSF, &b_muon_effSF);
+  tree->SetBranchAddress("nel", &nel, &b_nel);
+  tree->SetBranchAddress("el_pt", &el_pt, &b_el_pt);
+  tree->SetBranchAddress("el_phi", &el_phi, &b_el_phi);
+  tree->SetBranchAddress("el_eta", &el_eta, &b_el_eta);
+  tree->SetBranchAddress("el_m", &el_m, &b_el_m);
+  tree->SetBranchAddress("el_pidSF", &el_pidSF, &b_el_pidSF);
+  tree->SetBranchAddress("el_recoSF", &el_recoSF, &b_el_recoSF);
 }

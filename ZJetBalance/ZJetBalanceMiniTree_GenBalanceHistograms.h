@@ -33,9 +33,11 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   bool   m_doPUreweighting; //! configurable parameter
   double m_cutDPhiZJet; //! configurable parameter
   double m_ZMassWindow; //! configurable parameter
-  bool m_fillMuonBefore; //! configurable parameter
+  bool m_fillLeptonBefore; //! configurable parameter
+  bool m_isMuonSample; //! set automatically for each input file
 
   // declaration for your histograms
+  // Muon histograms
   TH1F* m_h_muon1_pT_beforecut; //!
   TH1F* m_h_muon1_eta_beforecut; //!
   TH1F* m_h_muon1_phi_beforecut; //!
@@ -48,6 +50,20 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   TH1F* m_h_muon2_pT; //!
   TH1F* m_h_muon2_eta; //!
   TH1F* m_h_muon2_phi; //!
+
+  // electrons histograms
+  TH1F* m_h_electron1_pT_beforecut; //!
+  TH1F* m_h_electron1_eta_beforecut; //!
+  TH1F* m_h_electron1_phi_beforecut; //!
+  TH1F* m_h_electron2_pT_beforecut; //!
+  TH1F* m_h_electron2_eta_beforecut; //!
+  TH1F* m_h_electron2_phi_beforecut; //!
+  TH1F* m_h_electron1_pT; //!
+  TH1F* m_h_electron1_eta; //!
+  TH1F* m_h_electron1_phi; //!
+  TH1F* m_h_electron2_pT; //!
+  TH1F* m_h_electron2_eta; //!
+  TH1F* m_h_electron2_phi; //!
 
   // histograms
   TH1F* m_h_RunNumber; //!
@@ -82,6 +98,9 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   TH1F* m_h_muonTrigFactor; //!
   TH1F* m_h_muon1EffFactor; //!
   TH1F* m_h_muon2EffFactor; //!
+  TH1F* m_h_electronTrigFactor; //!
+  TH1F* m_h_electron1EffFactor; //!
+  TH1F* m_h_electron2EffFactor; //!
   TH1F* m_h_nJets_beforecut; //!
   TH1F* m_h_jet_eta_beforecut; //!
   TH1F* m_h_jet_pt_beforecut; //!
@@ -113,6 +132,7 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   int GetPtBin(const double& _pt);
   int GetEtaBin(const double& _eta);
   inline void FillFlavorHistograms(TH1F* h_b, TH1F* h_c, TH1F* h_l, const int& truthLabel, const float& value, const float& weight);
+  void IsMuonSample();
 
   std::pair<TH1F*, TH1F*> ReturnCutflowPointers();
   std::vector< std::vector<TH1F*> > m_balance_hists;

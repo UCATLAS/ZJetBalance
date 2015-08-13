@@ -156,6 +156,7 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   Float_t         xf1; //!
   Float_t         xf2; //!
   std::vector<double>  *weight_muon_trig; //!
+  std::vector<double>  *weight_electron_trig; //!
   Float_t         ZpT; //!
   Float_t         Zeta; //!
   Float_t         Zphi; //!
@@ -252,6 +253,13 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   std::vector<float>   *muon_m; //!
   std::vector<int>     *muon_isTrigMatched; //!
   std::vector<std::vector<double> > *muon_effSF; //!
+  Int_t           nel; //!
+  std::vector<float>   *el_pt; //!
+  std::vector<float>   *el_phi; //!
+  std::vector<float>   *el_eta; //!
+  std::vector<float>   *el_m; //!
+  std::vector< std::vector<double> > *el_pidSF; //!
+  std::vector< std::vector<double> > *el_recoSF; //!
 
   // List of branches
   TBranch        *b_runNumber;   //!
@@ -274,6 +282,7 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_xf1;   //!
   TBranch        *b_xf2;   //!
   TBranch        *b_weight_muon_trig;   //!
+  TBranch        *b_weight_electron_trig;   //!
   TBranch        *b_ZpT;   //!
   TBranch        *b_Zeta;   //!
   TBranch        *b_Zphi;   //!
@@ -370,6 +379,13 @@ class ZJetBalanceMiniTreeAnaBase : public xAH::Algorithm
   TBranch        *b_muon_m;   //!
   TBranch        *b_muon_isTrigMatched;   //!
   TBranch        *b_muon_effSF;   //!
+  TBranch        *b_nel;   //!
+  TBranch        *b_el_pt;   //!
+  TBranch        *b_el_phi;   //!
+  TBranch        *b_el_eta;   //!
+  TBranch        *b_el_m;   //!  
+  TBranch        *b_el_pidSF;   //!
+  TBranch        *b_el_recoSF;   //!
 
 };  
 #endif

@@ -64,7 +64,7 @@ EL::StatusCode  ZJetBalanceMiniTree_GenBalanceHistograms :: configure ()
   m_minXForResponseHist      = config->GetValue("minXForResponseHist", 0.0);
   m_cutDPhiZJet              = config->GetValue("cutDPhiZJet", 2.8);
   m_ZMassWindow              = config->GetValue("ZMassWindow", 15);
-  m_fillMuonBefore           = config->GetValue("FillMuonBefore", false);
+  m_fillLeptonBefore         = config->GetValue("FillLeptonBefore", false);
 
   // create object before configuration
   m_pT_binning = new Double_t[BUFSIZ];
@@ -117,6 +117,14 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
   m_h_muon2_eta = book("muon2_eta", "#mu_{2} #eta", 60, -3.0, 3.0);
   m_h_muon1_phi = book("muon1_phi", "#mu_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
   m_h_muon2_phi = book("muon2_phi", "#mu_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
+  m_h_electron1_pT = book("electron1_pT", "e_{1} p_{T} [GeV]", 120, 0, 120);
+  m_h_electron2_pT = book("electron2_pT", "e_{2} p_{T} [GeV]", 120, 0, 120);
+  m_h_electron1_eta = book("electron1_eta", "e_{1} #eta", 60, -3.0, 3.0);
+  m_h_electron2_eta = book("electron2_eta", "e_{2} #eta", 60, -3.0, 3.0);
+  m_h_electron1_phi = book("electron1_phi", "e_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
+  m_h_electron2_phi = book("electron2_phi", "e_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
   // plots of Z itself
   m_h_ZpT   = book("ZpT",   "Z p_{T} [GeV]",  120,  0,    240);
   m_h_Zeta  = book("Zeta",  "Z #eta",         60,  -3.0, 3.0);
@@ -181,17 +189,29 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
   m_h_muonTrigFactor =  book("muonTrigFactor", "Muon Trigger Weight", 100, 0.0, 2.0);
   m_h_muon1EffFactor =  book("muon1EffFactor", "muon_{1} Efficiency SF", 100, 0.0, 2.0);
   m_h_muon2EffFactor =  book("muon2EffFactor", "muon_{2} Efficiency SF", 100, 0.0, 2.0);    
+
+  m_h_electronTrigFactor =  book("electronTrigFactor", "Electron Trigger Weight", 100, 0.0, 2.0);
+  m_h_electron1EffFactor =  book("electron1EffFactor", "electron_{1} Efficiency SF (Reco*PID)", 100, 0.0, 2.0);
+  m_h_electron2EffFactor =  book("electron2EffFactor", "electron_{2} Efficiency SF (Reco*PID)", 100, 0.0, 2.0);
   
   m_h_averageInteractionsPerCrossing = book("averageInteractionsPerCrossing", "", 50, 0, 50.);
   
   // before cuts muon plots
-  if( m_fillMuonBefore ) {
+  if( m_fillLeptonBefore ) {
     m_h_muon1_pT_beforecut = book("muon1_pT_beforecut", "#mu_{1} p_{T} [GeV]", 120, 0, 120);
     m_h_muon2_pT_beforecut = book("muon2_pT_beforecut", "#mu_{2} p_{T} [GeV]", 120, 0, 120);
     m_h_muon1_eta_beforecut = book("muon1_eta_beforecut", "#mu_{1} #eta", 60, -3.0, 3.0);
     m_h_muon2_eta_beforecut = book("muon2_eta_beforecut", "#mu_{2} #eta", 60, -3.0, 3.0);
     m_h_muon1_phi_beforecut = book("muon1_phi_beforecut", "#mu_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
     m_h_muon2_phi_beforecut = book("muon2_phi_beforecut", "#mu_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
+    m_h_electron1_pT_beforecut = book("electron1_pT_beforecut", "e_{1} p_{T} [GeV]", 120, 0, 120);
+    m_h_electron2_pT_beforecut = book("electron2_pT_beforecut", "e_{2} p_{T} [GeV]", 120, 0, 120);
+    m_h_electron1_eta_beforecut = book("electron1_eta_beforecut", "e_{1} #eta", 60, -3.0, 3.0);
+    m_h_electron2_eta_beforecut = book("electron2_eta_beforecut", "e_{2} #eta", 60, -3.0, 3.0);
+    m_h_electron1_phi_beforecut = book("electron1_phi_beforecut", "e_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
+    m_h_electron2_phi_beforecut = book("electron2_phi_beforecut", "e_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
   }
   
   // additinoal histograms according to configuration parameters
@@ -254,6 +274,9 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
 
 EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: fileExecute ()
 {
+  // Once per file, determine whether the file is a muon sample or not
+  m_isMuonSample = true;
+  IsMuonSample();
   return EL::StatusCode::SUCCESS;
 }
 
@@ -286,13 +309,23 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     weight_final = 
       mcEventWeight*weight_xs*pileup_reweighting_factor*m_additional_weight;
-    // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
-    m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
-    weight_final *= weight_muon_trig->at(0);
-    // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
-    m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
-    m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
-    weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
+    if (m_isMuonSample){
+      // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
+      weight_final *= weight_muon_trig->at(0);
+      // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
+      m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
+      weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
+    } else {
+      // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_electronTrigFactor->Fill( weight_electron_trig->at(0) );
+      weight_final *= weight_electron_trig->at(0);
+      // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_electron1EffFactor->Fill( el_pidSF->at(0)[0]*el_recoSF->at(0)[0] );
+      m_h_electron2EffFactor->Fill( el_pidSF->at(1)[0]*el_recoSF->at(1)[0] );
+      weight_final *= (el_pidSF->at(0)[0]*el_recoSF->at(0)[0])*(el_pidSF->at(1)[0]*el_recoSF->at(1)[0]) ;
+    }
   }
   
   FillCutflowHistograms("Process NTuple", mcEventWeight, weight_final);
@@ -340,13 +373,20 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   m_h_ZM_beforecut->Fill(ZM, weight_final);
 
   // muon before cut
-  if( m_fillMuonBefore ) {
+  if( m_fillLeptonBefore && m_isMuonSample ) {
     m_h_muon1_pT_beforecut->Fill ( muon_pt ->at(0), weight_final );
     m_h_muon1_eta_beforecut->Fill( muon_eta->at(0), weight_final );
     m_h_muon1_phi_beforecut->Fill( muon_phi->at(0), weight_final );
     m_h_muon2_pT_beforecut->Fill ( muon_pt ->at(1), weight_final );
     m_h_muon2_eta_beforecut->Fill( muon_eta->at(1), weight_final );
     m_h_muon2_phi_beforecut->Fill( muon_phi->at(1), weight_final );
+  } else if( m_fillLeptonBefore && (!m_isMuonSample) ){
+    m_h_electron1_pT_beforecut->Fill ( el_pt ->at(0), weight_final );
+    m_h_electron1_eta_beforecut->Fill( el_eta->at(0), weight_final );
+    m_h_electron1_phi_beforecut->Fill( el_phi->at(0), weight_final );
+    m_h_electron2_pT_beforecut->Fill ( el_pt ->at(1), weight_final );
+    m_h_electron2_eta_beforecut->Fill( el_eta->at(1), weight_final );
+    m_h_electron2_phi_beforecut->Fill( el_phi->at(1), weight_final );
   }
 
   // selection criteria need to be applied
@@ -385,13 +425,22 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     FillCutflowHistograms("jet_{1} b-tag SF", mcEventWeight, weight_final);
   }
 
-  // muon plots
-  m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
-  m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
-  m_h_muon1_phi->Fill( muon_phi->at(0), weight_final );
-  m_h_muon2_pT->Fill ( muon_pt ->at(1), weight_final );
-  m_h_muon2_eta->Fill( muon_eta->at(1), weight_final );
-  m_h_muon2_phi->Fill( muon_phi->at(1), weight_final );
+  // lepton plots
+  if( m_isMuonSample ) {
+    m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
+    m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
+    m_h_muon1_phi->Fill( muon_phi->at(0), weight_final );
+    m_h_muon2_pT->Fill ( muon_pt ->at(1), weight_final );
+    m_h_muon2_eta->Fill( muon_eta->at(1), weight_final );
+    m_h_muon2_phi->Fill( muon_phi->at(1), weight_final );
+  } else{
+    m_h_electron1_pT->Fill ( el_pt ->at(0), weight_final );
+    m_h_electron1_eta->Fill( el_eta->at(0), weight_final );
+    m_h_electron1_phi->Fill( el_phi->at(0), weight_final );
+    m_h_electron2_pT->Fill ( el_pt ->at(1), weight_final );
+    m_h_electron2_eta->Fill( el_eta->at(1), weight_final );
+    m_h_electron2_phi->Fill( el_phi->at(1), weight_final );
+  }
   // plots of Z itself
   m_h_ZpT->Fill(ZpT, weight_final);
   m_h_Zeta->Fill(Zeta, weight_final);
@@ -491,5 +540,16 @@ void ZJetBalanceMiniTree_GenBalanceHistograms::FillFlavorHistograms(TH1F* h_b, T
   default:
     h_l->Fill(value, weight);
     break;
+  }
+}
+
+void ZJetBalanceMiniTree_GenBalanceHistograms::IsMuonSample()
+{
+  Info("IsMuonSample()", "Checking to see if sample contains muons or electrons");
+  TFile* inputFile = wk()->inputFile();
+  m_isMuonSample = ((TTree*)inputFile->Get("outTree"))->GetBranch("muon_pt");
+  if( true ){
+    std::string info = m_isMuonSample?"Processing muon sample":"Processing electron sample";
+    Info("IsMuonSample()", info.c_str());
   }
 }
