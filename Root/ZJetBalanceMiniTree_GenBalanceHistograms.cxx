@@ -312,19 +312,25 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     if (m_isMuonSample){
       // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
-      weight_final *= weight_muon_trig->at(0);
+      if( weight_muon_trig->at(0)!= -999.0 )
+        weight_final *= weight_muon_trig->at(0);
       // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
       m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
-      weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
+      if( muon_effSF->at(0)[0]!= -999.0 && muon_effSF->at(1)[0]!= -999.0 )
+        weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
     } else {
       // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_electronTrigFactor->Fill( weight_electron_trig->at(0) );
-      weight_final *= weight_electron_trig->at(0);
+      if(weight_electron_trig->at(0) != -999.0 ) 
+        weight_final *= weight_electron_trig->at(0);
       // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_electron1EffFactor->Fill( el_pidSF->at(0)[0]*el_recoSF->at(0)[0] );
       m_h_electron2EffFactor->Fill( el_pidSF->at(1)[0]*el_recoSF->at(1)[0] );
-      weight_final *= (el_pidSF->at(0)[0]*el_recoSF->at(0)[0])*(el_pidSF->at(1)[0]*el_recoSF->at(1)[0]) ;
+      if( el_pidSF->at(0)[0]!= -999.0  && el_pidSF->at(1)[0]!= -999.0)
+        weight_final *= el_pidSF->at(0)[0] * el_pidSF->at(1)[0];
+      if( el_recoSF->at(0)[0]!= -999.0 && el_recoSF->at(1)[0]!= -999.0 )
+        weight_final *= el_recoSF->at(0)[0] * el_recoSF->at(1)[0] ;
     }
   }
   

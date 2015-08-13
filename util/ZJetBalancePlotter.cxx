@@ -109,10 +109,10 @@ int main(int argc, char* argv[]) {
   int       nptbins  = -1;
   int       netabins = -1;
   
-  TH1F* hRef_pt = (TH1F*)f->Get("pt_binning_info");
+  TH1F* hRef_pt = (TH1F*)f->Get("ProcZJetBalancept_binning_info");
   GetBinningInformation(hRef_pt, ptbins, nptbins);
   
-  TH1F* hRef_eta = (TH1F*)f->Get("eta_binning_info");
+  TH1F* hRef_eta = (TH1F*)f->Get("ProcZJetBalanceeta_binning_info");
   GetBinningInformation(hRef_eta, etabins, netabins);
   
   
