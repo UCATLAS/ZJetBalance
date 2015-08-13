@@ -26,9 +26,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
  public:
   // float cutValue;
   int m_eventCounter;  //!
-  
-  std::string m_name;  //!
-  
+    
  private:
   bool m_debug; //! set verbose mode
   bool m_isMC; //! set automatically for each input file
@@ -263,12 +261,12 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
-  std::vector<int>     *jet_HadronConeExclTruthLabelID;
-  std::vector<int>     *jet_MV2c20_isFix60;
-  std::vector<int>     *jet_MV2c20_isFix70;
-  std::vector<int>     *jet_MV2c20_isFix77;
-  std::vector<int>     *jet_MV2c20_isFix85;
-  std::vector<int>     *jet_MV2c20_isFlt70;
+  std::vector<int>     *jet_HadronConeExclTruthLabelID; //!
+  std::vector<int>     *jet_MV2c20_isFix60; //!
+  std::vector<int>     *jet_MV2c20_isFix70; //!
+  std::vector<int>     *jet_MV2c20_isFix77; //!
+  std::vector<int>     *jet_MV2c20_isFix85; //!
+  std::vector<int>     *jet_MV2c20_isFlt70; //!
   std::vector<int>     *jet_isBTag; //!
   std::vector<std::vector<float> > *jet_SFBTag; //!
   std::vector<float>   *jet_GhostArea; //!

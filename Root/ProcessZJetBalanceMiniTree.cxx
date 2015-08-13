@@ -1047,6 +1047,7 @@ void ProcessZJetBalanceMiniTree::FillCutflowHistograms(const std::string& label,
 
 void ProcessZJetBalanceMiniTree::IsMC()
 {
+  Info("IsMC()", "Checking to see if sample is data or MC");
   TFile* inputFile = wk()->inputFile();
   m_isMC = ((TTree*)inputFile->Get("outTree"))->GetBranch("mcChannelNumber");
   if( true ){
@@ -1057,6 +1058,7 @@ void ProcessZJetBalanceMiniTree::IsMC()
 
 void ProcessZJetBalanceMiniTree::IsMuonSample()
 {
+  Info("IsMuonSample()", "Checking to see if sample contains muons or electrons");
   TFile* inputFile = wk()->inputFile();
   m_isMuonSample = ((TTree*)inputFile->Get("outTree"))->GetBranch("muon_pt");
   if( true ){
