@@ -263,16 +263,12 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
+  std::vector<int>     *jet_HadronConeExclTruthLabelID;
   std::vector<int>     *jet_MV2c20_isFix60;
-  std::vector< std::vector<float> > *jet_MV2c20_SFFix60;
   std::vector<int>     *jet_MV2c20_isFix70;
-  std::vector< std::vector<float> > *jet_MV2c20_SFFix70;
   std::vector<int>     *jet_MV2c20_isFix77;
-  std::vector< std::vector<float> > *jet_MV2c20_SFFix77;
   std::vector<int>     *jet_MV2c20_isFix85;
-  std::vector< std::vector<float> > *jet_MV2c20_SFFix85;
   std::vector<int>     *jet_MV2c20_isFlt70;
-  std::vector< std::vector<float> > *jet_MV2c20_SFFlt70;
   std::vector<int>     *jet_isBTag; //!
   std::vector<std::vector<float> > *jet_SFBTag; //!
   std::vector<float>   *jet_GhostArea; //!
@@ -383,15 +379,10 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_MV2c00;   //!
   TBranch        *b_jet_MV2c20;   //!
   TBranch        *b_jet_MV2c20_isFix60;   //!
-  TBranch        *b_jet_MV2c20_SFFix60;   //!
   TBranch        *b_jet_MV2c20_isFix70;   //!
-  TBranch        *b_jet_MV2c20_SFFix70;   //!
   TBranch        *b_jet_MV2c20_isFix77;   //!
-  TBranch        *b_jet_MV2c20_SFFix77;   //!
   TBranch        *b_jet_MV2c20_isFix85;   //!
-  TBranch        *b_jet_MV2c20_SFFix85;   //!
   TBranch        *b_jet_MV2c20_isFlt70;   //!
-  TBranch        *b_jet_MV2c20_SFFlt70;   //!
   TBranch        *b_jet_isBTag;   //!
   TBranch        *b_jet_SFBTag;   //!
   TBranch        *b_jet_GhostArea;   //!

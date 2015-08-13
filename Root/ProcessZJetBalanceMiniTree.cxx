@@ -753,15 +753,10 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   jet_MV2c00 = 0;
   jet_MV2c20 = 0;
   jet_MV2c20_isFix60 = 0;
-  jet_MV2c20_SFFix60 = 0;
   jet_MV2c20_isFix70 = 0;
-  jet_MV2c20_SFFix70 = 0;
   jet_MV2c20_isFix77 = 0;
-  jet_MV2c20_SFFix77 = 0;
   jet_MV2c20_isFix85 = 0;
-  jet_MV2c20_SFFix85 = 0;
   jet_MV2c20_isFlt70 = 0;
-  jet_MV2c20_SFFlt70 = 0;
   jet_isBTag = 0;
   jet_SFBTag = 0;
   jet_GhostArea = 0;
@@ -869,15 +864,10 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("jet_MV2c00", &jet_MV2c00, &b_jet_MV2c00);
   tree->SetBranchAddress("jet_MV2c20", &jet_MV2c20, &b_jet_MV2c20);
   tree->SetBranchAddress("jet_MV2c20_isFix60", &jet_MV2c20_isFix60, &b_jet_MV2c20_isFix60);
-  tree->SetBranchAddress("jet_MV2c20_SFFix60", &jet_MV2c20_SFFix60, &b_jet_MV2c20_SFFix60);
   tree->SetBranchAddress("jet_MV2c20_isFix70", &jet_MV2c20_isFix70, &b_jet_MV2c20_isFix70);
-  tree->SetBranchAddress("jet_MV2c20_SFFix70", &jet_MV2c20_SFFix70, &b_jet_MV2c20_SFFix70);
   tree->SetBranchAddress("jet_MV2c20_isFix77", &jet_MV2c20_isFix77, &b_jet_MV2c20_isFix77);
-  tree->SetBranchAddress("jet_MV2c20_SFFix77", &jet_MV2c20_SFFix77, &b_jet_MV2c20_SFFix77);
   tree->SetBranchAddress("jet_MV2c20_isFix85", &jet_MV2c20_isFix85, &b_jet_MV2c20_isFix85);
-  tree->SetBranchAddress("jet_MV2c20_SFFix85", &jet_MV2c20_SFFix85, &b_jet_MV2c20_SFFix85);
   tree->SetBranchAddress("jet_MV2c20_isFlt70", &jet_MV2c20_isFlt70, &b_jet_MV2c20_isFlt70);
-  tree->SetBranchAddress("jet_MV2c20_SFFlt70", &jet_MV2c20_SFFlt70, &b_jet_MV2c20_SFFlt70);
   if(m_btagJets && !m_btagOP.empty() ) { this->SetBTagAddresses(tree); }
   tree->SetBranchAddress("jet_GhostArea", &jet_GhostArea, &b_jet_GhostArea);
   tree->SetBranchAddress("jet_ActiveArea", &jet_ActiveArea, &b_jet_ActiveArea);
