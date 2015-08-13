@@ -166,6 +166,7 @@ int main( int argc, char* argv[] ) {
   //if grid job
   bool f_grid = false;
   bool f_lxbatch = false;
+  bool f_samplelist = false;
 
   // Set up the job for xAOD access:
   xAOD::Init().ignore();
@@ -200,9 +201,13 @@ int main( int argc, char* argv[] ) {
     if( samplePath.substr( samplePath.size()-4 ).find(".txt") != std::string::npos){ //It is a text file of samples
       if( samplePath.find("grid") != string::npos || samplePath.find("Grid") != string::npos || samplePath.find("GRID") != string::npos ) //It is samples for the grid
         f_grid = true;
+      if( samplePath.find("samplelist") != string::npos ) // It is a list of AOD sample files, don't treat them as individual containers
+        f_samplelist = true;
 
       std::ifstream inFile( samplePath );
-      while(std::getline(inFile, containerName) ){
+      if ( f_samplelist )
+        SH::readFileList( sh , "sample", samplePath );
+      while( !f_samplelist && std::getline(inFile, containerName) ){
         if (containerName.size() > 1 && containerName.find("#") != 0 ){
           std::cout << "Adding container " << containerName << std::endl;
           if(f_grid){
@@ -219,9 +224,6 @@ int main( int argc, char* argv[] ) {
             namePosition = containerName.find_first_of(".", namePosition)+1;
             std::string outstr = "user."+userName+"."+containerName.substr(startPosition, namePosition)+outputTag+"/";
             outputContainerNames.push_back( outstr );
-          } else if ( containerName.find("filelist") != string::npos){
-            SH::readFileList( sh , "sample", samplePath );
-            break;
           } else{
             //Get full path of file
             char fullPath[300];
