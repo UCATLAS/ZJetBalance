@@ -26,11 +26,11 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
  public:
   // float cutValue;
   int m_eventCounter;  //!
-  
-  std::string m_name;  //!
-  
+    
  private:
   bool m_debug; //! set verbose mode
+  bool m_isMC; //! set automatically for each input file
+  bool m_isMuonSample; //! set automatically for each input file
   int    m_nBinsXForResponseHist; //! configurable parameter
   double m_maxXForResponseHist; //! configurable parameter
   double m_minXForResponseHist; //! configurable parameter
@@ -41,7 +41,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   double m_ZMassWindow; //! configurable parameter
   bool m_btagJets;      //! configurable parameter
   std::string m_btagOP; //! configurable parameter
-  bool m_fillMuonBefore; //! configurable parameter
+  bool m_fillLeptonBefore; //! configurable parameter
   
   CP::PileupReweightingTool* m_pileuptool; //!
 
@@ -57,7 +57,21 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1F* m_h_muon1_phi; //!
   TH1F* m_h_muon2_pT; //!
   TH1F* m_h_muon2_eta; //!
-  TH1F* m_h_muon2_phi; //!
+  TH1F* m_h_muon2_phi; //!  
+
+  // electrons histograms
+  TH1F* m_h_electron1_pT_beforecut; //!
+  TH1F* m_h_electron1_eta_beforecut; //!
+  TH1F* m_h_electron1_phi_beforecut; //!
+  TH1F* m_h_electron2_pT_beforecut; //!
+  TH1F* m_h_electron2_eta_beforecut; //!
+  TH1F* m_h_electron2_phi_beforecut; //!
+  TH1F* m_h_electron1_pT; //!
+  TH1F* m_h_electron1_eta; //!
+  TH1F* m_h_electron1_phi; //!
+  TH1F* m_h_electron2_pT; //!
+  TH1F* m_h_electron2_eta; //!
+  TH1F* m_h_electron2_phi; //!
 
   // histograms
   TH1F* m_h_RunNumber; //!
@@ -88,6 +102,9 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TH1F* m_h_muonTrigFactor; //!
   TH1F* m_h_muon1EffFactor; //!
   TH1F* m_h_muon2EffFactor; //!
+  TH1F* m_h_electronTrigFactor; //!
+  TH1F* m_h_electron1EffFactor; //!
+  TH1F* m_h_electron2EffFactor; //!
   TH1F* m_h_nJets_beforecut; //!
   TH1F* m_h_jet_eta_beforecut; //!
   TH1F* m_h_jet_pt_beforecut; //!
@@ -212,6 +229,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   Float_t         weight_xs; //!
   Float_t         weight_prescale; //!
   std::vector<double>  *weight_muon_trig; //!
+  std::vector<double>  *weight_electron_trig; //!
   Int_t           njets; //!
   std::vector<float>   *jet_E; //!
   std::vector<float>   *jet_pt; //!
@@ -243,14 +261,12 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *jet_MV1; //!
   std::vector<float>   *jet_MV2c00; //!
   std::vector<float>   *jet_MV2c20; //!
-  std::vector<int>     *jet_MV2c20_is85; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF85; //!
-  std::vector<int>     *jet_MV2c20_is77; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF77; //!
-  std::vector<int>     *jet_MV2c20_is70; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF70; //!
-  std::vector<int>     *jet_MV2c20_is60; //!
-  std::vector<std::vector<float> > *jet_MV2c20_SF60; //!
+  std::vector<int>     *jet_HadronConeExclTruthLabelID; //!
+  std::vector<int>     *jet_MV2c20_isFix60; //!
+  std::vector<int>     *jet_MV2c20_isFix70; //!
+  std::vector<int>     *jet_MV2c20_isFix77; //!
+  std::vector<int>     *jet_MV2c20_isFix85; //!
+  std::vector<int>     *jet_MV2c20_isFlt70; //!
   std::vector<int>     *jet_isBTag; //!
   std::vector<std::vector<float> > *jet_SFBTag; //!
   std::vector<float>   *jet_GhostArea; //!
@@ -283,6 +299,13 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   std::vector<float>   *muon_m; //!
   std::vector< std::vector<double> >  *muon_effSF; //!
   Int_t           nmuon; //!
+  Int_t           nel; //!
+  std::vector<float>   *el_pt; //!
+  std::vector<float>   *el_phi; //!
+  std::vector<float>   *el_eta; //!
+  std::vector<float>   *el_m; //!
+  std::vector< std::vector<double> > *el_pidSF; //!
+  std::vector< std::vector<double> > *el_recoSF; //!
 
   // List of branches
   TBranch        *b_runNumber;   //!
@@ -321,6 +344,7 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_weight_xs;   //!
   TBranch        *b_weight_prescale;   //!
   TBranch        *b_weight_muon_trig;   //!
+  TBranch        *b_weight_electron_trig;   //!
   TBranch        *b_njets;   //!
   TBranch        *b_jet_E;   //!
   TBranch        *b_jet_pt;   //!
@@ -352,14 +376,11 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_jet_MV1;   //!
   TBranch        *b_jet_MV2c00;   //!
   TBranch        *b_jet_MV2c20;   //!
-  TBranch        *b_jet_MV2c20_is85;   //!
-  TBranch        *b_jet_MV2c20_SF85;   //!
-  TBranch        *b_jet_MV2c20_is77;   //!
-  TBranch        *b_jet_MV2c20_SF77;   //!
-  TBranch        *b_jet_MV2c20_is70;   //!
-  TBranch        *b_jet_MV2c20_SF70;   //!
-  TBranch        *b_jet_MV2c20_is60;   //!
-  TBranch        *b_jet_MV2c20_SF60;   //!
+  TBranch        *b_jet_MV2c20_isFix60;   //!
+  TBranch        *b_jet_MV2c20_isFix70;   //!
+  TBranch        *b_jet_MV2c20_isFix77;   //!
+  TBranch        *b_jet_MV2c20_isFix85;   //!
+  TBranch        *b_jet_MV2c20_isFlt70;   //!
   TBranch        *b_jet_isBTag;   //!
   TBranch        *b_jet_SFBTag;   //!
   TBranch        *b_jet_GhostArea;   //!
@@ -392,6 +413,13 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   TBranch        *b_muon_phi;   //!
   TBranch        *b_muon_m;   //!
   TBranch        *b_muon_effSF;   //!
+  TBranch        *b_nel;   //!
+  TBranch        *b_el_pt;   //!
+  TBranch        *b_el_phi;   //!
+  TBranch        *b_el_eta;   //!
+  TBranch        *b_el_m;   //!  
+  TBranch        *b_el_pidSF;   //!
+  TBranch        *b_el_recoSF;   //!
 
   // Turn on Sumw2 for the histogram
   void Sumw2(TH1* hist, bool flag=true);
@@ -404,6 +432,10 @@ class ProcessZJetBalanceMiniTree : public xAH::Algorithm
   // Set the xlabel, ylabel
   void SetLabel(TH1* hist, std::string xlabel, std::string ylabel);
 
+  // Set flag for whether the sample is MC or data
+  void IsMC();
+
+  void IsMuonSample();
 };
 
 #endif

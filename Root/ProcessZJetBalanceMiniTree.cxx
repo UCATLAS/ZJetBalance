@@ -59,12 +59,12 @@ EL::StatusCode  ProcessZJetBalanceMiniTree :: configure ()
   m_PRWFileNames             = config->GetValue("PRWFiles", "");
   m_cutDPhiZJet              = config->GetValue("cutDPhiZJet", 2.8);
   m_ZMassWindow              = config->GetValue("ZMassWindow", 15);
-  m_fillMuonBefore           = config->GetValue("FillMuonBefore", false);
+  m_fillLeptonBefore         = config->GetValue("FillLeptonBefore", false);
   m_btagJets                 = config->GetValue("BTagJets", false);
-  m_btagOP                   = config->GetValue("BTagOP", "70"); // 85, 77, 70, 60
+  m_btagOP                   = config->GetValue("BTagOP", "Fix70"); // Fix60, Fix70, Fix77, Fix85, Flt70
   
   if( m_btagJets ) {
-    if( m_btagOP != "85" && m_btagOP != "77" && m_btagOP != "70" && m_btagOP != "60" ) {
+    if( m_btagOP != "Fix85" && m_btagOP != "Fix77" && m_btagOP != "Fix70" && m_btagOP != "Fix60" && m_btagOP != "Flt70") {
       std::cout << "Invalid b-tag operating point " << m_btagOP << std::endl;
       return EL::StatusCode::FAILURE;
     }
@@ -118,6 +118,14 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   m_h_muon2_eta = book(m_name, "muon2_eta", "#mu_{2} #eta", 60, -3.0, 3.0);
   m_h_muon1_phi = book(m_name, "muon1_phi", "#mu_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
   m_h_muon2_phi = book(m_name, "muon2_phi", "#mu_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
+  m_h_electron1_pT = book(m_name, "electron1_pT", "e_{1} p_{T} [GeV]", 120, 0, 120);
+  m_h_electron2_pT = book(m_name, "electron2_pT", "e_{2} p_{T} [GeV]", 120, 0, 120);
+  m_h_electron1_eta = book(m_name, "electron1_eta", "e_{1} #eta", 60, -3.0, 3.0);
+  m_h_electron2_eta = book(m_name, "electron2_eta", "e_{2} #eta", 60, -3.0, 3.0);
+  m_h_electron1_phi = book(m_name, "electron1_phi", "e_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
+  m_h_electron2_phi = book(m_name, "electron2_phi", "e_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
   // plots of Z itself
   m_h_ZpT   = book(m_name, "ZpT",   "Z p_{T} [GeV]",  120,  0,    240);
   m_h_Zeta  = book(m_name, "Zeta",  "Z #eta",         60,  -3.0, 3.0);
@@ -150,6 +158,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: histInitialize ()
   m_h_muonTrigFactor =  book(m_name, "muonTrigFactor", "Muon Trigger Weight", 100, 0.0, 2.0);
   m_h_muon1EffFactor =  book(m_name, "muon1EffFactor", "muon_{1} Efficiency SF", 100, 0.0, 2.0);
   m_h_muon2EffFactor =  book(m_name, "muon2EffFactor", "muon_{2} Efficiency SF", 100, 0.0, 2.0);
+ 
+  m_h_electronTrigFactor =  book(m_name, "electronTrigFactor", "Electron Trigger Weight", 100, 0.0, 2.0);
+  m_h_electron1EffFactor =  book(m_name, "electron1EffFactor", "electron_{1} Efficiency SF (Reco*PID)", 100, 0.0, 2.0);
+  m_h_electron2EffFactor =  book(m_name, "electron2EffFactor", "electron_{2} Efficiency SF (Reco*PID)", 100, 0.0, 2.0);
   
   const std::pair<TH1F*, TH1F*> cutflows = ReturnCutflowPointers();
   int nBinsCutflow = cutflows.first->GetNbinsX();
@@ -218,7 +230,10 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: changeInput (bool firstFile)
     m_h_cutflow_weighted->SetBinContent(iBin, m_h_cutflow_weighted->GetBinContent(iBin)+cutflows.second->GetBinContent(iBin)); 
     Info("changeInput()", "iBin=%2d/%-2d new cutflow entry=%.1f (%s) - weighted ", iBin, nBins, m_h_cutflow_weighted->GetBinContent(iBin), m_h_cutflow_weighted->GetXaxis()->GetBinLabel(iBin));
   }
-  
+
+  IsMC(); // Set flag for whether the sample is MC or data.
+  IsMuonSample(); // Set flag for whether the sample is for muons or electrons
+
   TTree *tree = wk()->tree();
   InitTree(tree);
   return EL::StatusCode::SUCCESS;
@@ -323,13 +338,20 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: initialize ()
   m_h_averageInteractionsPerCrossing = book(m_name, "averageInteractionsPerCrossing", "", 50, 0, 50.);
   
   // before cuts muon plots
-  if( m_fillMuonBefore ) {
+  if( m_fillLeptonBefore ) {
     m_h_muon1_pT_beforecut = book(m_name, "muon1_pT_beforecut", "#mu_{1} p_{T} [GeV]", 120, 0, 120);
     m_h_muon2_pT_beforecut = book(m_name, "muon2_pT_beforecut", "#mu_{2} p_{T} [GeV]", 120, 0, 120);
     m_h_muon1_eta_beforecut = book(m_name, "muon1_eta_beforecut", "#mu_{1} #eta", 60, -3.0, 3.0);
     m_h_muon2_eta_beforecut = book(m_name, "muon2_eta_beforecut", "#mu_{2} #eta", 60, -3.0, 3.0);
     m_h_muon1_phi_beforecut = book(m_name, "muon1_phi_beforecut", "#mu_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
     m_h_muon2_phi_beforecut = book(m_name, "muon2_phi_beforecut", "#mu_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
+
+    m_h_electron1_pT_beforecut = book(m_name, "electron1_pT_beforecut", "e_{1} p_{T} [GeV]", 120, 0, 120);
+    m_h_electron2_pT_beforecut = book(m_name, "electron2_pT_beforecut", "e_{2} p_{T} [GeV]", 120, 0, 120);
+    m_h_electron1_eta_beforecut = book(m_name, "electron1_eta_beforecut", "e_{1} #eta", 60, -3.0, 3.0);
+    m_h_electron2_eta_beforecut = book(m_name, "electron2_eta_beforecut", "e_{2} #eta", 60, -3.0, 3.0);
+    m_h_electron1_phi_beforecut = book(m_name, "electron1_phi_beforecut", "e_{1} #phi", 64, -TMath::Pi(), TMath::Pi());
+    m_h_electron2_phi_beforecut = book(m_name, "electron2_phi_beforecut", "e_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
   }
   
   // Pileup RW Tool //
@@ -408,22 +430,30 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
   
-  bool isMC = (mcChannelNumber!=-1);
-
   double weight_final=1.0;
-  if (isMC) {
+  if (m_isMC) {
   
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     m_h_prwfactor->Fill(pileup_reweighting_factor);
     weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
-    // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
-    m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
-    weight_final *= weight_muon_trig->at(0);
-    // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
-    m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
-    m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
-    weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
-        
+
+    if( m_isMuonSample ){
+      // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
+      weight_final *= weight_muon_trig->at(0);
+      // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_muon1EffFactor->Fill( muon_effSF->at(0)[0] );
+      m_h_muon2EffFactor->Fill( muon_effSF->at(1)[0] );
+      weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
+    } else {
+      // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_electronTrigFactor->Fill( weight_electron_trig->at(0) );
+      weight_final *= weight_electron_trig->at(0);
+      // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
+      m_h_electron1EffFactor->Fill( el_pidSF->at(0)[0]*el_recoSF->at(0)[0] );
+      m_h_electron2EffFactor->Fill( el_pidSF->at(1)[0]*el_recoSF->at(1)[0] );
+      weight_final *= (el_pidSF->at(0)[0]*el_recoSF->at(0)[0])*(el_pidSF->at(1)[0]*el_recoSF->at(1)[0]) ;
+    }
     // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e muon_effSF0=%f muon_effSF1=%f trigSF=%f",
     // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final, muon_effSF->at(0)[0], muon_effSF->at(1)[0], weight_muon_trig->at(0));
   }
@@ -446,7 +476,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   for (int iJet=0, nJets=jet_pt->size(); iJet<nJets; iJet++) {
     const float& pt  = jet_pt->at(iJet);
     const float& eta = jet_eta->at(iJet);
-    const int& truthLabel = isMC ? jet_ConeTruthLabelID->at(iJet) : -1;
+    const int& truthLabel = m_isMC ? jet_ConeTruthLabelID->at(iJet) : -1;
     
     if ( pt < 30. ) continue;
     nJetsBeforeCut++;
@@ -460,14 +490,21 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   }
   m_h_nJets_beforecut->Fill(nJetsBeforeCut, weight_final);
 
-  // muon before cut
-  if( m_fillMuonBefore ) {
+  // lepton before cut
+  if( m_fillLeptonBefore && m_isMuonSample ) {
     m_h_muon1_pT_beforecut->Fill ( muon_pt ->at(0), weight_final );
     m_h_muon1_eta_beforecut->Fill( muon_eta->at(0), weight_final );
     m_h_muon1_phi_beforecut->Fill( muon_phi->at(0), weight_final );
     m_h_muon2_pT_beforecut->Fill ( muon_pt ->at(1), weight_final );
     m_h_muon2_eta_beforecut->Fill( muon_eta->at(1), weight_final );
     m_h_muon2_phi_beforecut->Fill( muon_phi->at(1), weight_final );
+  } else if ( m_fillLeptonBefore && (!m_isMuonSample) ) {
+    m_h_electron1_pT_beforecut->Fill ( el_pt ->at(0), weight_final );
+    m_h_electron1_eta_beforecut->Fill( el_eta->at(0), weight_final );
+    m_h_electron1_phi_beforecut->Fill( el_phi->at(0), weight_final );
+    m_h_electron2_pT_beforecut->Fill ( el_pt ->at(1), weight_final );
+    m_h_electron2_eta_beforecut->Fill( el_eta->at(1), weight_final );
+    m_h_electron2_phi_beforecut->Fill( el_phi->at(1), weight_final );
   }
 
   // selection criteria need to be applied
@@ -481,7 +518,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   const float& lead_jet_pt      = jet_pt->at(0);
   const float& lead_jet_eta     = jet_eta->at(0);
   const float& lead_jet_phi     = jet_phi->at(0);
-  const int&   lead_jet_truthLabel = isMC ? jet_ConeTruthLabelID->at(0) : -1;
+  const int&   lead_jet_truthLabel = m_isMC ? jet_ConeTruthLabelID->at(0) : -1;
   const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
   const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
 
@@ -505,13 +542,22 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     FillCutflowHistograms("jet_{1} b-tag SF", mcEventWeight, weight_final);
   }
 
-  // muon plots
-  m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
-  m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
-  m_h_muon1_phi->Fill( muon_phi->at(0), weight_final );
-  m_h_muon2_pT->Fill ( muon_pt ->at(1), weight_final );
-  m_h_muon2_eta->Fill( muon_eta->at(1), weight_final );
-  m_h_muon2_phi->Fill( muon_phi->at(1), weight_final );
+  // lepton plots
+  if( m_isMuonSample ) {
+    m_h_muon1_pT->Fill ( muon_pt ->at(0), weight_final );
+    m_h_muon1_eta->Fill( muon_eta->at(0), weight_final );
+    m_h_muon1_phi->Fill( muon_phi->at(0), weight_final );
+    m_h_muon2_pT->Fill ( muon_pt ->at(1), weight_final );
+    m_h_muon2_eta->Fill( muon_eta->at(1), weight_final );
+    m_h_muon2_phi->Fill( muon_phi->at(1), weight_final );
+  } else{
+    m_h_electron1_pT->Fill ( el_pt ->at(0), weight_final );
+    m_h_electron1_eta->Fill( el_eta->at(0), weight_final );
+    m_h_electron1_phi->Fill( el_phi->at(0), weight_final );
+    m_h_electron2_pT->Fill ( el_pt ->at(1), weight_final );
+    m_h_electron2_eta->Fill( el_eta->at(1), weight_final );
+    m_h_electron2_phi->Fill( el_phi->at(1), weight_final );
+  }
   // plots of Z itself
   m_h_ZpT->Fill(ZpT, weight_final);
   m_h_Zeta->Fill(Zeta, weight_final);
@@ -563,7 +609,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: finalize ()
   // submission node after all your histogram outputs have been
   // merged.  This is different from histFinalize() in that it only
   // gets called on worker nodes that processed input events.
-  std::cout << "Finialize!" << std::endl;
+  std::cout << "Finalize!" << std::endl;
   
   return EL::StatusCode::SUCCESS;
 }
@@ -675,6 +721,7 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
 {
   // Set object pointer
   weight_muon_trig = 0;
+  weight_electron_trig = 0;
   jet_E = 0;
   jet_pt = 0;
   jet_phi = 0;
@@ -705,14 +752,11 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   jet_MV1 = 0;
   jet_MV2c00 = 0;
   jet_MV2c20 = 0;
-  jet_MV2c20_is85 = 0;
-  jet_MV2c20_SF85 = 0;
-  jet_MV2c20_is77 = 0;
-  jet_MV2c20_SF77 = 0;
-  jet_MV2c20_is70 = 0;
-  jet_MV2c20_SF70 = 0;
-  jet_MV2c20_is60 = 0;
-  jet_MV2c20_SF60 = 0;
+  jet_MV2c20_isFix60 = 0;
+  jet_MV2c20_isFix70 = 0;
+  jet_MV2c20_isFix77 = 0;
+  jet_MV2c20_isFix85 = 0;
+  jet_MV2c20_isFlt70 = 0;
   jet_isBTag = 0;
   jet_SFBTag = 0;
   jet_GhostArea = 0;
@@ -744,7 +788,13 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   muon_phi = 0;
   muon_m = 0;
   muon_effSF = 0;
-   
+  el_pt = 0;
+  el_phi = 0;
+  el_eta = 0;
+  el_m = 0;
+  el_pidSF = 0;
+  el_recoSF = 0;
+
   tree->SetBranchAddress("runNumber", &runNumber, &b_runNumber);
   tree->SetBranchAddress("eventNumber", &eventNumber, &b_eventNumber);
   tree->SetBranchAddress("mcEventNumber", &mcEventNumber, &b_mcEventNumber);
@@ -781,6 +831,7 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("weight_xs", &weight_xs, &b_weight_xs);
   tree->SetBranchAddress("weight_prescale", &weight_prescale, &b_weight_prescale);
   tree->SetBranchAddress("weight_muon_trig", &weight_muon_trig, &b_weight_muon_trig);
+  tree->SetBranchAddress("weight_electron_trig", &weight_electron_trig, &b_weight_electron_trig);
   tree->SetBranchAddress("njets", &njets, &b_njets);
   tree->SetBranchAddress("jet_E", &jet_E, &b_jet_E);
   tree->SetBranchAddress("jet_pt", &jet_pt, &b_jet_pt);
@@ -812,14 +863,11 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("jet_MV1", &jet_MV1, &b_jet_MV1);
   tree->SetBranchAddress("jet_MV2c00", &jet_MV2c00, &b_jet_MV2c00);
   tree->SetBranchAddress("jet_MV2c20", &jet_MV2c20, &b_jet_MV2c20);
-  tree->SetBranchAddress("jet_MV2c20_is85", &jet_MV2c20_is85, &b_jet_MV2c20_is85);
-  tree->SetBranchAddress("jet_MV2c20_SF85", &jet_MV2c20_SF85, &b_jet_MV2c20_SF85);
-  tree->SetBranchAddress("jet_MV2c20_is77", &jet_MV2c20_is77, &b_jet_MV2c20_is77);
-  tree->SetBranchAddress("jet_MV2c20_SF77", &jet_MV2c20_SF77, &b_jet_MV2c20_SF77);
-  tree->SetBranchAddress("jet_MV2c20_is70", &jet_MV2c20_is70, &b_jet_MV2c20_is70);
-  tree->SetBranchAddress("jet_MV2c20_SF70", &jet_MV2c20_SF70, &b_jet_MV2c20_SF70);
-  tree->SetBranchAddress("jet_MV2c20_is60", &jet_MV2c20_is60, &b_jet_MV2c20_is60);
-  tree->SetBranchAddress("jet_MV2c20_SF60", &jet_MV2c20_SF60, &b_jet_MV2c20_SF60);
+  tree->SetBranchAddress("jet_MV2c20_isFix60", &jet_MV2c20_isFix60, &b_jet_MV2c20_isFix60);
+  tree->SetBranchAddress("jet_MV2c20_isFix70", &jet_MV2c20_isFix70, &b_jet_MV2c20_isFix70);
+  tree->SetBranchAddress("jet_MV2c20_isFix77", &jet_MV2c20_isFix77, &b_jet_MV2c20_isFix77);
+  tree->SetBranchAddress("jet_MV2c20_isFix85", &jet_MV2c20_isFix85, &b_jet_MV2c20_isFix85);
+  tree->SetBranchAddress("jet_MV2c20_isFlt70", &jet_MV2c20_isFlt70, &b_jet_MV2c20_isFlt70);
   if(m_btagJets && !m_btagOP.empty() ) { this->SetBTagAddresses(tree); }
   tree->SetBranchAddress("jet_GhostArea", &jet_GhostArea, &b_jet_GhostArea);
   tree->SetBranchAddress("jet_ActiveArea", &jet_ActiveArea, &b_jet_ActiveArea);
@@ -851,7 +899,14 @@ void ProcessZJetBalanceMiniTree :: InitTree(TTree* tree)
   tree->SetBranchAddress("muon_eta", &muon_eta, &b_muon_eta);
   tree->SetBranchAddress("muon_m", &muon_m, &b_muon_m);
   tree->SetBranchAddress("muon_effSF", &muon_effSF, &b_muon_effSF);
-}
+  tree->SetBranchAddress("nel", &nel, &b_nel);
+  tree->SetBranchAddress("el_pt", &el_pt, &b_el_pt);
+  tree->SetBranchAddress("el_phi", &el_phi, &b_el_phi);
+  tree->SetBranchAddress("el_eta", &el_eta, &b_el_eta);
+  tree->SetBranchAddress("el_m", &el_m, &b_el_m);
+  tree->SetBranchAddress("el_pidSF", &el_pidSF, &b_el_pidSF);
+  tree->SetBranchAddress("el_recoSF", &el_recoSF, &b_el_recoSF);
+} 
 
 void ProcessZJetBalanceMiniTree :: SetBTagAddresses(TTree* tree)
 {
@@ -988,4 +1043,26 @@ void ProcessZJetBalanceMiniTree::FillCutflowHistograms(const std::string& label,
   m_h_cutflow->Fill( xx, 1 );
   m_h_cutflow_weighted->Fill( xx, xAHWeight );
   m_h_cutflow_weighted_final->Fill( xx, weightFinal );
+}
+
+void ProcessZJetBalanceMiniTree::IsMC()
+{
+  Info("IsMC()", "Checking to see if sample is data or MC");
+  TFile* inputFile = wk()->inputFile();
+  m_isMC = ((TTree*)inputFile->Get("outTree"))->GetBranch("mcChannelNumber");
+  if( true ){
+    std::string info = m_isMC?"Processing MC sample":"Processing data sample";
+    Info("IsMC()", info.c_str());
+  }
+}
+
+void ProcessZJetBalanceMiniTree::IsMuonSample()
+{
+  Info("IsMuonSample()", "Checking to see if sample contains muons or electrons");
+  TFile* inputFile = wk()->inputFile();
+  m_isMuonSample = ((TTree*)inputFile->Get("outTree"))->GetBranch("muon_pt");
+  if( true ){
+    std::string info = m_isMuonSample?"Processing muon sample":"Processing electron sample";
+    Info("IsMuonSample()", info.c_str());
+  }
 }

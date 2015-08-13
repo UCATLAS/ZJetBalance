@@ -50,6 +50,7 @@ int main( int argc, char* argv[] ) {
   std::string outputTag = "";
   std::string submitDir = "submitDir";
   std::string leptonChoice = "Muon";
+  int limitEvents = -1;
 
   std::string systName = "None";
   float systVal = 0;
@@ -74,6 +75,7 @@ int main( int argc, char* argv[] ) {
          << "  -outputTag       Version string to be appended to job name" << std::endl
          << "  -submitDir       Name of output directory" << std::endl
          << "  -leptonChoice    Choose channel to run on, either Muon or Electron" << std::endl
+         << "  -limitEvents     Limit the number of events processed for debugging" << std::endl
          << "  -syst            Name AND value for systematic" << std::endl
          << std::endl;
     exit(1);
@@ -124,6 +126,14 @@ int main( int argc, char* argv[] ) {
          leptonChoice = options.at(iArg+1);
          iArg += 2;
        }
+    }  else if (options.at(iArg).compare("-limitEvents") == 0) {
+       if (iArg+1 == argc || iArg+1 == (int)options.size() || options.at(iArg+1)[0] == '-' ) {
+         std::cout << " -limitEvents should be followed by either Muon or Electron" << std::endl;
+         return 1;
+       } else {
+         limitEvents = stoi(options.at(iArg+1));
+         iArg += 2;
+       }
     } else if (options.at(iArg).compare("-syst") == 0) {
        if (iArg+1 == argc || iArg+2 == argc || iArg+1 == (int)options.size() || options.at(iArg+1)[0] == '-' ) {
          std::cout << " -inFile should be followed by a systematic string and an integer" << std::endl;
@@ -156,6 +166,7 @@ int main( int argc, char* argv[] ) {
   //if grid job
   bool f_grid = false;
   bool f_lxbatch = false;
+  bool f_samplelist = false;
 
   // Set up the job for xAOD access:
   xAOD::Init().ignore();
@@ -190,9 +201,13 @@ int main( int argc, char* argv[] ) {
     if( samplePath.substr( samplePath.size()-4 ).find(".txt") != std::string::npos){ //It is a text file of samples
       if( samplePath.find("grid") != string::npos || samplePath.find("Grid") != string::npos || samplePath.find("GRID") != string::npos ) //It is samples for the grid
         f_grid = true;
+      if( samplePath.find("samplelist") != string::npos ) // It is a list of AOD sample files, don't treat them as individual containers
+        f_samplelist = true;
 
       std::ifstream inFile( samplePath );
-      while(std::getline(inFile, containerName) ){
+      if ( f_samplelist )
+        SH::readFileList( sh , "sample", samplePath );
+      while( !f_samplelist && std::getline(inFile, containerName) ){
         if (containerName.size() > 1 && containerName.find("#") != 0 ){
           std::cout << "Adding container " << containerName << std::endl;
           if(f_grid){
@@ -209,9 +224,6 @@ int main( int argc, char* argv[] ) {
             namePosition = containerName.find_first_of(".", namePosition)+1;
             std::string outstr = "user."+userName+"."+containerName.substr(startPosition, namePosition)+outputTag+"/";
             outputContainerNames.push_back( outstr );
-          } else if ( containerName.find("filelist") != string::npos){
-            SH::readFileList( sh , "sample", samplePath );
-            break;
           } else{
             //Get full path of file
             char fullPath[300];
@@ -272,7 +284,7 @@ int main( int argc, char* argv[] ) {
   job.sampleHandler( sh );
 
   // For debugging purposes, limit the amount of events that we loop over.
-  // job.options()->setDouble (EL::Job::optMaxEvents, 5000);
+  if(limitEvents > -1) job.options()->setDouble (EL::Job::optMaxEvents, limitEvents);
 
   // To automatically delete submitDir
   job.options()->setDouble(EL::Job::optRemoveSubmitDir, 1);

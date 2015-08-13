@@ -1,5 +1,5 @@
-#ifndef AnalysisExample_MiniTree_H
-#define AnalysisExample_MiniTree_H
+#ifndef ZJetBalance_MiniTree_H 
+#define ZJetBalance_MiniTree_H 
 
 #include "xAODAnaHelpers/HelpTreeBase.h"
 #include "TTree.h"
