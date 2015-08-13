@@ -203,25 +203,25 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
     for (int iEtaBin=1; iEtaBin<m_n_eta_binning+1; iEtaBin++) {
       Info("Initialize()", "%s", Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
       TH1F* h = new TH1F(Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin), 
-			 Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+			 Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
 			      m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 			      m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 			      ), 
 			 m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       TH1F* h_b = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_b", iEtaBin, iPtBin), 
-			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
 				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 				), 
 			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       TH1F* h_c = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_c", iEtaBin, iPtBin), 
-			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
 				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 			      ), 
 			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       TH1F* h_l = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_l", iEtaBin, iPtBin), 
-			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
 				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 				), 
@@ -355,14 +355,15 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
 
   if (TMath::Abs(dPhiZJet1)<m_cutDPhiZJet)  { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("#Delta#phi(Z,jet)", mcEventWeight, weight_final);
-
+  
   // 
   const float& lead_jet_pt      = jet_pt->at(0);
   const float& lead_jet_eta     = jet_eta->at(0);
+  const float& lead_jet_constScale_eta = jet_constitScaleEta->at(0);
   const float& lead_jet_phi     = jet_phi->at(0);
   const int&   lead_jet_truthLabel = m_isMC ? jet_ConeTruthLabelID->at(0) : -1;
   const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
-  const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
+  const int    lead_jet_eta_bin = GetEtaBin(lead_jet_constScale_eta);
 
   //Info("execute()", "lead_jet_eta=%.1f (%d) lead_jet_pt=%.1f (%d)",
   //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
