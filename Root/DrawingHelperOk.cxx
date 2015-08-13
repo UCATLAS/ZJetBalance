@@ -1,6 +1,18 @@
 #include <ZJetBalance/DrawingHelperOk.h>
 
 // ======================================
+ZJetBalance::DrawingHelperOk::DrawingHelperOk()
+  : m_outputFileName("outpuf_default"),
+    m_luminosity(-1000.)
+{
+  m_canvas = new TCanvas();
+  m_canvas->Print(Form("%s.pdf[", m_outputFileName.c_str()));
+  gStyle->SetOptStat(0);
+  
+  TH1::SetDefaultSumw2();
+}
+
+// ======================================
 ZJetBalance::DrawingHelperOk::DrawingHelperOk(const std::string& outputFileName)
   : m_outputFileName(outputFileName),
     m_luminosity(-1000.)
@@ -41,7 +53,7 @@ ZJetBalance::DrawingHelperOk::ATLASLabel(Double_t x,Double_t y,const char* text,
   l.SetTextFont(72);
   l.SetTextColor(color);
 
-  double delx = 0.09*696*gPad->GetWh()/(472*gPad->GetWw());
+  double delx = 0.11*696*gPad->GetWh()/(472*gPad->GetWw());
 
   l.DrawLatex(x,y,"ATLAS");
   if (text) {
@@ -107,7 +119,8 @@ ZJetBalance::DrawingHelperOk::AddMC(const std::string& filename,
 				    const std::string& symbol,
 				    const int& color,
 				    const int& marker_sylte,
-				    const bool& useWeightedSum)
+				    const bool& useWeightedSum,
+				    const bool& doNormalize)
 {
   m_MC_fileNames.push_back(filename);
   m_MC_sampleTitles.push_back(title);
@@ -117,11 +130,12 @@ ZJetBalance::DrawingHelperOk::AddMC(const std::string& filename,
   
   // for normalization calculation
   TFile* fMC   = GetTFile(filename);
-  double MCTotal = useWeightedSum ? 
-    ((TH1F*)GetObject(fMC, "cutflow_weighted"))->GetBinContent(1) : 
-    ((TH1F*)GetObject(fMC, "cutflow"))->GetBinContent(1);
-  const double McLuminosityWeight = 
-    (m_luminosity>0) ? m_luminosity/MCTotal : 1.;
+  double MCTotal = (!doNormalize) ?
+    1. : ( useWeightedSum ? 
+	   ((TH1F*)GetObject(fMC, "cutflow_weighted"))->GetBinContent(1) : 
+	   ((TH1F*)GetObject(fMC, "cutflow"))->GetBinContent(1) );
+  const double McLuminosityWeight = (!doNormalize) ?
+    1. : ( (m_luminosity>0) ? m_luminosity/MCTotal : 1. );
   
   if (m_luminosity<0) {
     Info("AddMC()", "Normalization Factor is not set to %s", title.c_str());
@@ -136,8 +150,11 @@ ZJetBalance::DrawingHelperOk::AddMC(const std::string& filename,
   Info("AddMC()", "Title            : %s", title.c_str());
   Info("AddMC()", "Symbol           : %s", symbol.c_str());
   Info("AddMC()", "NomFactor        : %.2e", McLuminosityWeight);
-  Info("AddMC()", "Use Weighted Sum : %s", (useWeightedSum ? "YES" : "NO"));
-  Info("AddMC()", "MCTotal          : %.2e", MCTotal);
+  Info("AddMC()", "Normalization    : %s", (doNormalize ? "YES" : "NO"));
+  if (doNormalize) {
+    Info("AddMC()", "Use Weighted Sum : %s", (useWeightedSum ? "YES" : "NO"));
+    Info("AddMC()", "MCTotal          : %.2e", MCTotal);
+  }
 }
 
 // ======================================
@@ -155,8 +172,10 @@ ZJetBalance::DrawingHelperOk::PrepareTH1F(TFile* fileobj,
   h->GetXaxis()->SetTitle(xtitle.c_str());
   h->SetTitle("");
   h->SetLineColor(color);
-  if (fillHistogram) {
+  if (fillHistogram) {    
     h->SetFillColor(color);
+    h->SetMarkerStyle(0);
+    h->SetMarkerSize(0);
   } else {
     h->SetMarkerColor(color);
     h->SetMarkerStyle(markerStyle);
@@ -207,7 +226,49 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
 					const std::vector<double>& mcEntries,
 					const std::string& comment,
 					const std::string& label,
-					const double& ratio_plot_range)
+					const double& ratio_plot_range,
+					const std::string& mcDrawOption,
+					const bool& setYRange,
+					const double& yMinimum,
+					const double& yMaximum,
+					const bool& setXRange,
+					const double& xMinimum,
+					const double& xMaximum)
+{
+  // a function for backward compatibility
+  RatioPlot(hData,
+	    mcHistStack,
+	    m_MC_sampleTitles,
+	    mcEntries,
+	    comment,
+	    label,
+	    ratio_plot_range,
+	    mcDrawOption,
+	    setYRange,
+	    yMinimum,
+	    yMaximum,
+	    setXRange,
+	    xMinimum,
+	    xMaximum);
+}
+
+// ======================================
+void 
+ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
+					std::vector<TH1F>& mcHistStack,
+					const std::vector<std::string>& mcSampleTitles,
+					const std::vector<double>& mcEntries,
+					const std::string& comment,
+					const std::string& label,
+					const double& ratio_plot_range,
+					const std::string& mcDrawOption,
+					const bool& setYRange,
+					const double& yMinimum,
+					const double& yMaximum,
+					const bool& setXRange,
+					const double& xMinimum,
+					const double& xMaximum
+					)
 {
   m_canvas->Clear();
   m_canvas->Update();
@@ -285,17 +346,31 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   
   // draw top figure
   canvas_up->cd();
-  if (hMC->GetMaximum()<hData->GetMaximum()) {
+  
+  if (setYRange) {
+    hData->SetMaximum(yMaximum);
+    hData->SetMinimum(yMinimum);
+    hMC->SetMaximum(yMaximum);
+    hMC->SetMinimum(yMinimum);
+  } else if (mcDrawOption=="H") { // nominal histograms (auto range)
     hData->SetMinimum(hData->GetMinimum()<0 ? hData->GetMinimum() : 0.);
-    hData->Draw("PE");
-  } else {
     hMC->SetMinimum(hMC->GetMinimum()<0 ? hMC->GetMinimum() : 0.);
-    hMC->Draw("H");
   }
   
-  hMC->Draw("H SAME");
+  if (setXRange) {
+    hData->GetXaxis()->SetRangeUser(xMinimum, xMaximum);
+    hMC->GetXaxis()->SetRangeUser(xMinimum, xMaximum);
+  }
+  
+  if (hMC->GetMaximum()<hData->GetMaximum()) {
+    hData->Draw("PE");
+  } else {
+    hMC->Draw(Form("%s", mcDrawOption.c_str()));
+  }
+  
+  hMC->Draw(Form("%s SAME", mcDrawOption.c_str()));
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    mcHistStack.at(iMC).Draw("H SAME");
+    mcHistStack.at(iMC).Draw(Form("%s SAME", mcDrawOption.c_str()));
   }
   hData->Draw("PE SAME");
   
@@ -304,18 +379,14 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   leg.SetLineColor(0);
   leg.SetFillStyle(0);
   
-  leg.AddEntry(hData, 
-	       Form("Data (%.0f)}", 
-		    hData->Integral(-1, -1)),
-	       "PL");
+  std::string dataLegend = (mcDrawOption=="H") ? Form("Data (%.0f)", hData->Integral(-1, -1)) : "Data";
+  leg.AddEntry(hData, dataLegend.c_str(), "PL");
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    leg.AddEntry( &(mcHistStack[iMC]),   
-		  Form("%s (%.0f)", 
-		       m_MC_sampleTitles.at(iMC).c_str(),
-		       mcEntries.at(iMC)),
-		  "F");
+    std::string mcLegend = (mcDrawOption=="H") ? Form("%s (%.1f)", mcSampleTitles.at(iMC).c_str(), mcEntries.at(iMC)) : mcSampleTitles.at(iMC);
+    leg.AddEntry( &(mcHistStack[iMC]), mcLegend.c_str(), "F");
   }
   
+    
   leg.Draw();
   
   ATLASLabel(0.20, 0.94, label.c_str(), kBlack);
@@ -327,7 +398,8 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   canvas_dw->cd();
   canvas_dw->SetGridy();
   const std::string xtitle = hData->GetXaxis()->GetTitle();
-  TLine l1(h_ratio_data.GetXaxis()->GetXmin(), 1.0, h_ratio_data.GetXaxis()->GetXmax(), 1.0);
+  TLine l1((setXRange ? xMinimum : h_ratio_data.GetXaxis()->GetXmin()), 1.0, 
+	   (setXRange ? xMaximum : h_ratio_data.GetXaxis()->GetXmax()), 1.0);
   // font size
   h_ratio_mc.SetMaximum(1.0+ratio_plot_range);
   h_ratio_mc.SetMinimum(1.0-ratio_plot_range);
@@ -357,13 +429,44 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   CustimizeCampusWithRightMargin();
 }
 
+void 
+ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F_GraphStyle(const std::string& histname,
+								const std::string& comment,
+								const std::string& xtitle,
+								const std::string& label,
+								const bool& setYRange,
+								const double& yMinimum,
+								const double& yMaximum,
+								const bool& setXRange,
+								const double& xMinimum,
+								const double& xMaximum)
+{
+  MyDataMcComparisonTH1F(histname,
+			 comment,
+			 xtitle,
+			 label,
+			 "E2",
+			 setYRange,
+			 yMinimum,
+			 yMaximum,
+			 setXRange,
+			 xMinimum,
+			 xMaximum);
+}
   
 // ======================================
 void 
 ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname,
 						     const std::string& comment,
 						     const std::string& xtitle,
-						     const std::string& label)
+						     const std::string& label,
+						     const std::string& mcDrawOption,
+						     const bool& setYRange,
+						     const double& yMinimum,
+						     const double& yMaximum,
+						     const bool& setXRange,
+						     const double& xMinimum,
+						     const double& xMaximum)
 {    
   // data preparation 
   TFile* fData = GetTFile(m_Data_fileName);
@@ -397,7 +500,7 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
     mcHists.push_back(tmp);
     mcEntries.push_back(tmp->Integral(-1, -1));
   }
-  
+
   std::vector<TH1F> mcHistStack(mcHists.size());
   for (int iFile=0, nFiles=mcHists.size(); iFile<nFiles; iFile++) {
     mcHists.at(iFile)->Copy(mcHistStack[iFile]);
@@ -407,19 +510,32 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   }
   
   TH1F* hMC = (& (mcHistStack[0]) );
-  if (hMC->GetMaximum()<hData->GetMaximum()) {
+  if (setYRange) {
+    hData->SetMaximum(yMaximum);
+    hData->SetMinimum(yMinimum);
+    hMC->SetMaximum(yMaximum);
+    hMC->SetMinimum(yMinimum);
+  } else if (mcDrawOption=="H") { // nominal histograms (auto range)
     hData->SetMinimum(hData->GetMinimum()<0 ? hData->GetMinimum() : 0.);
+    hMC->SetMinimum(hMC->GetMinimum()<0 ? hMC->GetMinimum() : 0.);
+  } 
+  
+  if (setXRange) {
+    hData->GetXaxis()->SetRangeUser(xMinimum, xMaximum);
+    hMC->GetXaxis()->SetRangeUser(xMinimum, xMaximum);
+  }
+  
+  if (hMC->GetMaximum()<hData->GetMaximum()) {
     hData->GetXaxis()->SetTitle(xtitle.c_str());
     hData->Draw("PE");
   } else {
-    hMC->SetMinimum(hMC->GetMinimum()<0 ? hMC->GetMinimum() : 0.);
     hMC->GetXaxis()->SetTitle(xtitle.c_str());
-    hMC->Draw("H");
+    hMC->Draw(Form("%s", mcDrawOption.c_str()));
   }
   
-  hMC->Draw("H SAME");
+  hMC->Draw(Form("%s SAME", mcDrawOption.c_str()));
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    mcHistStack.at(iMC).Draw("H SAME");
+    mcHistStack.at(iMC).Draw(Form("%s SAME", mcDrawOption.c_str()));
   }
   hData->Draw("PE SAME");
   
@@ -428,16 +544,11 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   leg.SetLineColor(0);
   leg.SetFillStyle(0);
   
-  leg.AddEntry(hData, 
-	       Form("Data (%.0f)", 
-		    hData->Integral(-1, -1)),
-	       "PL");
+  std::string dataLegend = (mcDrawOption=="H") ? Form("Data (%.0f)", hData->Integral(-1, -1)) : "Data";
+  leg.AddEntry(hData, dataLegend.c_str(), "PL");
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    leg.AddEntry( &(mcHistStack[iMC]),   
-		  Form("%s (%.0f)", 
-		       m_MC_sampleTitles.at(iMC).c_str(),
-		       mcEntries.at(iMC)),
-		  "F");
+    std::string mcLegend = (mcDrawOption=="H") ? Form("%s (%.1f)", m_MC_sampleTitles.at(iMC).c_str(), mcEntries.at(iMC)) : m_MC_sampleTitles.at(iMC);
+    leg.AddEntry( &(mcHistStack[iMC]), mcLegend.c_str(), "F");
   }
   
   leg.Draw();
@@ -450,9 +561,11 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   
   CustimizeCampusWithRightMargin();
   m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
+
   
   // ratio plot
-  RatioPlot(hData, mcHistStack, mcEntries, comment, label, 0.5);
+  RatioPlot(hData, mcHistStack, mcEntries, comment, label, 0.5, mcDrawOption,
+	    setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   CloseMCFiles(mcFiles);
 }

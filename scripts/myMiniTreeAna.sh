@@ -45,3 +45,15 @@ hadd all_hist410004.root hist410004/hist-*.root
 RunZJetBalanceMiniTreeAnaWithCustomizedConfig 1.0 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_None_271298-271595_RUN2-UPD4-04.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361107.e3601_a766_a767_r6264.v00_METADATA.root' '/eos/atlas/user/o/okumura/data/ZBJetBalanceStudy_v20150810/data15_13TeV_50ns' 'histData50ns'
 rm -f all_histData50ns.root
 hadd all_histData50ns.root histData50ns/hist-*.root
+
+
+# Run Jet Resoponse Fitter
+rm -f all_MC.root 
+hadd all_MC.root all_hist361107.root all_hist361108.root all_hist410004.root
+
+ZJetBalancePlotter -usePoisson -inFile all_MC.root -outTag allMC
+ZJetBalancePlotter -usePoisson -inFile all_histData50ns.root -outTag allData
+
+
+# Run Plotter
+testDHGBHOutAndJERFitter | tee constants.tex

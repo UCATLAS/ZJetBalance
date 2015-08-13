@@ -29,6 +29,7 @@ namespace ZJetBalance {
   class DrawingHelperOk
   {
   public:
+    DrawingHelperOk();
     DrawingHelperOk(const std::string& outputFileName);
     ~DrawingHelperOk();
     static TFile* GetTFile(const std::string& filename);
@@ -40,7 +41,8 @@ namespace ZJetBalance {
 	       const std::string& symbol,
 	       const int& color,
 	       const int& marker_sylte,
-	       const bool& useWeightedSum
+	       const bool& useWeightedSum,
+	       const bool& doNormalize = true /* could be false in case we do not need normalize the distribution, for e.g. efficiency */
 	       );
     void SetDataFileName(const std::string& name) {m_Data_fileName=name;} 
     void SetLuminosity(const double& luminosity) {m_luminosity=luminosity;}
@@ -48,13 +50,51 @@ namespace ZJetBalance {
     void MyDataMcComparisonTH1F(const std::string& histname,
 				const std::string& comment,
 				const std::string& xtitle,
-				const std::string& label="Internal");
+				const std::string& label="Internal",
+				const std::string& mcDrawOption="H",
+				const bool& setYRange=false,
+				const double& yMinimum=-1,
+				const double& yMaximum=-1,
+				const bool& setXRange=false,
+				const double& xMinimum=-1,
+				const double& xMaximum=-1);
+    void MyDataMcComparisonTH1F_GraphStyle(const std::string& histname,
+					   const std::string& comment,
+					   const std::string& xtitle,
+					   const std::string& label="Internal",
+					   const bool& setYRange=false,
+					   const double& yMinimum=-1,
+					   const double& yMaximum=-1,
+					   const bool& setXRange=false,
+					   const double& xMinimum=-1,
+					   const double& xMaximum=-1);
+    void RatioPlot(TH1F* hData,
+		   std::vector<TH1F>& mcHistStack,
+		   const std::vector<std::string>& mcSampleTitles,
+		   const std::vector<double>& mcEntries,
+		   const std::string& comment,
+		   const std::string& label,
+		   const double& ratio_plot_range,
+		   const std::string& mcDrawOption="H",
+		   const bool& setYRange=false,
+		   const double& yMinimum=-1,
+		   const double& yMaximum=-1,
+		   const bool& setXRange=false,
+		   const double& xMinimum=-1,
+		   const double& xMaximum=-1);
     void RatioPlot(TH1F* hData,
 		   std::vector<TH1F>& mcHistStack,
 		   const std::vector<double>& mcEntries,
 		   const std::string& comment,
 		   const std::string& label,
-		   const double& ratio_plot_range);
+		   const double& ratio_plot_range,
+		   const std::string& mcDrawOption="H",
+		   const bool& setYRange=false,
+		   const double& yMinimum=-1,
+		   const double& yMaximum=-1,
+		   const bool& setXRange=false,
+		   const double& xMinimum=-1,
+		   const double& xMaximum=-1);
     void DumpCutFlow(const std::string& commandPrefix="", // e.g. "WithBTag_"
 		     const std::string& cutflowHistogramName="cutflow_weighted_final");
     
