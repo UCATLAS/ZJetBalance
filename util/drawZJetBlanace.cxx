@@ -320,30 +320,36 @@ void DrawValidationPlots(TCanvas& c1,
   TFile* fMC   = GetTFile(mc_file);
   TFile* fData = GetTFile(data_file);
   
-  MyDrawTH1F(c1, outputfile, fMC, fData, "ZpT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{Z} [GeV]", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "ZM", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "M_{Z} Z [GeV]", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "Z_jet_dPhi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#Delta (jet, Z)", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "muon1_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon1}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "muon1_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon1}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "muon1_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon1}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "muon2_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon2}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "muon2_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon2}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "muon2_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon2}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceZpT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{Z} [GeV]", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceZM", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "M_{Z} Z [GeV]", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceZ_jet_dPhi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#Delta (jet, Z)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancemuon1_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancemuon1_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancemuon1_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancemuon2_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{muon2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancemuon2_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{muon2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancemuon2_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{muon2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceelectron1_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{electron1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceelectron1_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{electron1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceelectron1_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{electron1}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceelectron2_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{electron2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceelectron2_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{electron2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceelectron2_pT", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{electron2}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancejet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancejet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancejet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
   
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "ProcZJetBalancejet_eta", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet}", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "ProcZJetBalancejet_phi", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#phi^{jet}", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "ProcZJetBalancejet_pt", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet}", mcLuminosityWeight);
   
-  MyDrawTH1F(c1, outputfile, fMC, fData, "averageInteractionsPerCrossing", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "Average Interaction per Bunch Crossing (preselection) ", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "nJets_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "N_{jets} (preselection)", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
-  MyDrawTH1F(c1, outputfile, fMC, fData, "jet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalanceaverageInteractionsPerCrossing", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "Average Interaction per Bunch Crossing (preselection) ", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancenJets_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "N_{jets} (preselection)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancejet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
+  MyDrawTH1F(c1, outputfile, fMC, fData, "ProcZJetBalancejet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
   
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
-  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "jet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "ProcZJetBalancejet_eta_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "#eta^{jet} (preselection)", mcLuminosityWeight);
+  MyDrawTH1FForTruthFlavors(c1, outputfile, fMC, fData, "ProcZJetBalancejet_pt_beforecut", Form("#it{ATLAS} internal Luminosity=%.2f fb^{-1}", luminosity), "p_{T}^{jet} (preselection)", mcLuminosityWeight);
   
   
   fMC->Close();
