@@ -50,6 +50,14 @@ RunZJetBalanceMiniTreeAnaWithCustomizedConfig 1.0 '$ROOTCOREBIN/data/ZJetBalance
 rm -f all_el_histData50ns.root
 hadd all_el_histData50ns.root el_histData50ns/hist-*.root
 
+# Run Jet Resoponse Fitter
+rm -f all_el_MC.root 
+hadd all_el_MC.root all_el_hist361106.root all_el_hist361108.root all_el_hist410004.root
+
+ZJetBalancePlotter -usePoisson -inFile all_el_MC.root -outTag allMC_el
+ZJetBalancePlotter -usePoisson -inFile all_el_histData50ns.root -outTag allData_el
+
+
 
 ############################################################
 # Z to mumu run
@@ -84,12 +92,12 @@ hadd all_mu_histData50ns.root mu_histData50ns/hist-*.root
 
 
 # Run Jet Resoponse Fitter
-rm -f all_MC.root 
+rm -f all_mu_MC.root 
 hadd all_mu_MC.root all_mu_hist361107.root all_mu_hist361108.root all_mu_hist410004.root
 
-ZJetBalancePlotter -usePoisson -inFile all_mu_MC.root -outTag allMC
-ZJetBalancePlotter -usePoisson -inFile all_mu_histData50ns.root -outTag allData
+ZJetBalancePlotter -usePoisson -inFile all_mu_MC.root -outTag allMC_mu
+ZJetBalancePlotter -usePoisson -inFile all_mu_histData50ns.root -outTag allData_mu
 
 
 # Run Plotter
-testDHGBHOutAndJERFitter | tee constants.tex
+#testDHGBHOutAndJERFitter | tee constants.tex
