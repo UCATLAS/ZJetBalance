@@ -223,25 +223,25 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
     for (int iEtaBin=1; iEtaBin<m_n_eta_binning+1; iEtaBin++) {
       Info("Initialize()", "%s", Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
       TH1F* h = new TH1F(Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin), 
-			 Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
+			 Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
 			      m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 			      m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 			      ), 
 			 m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       TH1F* h_b = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_b", iEtaBin, iPtBin), 
-			   Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
 				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 				), 
 			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       TH1F* h_c = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_c", iEtaBin, iPtBin), 
-			   Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
 				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 			      ), 
 			   m_nBinsXForResponseHist, m_minXForResponseHist, m_maxXForResponseHist);
       TH1F* h_l = new TH1F(Form("DB_RefEtaBin%d_PtBin%d_l", iEtaBin, iPtBin), 
-			   Form("%.1f<p_{T}<%.1f, %.1f<#eta^{det}<%.1f", 
+			   Form("%.1f<p_{T}<%.1f, %.1f<#eta<%.1f", 
 				m_pT_binning[iPtBin-1], m_pT_binning[iPtBin],
 				m_eta_binning[iEtaBin-1], m_eta_binning[iEtaBin]
 				), 
@@ -309,6 +309,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     weight_final = 
       mcEventWeight*weight_xs*pileup_reweighting_factor*m_additional_weight;
+    
     if (m_isMuonSample){
       // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );
@@ -320,17 +321,21 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
       if( muon_effSF->at(0)[0]!= -999.0 && muon_effSF->at(1)[0]!= -999.0 )
         weight_final *= muon_effSF->at(0)[0] * muon_effSF->at(1)[0];
     } else {
+      
       // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_electronTrigFactor->Fill( weight_electron_trig->at(0) );
       if(weight_electron_trig->at(0) != -999.0 ) 
         weight_final *= weight_electron_trig->at(0);
       // muon efficiency scale factors: 0 is nominal, rest are systematics +,- 1 sigma for each
+      
       m_h_electron1EffFactor->Fill( el_pidSF->at(0)[0]*el_recoSF->at(0)[0] );
       m_h_electron2EffFactor->Fill( el_pidSF->at(1)[0]*el_recoSF->at(1)[0] );
+      
       if( el_pidSF->at(0)[0]!= -999.0  && el_pidSF->at(1)[0]!= -999.0)
         weight_final *= el_pidSF->at(0)[0] * el_pidSF->at(1)[0];
       if( el_recoSF->at(0)[0]!= -999.0 && el_recoSF->at(1)[0]!= -999.0 )
         weight_final *= el_recoSF->at(0)[0] * el_recoSF->at(1)[0] ;
+      
     }
   }
   
@@ -342,6 +347,19 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
 
+  // 
+  const float& lead_jet_pt      = jet_pt->at(0);
+  const float& lead_jet_eta     = jet_eta->at(0);
+  const float& lead_jet_constScale_eta = jet_constitScaleEta->at(0);
+  const float& lead_jet_phi     = jet_phi->at(0);
+  const int&   lead_jet_truthLabel = m_isMC ? jet_ConeTruthLabelID->at(0) : -1;
+  const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
+  //const int    lead_jet_eta_bin = GetEtaBin(lead_jet_constScale_eta);
+  const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
+  
+  if (lead_jet_eta_bin==-1 or lead_jet_pt_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
+  FillCutflowHistograms("jet_{1} #eta / p_{T}", mcEventWeight, weight_final);
+  
   m_h_RunNumber->Fill(runNumber, weight_final);
   m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
 
@@ -349,7 +367,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   int nJetsBeforeCut = 0;
   
   m_h_1st_jet_eta_beforecut->Fill(jet_eta->at(0), weight_final);
-  m_h_1st_jet_pt_beforecut->Fill(jet_eta->at(0), weight_final);
+  m_h_1st_jet_pt_beforecut->Fill(jet_pt->at(0), weight_final);
   if (m_isMC) {    
     FillFlavorHistograms(m_h_1st_jet_pt_beforecut_b, m_h_1st_jet_pt_beforecut_c, m_h_1st_jet_pt_beforecut_l, 
 			 jet_ConeTruthLabelID->at(0), jet_pt->at(0), weight_final);
@@ -394,7 +412,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     m_h_electron2_eta_beforecut->Fill( el_eta->at(1), weight_final );
     m_h_electron2_phi_beforecut->Fill( el_phi->at(1), weight_final );
   }
-
+  
   // selection criteria need to be applied
   if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
@@ -402,21 +420,12 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   if (TMath::Abs(dPhiZJet1)<m_cutDPhiZJet)  { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("#Delta#phi(Z,jet)", mcEventWeight, weight_final);
   
-  // 
-  const float& lead_jet_pt      = jet_pt->at(0);
-  const float& lead_jet_eta     = jet_eta->at(0);
-  const float& lead_jet_constScale_eta = jet_constitScaleEta->at(0);
-  const float& lead_jet_phi     = jet_phi->at(0);
-  const int&   lead_jet_truthLabel = m_isMC ? jet_ConeTruthLabelID->at(0) : -1;
-  const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
-  const int    lead_jet_eta_bin = GetEtaBin(lead_jet_constScale_eta);
+  
+  //Info("execute()", "weight=%.f m_isMC=%s ptbin=%d etabin=%d", weight_final, (m_isMC ? "True" : "False"), lead_jet_pt_bin, lead_jet_eta_bin);
 
   //Info("execute()", "lead_jet_eta=%.1f (%d) lead_jet_pt=%.1f (%d)",
   //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
-
-  if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
-  FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
-
+  
   if (jet_pt->size()>1) { if (jet_pt->at(1)>pTRef1*0.2) {return EL::StatusCode::SUCCESS;} } // event with second jet is vetoed
   FillCutflowHistograms("jet_{2} p_{T}", mcEventWeight, weight_final);
 
@@ -425,10 +434,16 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     if( !jet_isBTag->at(0) ) { return EL::StatusCode::SUCCESS; }
     FillCutflowHistograms("jet_{1} b-tagged", mcEventWeight, weight_final);
     // apply b-tagging weight
-    weight_final *= jet_SFBTag->at(0)[0]; // other weights are for systematics
+    if (m_isMC) weight_final *= jet_SFBTag->at(0)[0]; // other weights are for systematics
     //Info("execute()", "jet_SFBTag->at(0)[0]=%f \n", jet_SFBTag->at(0)[0]);
     
     FillCutflowHistograms("jet_{1} b-tag SF", mcEventWeight, weight_final);
+  } else {
+    if( jet_isBTag->at(0) ) { 
+      // only in order to store the cutflow 
+      FillCutflowHistograms("jet_{1} b-tagged", mcEventWeight, weight_final);
+      FillCutflowHistograms("jet_{1} b-tag SF", mcEventWeight, ((m_isMC) ? weight_final*jet_SFBTag->at(0)[0] : weight_final));
+    }
   }
 
   // lepton plots
