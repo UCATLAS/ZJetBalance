@@ -3,7 +3,8 @@
 // ======================================
 ZJetBalance::DrawingHelperOk::DrawingHelperOk()
   : m_outputFileName("outpuf_default"),
-    m_luminosity(-1000.)
+    m_luminosity(-1000.),
+    m_showStat(false)
 {
   m_canvas = new TCanvas();
   m_canvas->Print(Form("%s.pdf[", m_outputFileName.c_str()));
@@ -223,7 +224,7 @@ ZJetBalance::DrawingHelperOk::CloseMCFiles(const std::vector<TFile*>& files)
 void 
 ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
 					std::vector<TH1F>& mcHistStack,
-					const std::vector<double>& mcEntries,
+					const std::vector<std::map<std::string, double> >& mcStats,
 					const std::string& comment,
 					const std::string& label,
 					const double& ratio_plot_range,
@@ -239,7 +240,7 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   RatioPlot(hData,
 	    mcHistStack,
 	    m_MC_sampleTitles,
-	    mcEntries,
+	    mcStats,
 	    comment,
 	    label,
 	    ratio_plot_range,
@@ -257,7 +258,7 @@ void
 ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
 					std::vector<TH1F>& mcHistStack,
 					const std::vector<std::string>& mcSampleTitles,
-					const std::vector<double>& mcEntries,
+					const std::vector<std::map<std::string, double> >& mcStats,
 					const std::string& comment,
 					const std::string& label,
 					const double& ratio_plot_range,
@@ -379,16 +380,13 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   leg.SetLineColor(0);
   leg.SetFillStyle(0);
   
-  std::string dataLegend = (mcDrawOption=="H") ? Form("Data (%.0f)", hData->Integral(-1, -1)) : "Data";
+  std::string dataLegend = ReturnLegend("Data", hData->Integral(-1, -1), hData->GetMean(), hData->GetRMS(), mcDrawOption, true);
   leg.AddEntry(hData, dataLegend.c_str(), "PL");
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    std::string mcLegend = (mcDrawOption=="H") ? Form("%s (%.1f)", mcSampleTitles.at(iMC).c_str(), mcEntries.at(iMC)) : mcSampleTitles.at(iMC);
+    std::string mcLegend = ReturnLegend(mcSampleTitles.at(iMC),mcStats.at(iMC), mcDrawOption, false);
     leg.AddEntry( &(mcHistStack[iMC]), mcLegend.c_str(), "F");
   }
-  
-    
-  leg.Draw();
-  
+      
   ATLASLabel(0.20, 0.94, label.c_str(), kBlack);
   
   TLatex myComment(0.45, 0.94, comment.c_str());
@@ -423,6 +421,10 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   h_ratio_mc.Draw("E2");
   h_ratio_data.Draw("PE SAME");
   l1.Draw();
+  
+  canvas_up->cd();  
+  leg.Draw();
+  
   m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
   
   m_canvas->Clear();
@@ -482,7 +484,7 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   
   std::vector<TFile*> mcFiles = OpenAndReturnMCFiles();
   std::vector<TH1F*> mcHists;
-  std::vector<double> mcEntries;
+  std::vector<std::map<std::string, double> > mcStats;
   
   if (m_MC_fileNames.size()==0) {
     Error("MyDataMcComparison()", "no MC files registered. no draw for %s", 
@@ -499,9 +501,10 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 			    true, // fillHistogram
 			    m_MC_normalizationFactor.at(iMC));
     mcHists.push_back(tmp);
-    mcEntries.push_back(tmp->Integral(-1, -1));
+    std::map<std::string, double> stats = ReturnStatsMap(tmp);
+    mcStats.push_back(stats);
   }
-
+  
   std::vector<TH1F> mcHistStack(mcHists.size());
   for (int iFile=0, nFiles=mcHists.size(); iFile<nFiles; iFile++) {
     mcHists.at(iFile)->Copy(mcHistStack[iFile]);
@@ -545,10 +548,10 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   leg.SetLineColor(0);
   leg.SetFillStyle(0);
   
-  std::string dataLegend = (mcDrawOption=="H") ? Form("Data (%.0f)", hData->Integral(-1, -1)) : "Data";
+  std::string dataLegend = ReturnLegend("Data", hData->Integral(-1, -1), hData->GetMean(), hData->GetRMS(), mcDrawOption, true);
   leg.AddEntry(hData, dataLegend.c_str(), "PL");
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    std::string mcLegend = (mcDrawOption=="H") ? Form("%s (%.1f)", m_MC_sampleTitles.at(iMC).c_str(), mcEntries.at(iMC)) : m_MC_sampleTitles.at(iMC);
+    std::string mcLegend = ReturnLegend(m_MC_sampleTitles.at(iMC),mcStats.at(iMC), mcDrawOption, false);
     leg.AddEntry( &(mcHistStack[iMC]), mcLegend.c_str(), "F");
   }
   
@@ -565,7 +568,7 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 
   
   // ratio plot
-  RatioPlot(hData, mcHistStack, mcEntries, comment, label, 0.5, mcDrawOption,
+  RatioPlot(hData, mcHistStack, mcStats, comment, label, 0.5, mcDrawOption,
 	    setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   CloseMCFiles(mcFiles);
@@ -686,4 +689,60 @@ ZJetBalance::DrawingHelperOk::DumpCutFlow(const std::string& commandPrefix, // e
   
   fData->Close();
   CloseMCFiles(mcFiles);
+}
+  
+// ======================================
+std::map<std::string, double> 
+ZJetBalance::DrawingHelperOk::ReturnStatsMap(TH1* h)
+{
+  std::map<std::string, double> rc;
+  rc["integral"] = h->Integral(-1, -1);
+  rc["mean"] = h->GetMean();
+  rc["rms"] = h->GetRMS();
+  return rc;
+}
+
+// ======================================
+std::string 
+ZJetBalance::DrawingHelperOk::ReturnLegend(const std::string& title,
+					   const std::map<std::string, double> stats,
+					   const std::string& drawOption,
+					   bool isData)
+{
+  return ReturnLegend(title,
+		      stats.at("integral"),
+		      stats.at("mean"),
+		      stats.at("rms"),
+		      drawOption,
+		      isData);
+}
+
+// ======================================
+std::string 
+ZJetBalance::DrawingHelperOk::ReturnLegend(const std::string& title,
+					   const double& entry,
+					   const double& mean,
+					   const double& rms,
+					   const std::string& drawOption,
+					   bool isData)
+{
+  std::string rc;
+  
+  if (drawOption!="H") {
+    rc = title;
+  } else {
+    if (!m_showStat) {
+      rc = (isData ? 
+	    Form("%s (%.0f)", title.c_str(), entry) : 
+	    Form("%s (%.1f)", title.c_str(), entry));
+    } else {
+      rc = (isData ? 
+	    Form("#splitline{%s (%.0f)}{ave=%.1f rms=%.1f}", title.c_str(), entry, mean, rms) :
+	    Form("#splitline{%s (%.1f)}{ave=%.1f rms=%.1f}", title.c_str(), entry, mean, rms));
+	    //Form("#splitline{%s (%.0f)}{#splitline{mean=%.1f}{RMS=%.1f}}", title.c_str(), entry, mean, rms) :
+	    //Form("#splitline{%s (%.1f)}{#splitline{mean=%.1f}{RMS=%.1f}}", title.c_str(), entry, mean, rms));
+    }
+  }
+  
+  return rc;
 }
