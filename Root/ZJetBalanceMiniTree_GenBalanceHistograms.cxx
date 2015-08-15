@@ -531,7 +531,7 @@ void ZJetBalanceMiniTree_GenBalanceHistograms::DecodeBinning(TString binning_str
 int ZJetBalanceMiniTree_GenBalanceHistograms::GetPtBin(const double& _pt)
 {
   int rc=-1;
-  for (int iBin=0; iBin<m_n_pT_binning-1; iBin++) {
+  for (int iBin=0; iBin<m_n_pT_binning; iBin++) {
     if (m_pT_binning[iBin]<_pt && _pt<m_pT_binning[iBin+1]) {
       rc=iBin;
       break;
