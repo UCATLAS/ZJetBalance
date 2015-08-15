@@ -309,7 +309,7 @@ void ZJetBalanceMiniTreeAnaBase::LoadMiniTree()
   // load tree
   //===============================
   TTree* tree = wk()->tree();
-  if(m_btagJets) { if(!jet_isBTag || !jet_SFBTag) { this->SetBTagAddresses(tree); } }
+  if(!jet_isBTag) { this->SetBTagAddresses(tree); }
   const int jentry = wk()->treeEntry();
   tree->LoadTree (jentry);
   tree->GetEntry (jentry);
@@ -523,17 +523,27 @@ EL::StatusCode ZJetBalanceMiniTreeAnaBase::LoadBasicConfiguration()
 
 void ZJetBalanceMiniTreeAnaBase :: SetBTagAddresses(TTree* tree)
 {
-  if(!m_btagJets) { return; }
+  Info("SetBTagAddresses()", "called");
   std::string btagAddress("jet_MV2c20_is"+m_btagOP);
   std::string btagSFAddress("jet_MV2c20_SF"+m_btagOP);
   tree->SetBranchAddress(btagAddress.c_str(),   &jet_isBTag, &b_jet_isBTag);
-  tree->SetBranchAddress(btagSFAddress.c_str(), &jet_SFBTag, &b_jet_SFBTag);
-  if( !(jet_isBTag && jet_SFBTag) ) {
-    std::cout << "CANNOT Set B-Tagging Branches : " << std::endl;
-    std::cout << "\t" << btagAddress.c_str() << std::endl;
-    std::cout << "\t" << btagSFAddress.c_str() << std::endl;
+  if (!tree->GetBranch("mcChannelNumber")) {
+    Info("SetBTagAddresses()", "Data and SF address is not set");
+    if( !jet_isBTag ) {
+      std::cout << "CANNOT Set B-Tagging Branches : " << std::endl;
+      std::cout << "\t" << btagAddress.c_str() << std::endl;
+    }
+  } else {
+    Info("SetBTagAddresses()", "Data and SF address is set");
+    tree->SetBranchAddress(btagSFAddress.c_str(), &jet_SFBTag, &b_jet_SFBTag);
+    if( !(jet_isBTag && jet_SFBTag) ) {
+      std::cout << "CANNOT Set B-Tagging Branches : " << std::endl;
+      std::cout << "\t" << btagAddress.c_str() << std::endl;
+      std::cout << "\t" << btagSFAddress.c_str() << std::endl;
+    }
   }
   // FIXME - induce an exit
+  Info("SetBTagAddresses()", "ended");
 }
 
 void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
@@ -541,11 +551,11 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   // isBTag SFBTag needs special treatment
   jet_isBTag = 0;
   jet_SFBTag = 0;
-  if(m_btagJets && !m_btagOP.empty() ) { this->SetBTagAddresses(tree); }
   
   // copied from MakeClass function and add //! for all the variables
   // Set object pointer
   weight_muon_trig = 0;
+  weight_electron_trig = 0;
   jet_E = 0;
   jet_pt = 0;
   jet_phi = 0;
@@ -652,6 +662,7 @@ void ZJetBalanceMiniTreeAnaBase :: InitTree(TTree* tree)
   tree->SetBranchAddress("xf1", &xf1, &b_xf1);
   tree->SetBranchAddress("xf2", &xf2, &b_xf2);
   tree->SetBranchAddress("weight_muon_trig", &weight_muon_trig, &b_weight_muon_trig);
+  tree->SetBranchAddress("weight_electron_trig", &weight_electron_trig, &b_weight_electron_trig);
   tree->SetBranchAddress("ZpT", &ZpT, &b_ZpT);
   tree->SetBranchAddress("Zeta", &Zeta, &b_Zeta);
   tree->SetBranchAddress("Zphi", &Zphi, &b_Zphi);
