@@ -153,7 +153,8 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
   
   // ratio plot
-  RatioPlot(hData, mcHistStack, mcSampleTitle, mcEntries, comment, label, 0.5);
+  RatioPlot(hData, mcHistStack, mcSampleTitle, mcEntries, comment, label, 0.5, mcDrawOption,
+	    setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   
   fData->Close();
