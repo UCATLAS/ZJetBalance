@@ -32,11 +32,10 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   
   std::vector<TFile*> mcFiles = OpenAndReturnMCFiles();
   std::vector<TH1F*>  mcHists(3); // for three flavor
-  std::vector<double> mcEntries(3); // for three flavor
+  std::vector<std::map<std::string, double> > mcStats(3); // for three flavor
   std::vector<std::string> mcSampleTitle(3); // for three flavor
   
-  // initializer
-  mcEntries[0]=0.; mcEntries[1]=0.; mcEntries[2]=0.;
+  // initializer  
   mcSampleTitle[0]="b"; mcSampleTitle[1]="c"; mcSampleTitle[2]="others";
   mcHists[0] = new TH1F(); mcHists[1] = new TH1F(); mcHists[2] = new TH1F(); 
   
@@ -73,13 +72,12 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
       mcHists[0]->Add(tmp_b);
       mcHists[1]->Add(tmp_c);
       mcHists[2]->Add(tmp_l);
-    }
-    
-    (mcEntries[0]) += tmp_b->Integral(-1, -1);
-    (mcEntries[1]) += tmp_c->Integral(-1, -1);
-    (mcEntries[2]) += tmp_l->Integral(-1, -1);
+    }    
   }
   
+  mcStats[0]= ReturnStatsMap(mcHists[0]);
+  mcStats[1]= ReturnStatsMap(mcHists[1]);
+  mcStats[2]= ReturnStatsMap(mcHists[2]);
   
   std::vector<TH1F> mcHistStack(mcHists.size());
   for (int iFlavor=0, nFlavors=mcHists.size(); iFlavor<nFlavors; iFlavor++) {
@@ -129,16 +127,11 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   leg.SetLineColor(0);
   leg.SetFillStyle(0);
   
-  leg.AddEntry(hData, 
-	       Form("Data (%.0f)", 
-		    hData->Integral(-1, -1)),
-	       "PL");
+  const std::string dataLegend = ReturnLegend("Data", hData->Integral(-1, -1), hData->GetMean(), hData->GetRMS(), mcDrawOption, true);
+  leg.AddEntry(hData, dataLegend.c_str(), "PL");
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    leg.AddEntry( &(mcHistStack[iMC]),   
-  		  Form("%s (%.0f)", 
-  		       mcSampleTitle.at(iMC).c_str(),
-  		       mcEntries.at(iMC)),
-  		  "F");
+    const std::string mcLegend = ReturnLegend(mcSampleTitle.at(iMC), mcStats.at(iMC), mcDrawOption, false);
+    leg.AddEntry( &(mcHistStack[iMC]), mcLegend.c_str(), "F");
   }
   
   leg.Draw();
@@ -153,7 +146,7 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
   
   // ratio plot
-  RatioPlot(hData, mcHistStack, mcSampleTitle, mcEntries, comment, label, 0.5, mcDrawOption,
+  RatioPlot(hData, mcHistStack, mcSampleTitle, mcStats, comment, label, 0.5, mcDrawOption,
 	    setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   
