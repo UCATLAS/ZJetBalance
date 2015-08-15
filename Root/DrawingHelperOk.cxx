@@ -282,7 +282,7 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   TH1D h_ratio_data;
   TH1D h_ratio_mc;
   hMC->Copy(h_ratio_mc);
-  hMC->Copy(h_ratio_data);
+  hData->Copy(h_ratio_data);
   
   h_ratio_mc.Clear();
   h_ratio_mc.SetName("ratio_data");
@@ -418,6 +418,7 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   h_ratio_data.SetLineColor(kBlack);
   h_ratio_data.SetMarkerColor(kBlack);
   h_ratio_data.SetMarkerStyle(8);
+  
   
   h_ratio_mc.Draw("E2");
   h_ratio_data.Draw("PE SAME");
