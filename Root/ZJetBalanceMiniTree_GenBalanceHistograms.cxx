@@ -346,19 +346,19 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   if (m_eventCounter%10000==0) {
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
-
+  
   // 
   const float& lead_jet_pt      = jet_pt->at(0);
   const float& lead_jet_eta     = jet_eta->at(0);
   const float& lead_jet_constScale_eta = jet_constitScaleEta->at(0);
   const float& lead_jet_phi     = jet_phi->at(0);
   const int&   lead_jet_truthLabel = m_isMC ? jet_ConeTruthLabelID->at(0) : -1;
-  const int    lead_jet_pt_bin  = GetPtBin(pTRef1);
+  const int    Z_pt_ref_bin  = GetPtBin(pTRef1);
   //const int    lead_jet_eta_bin = GetEtaBin(lead_jet_constScale_eta);
   const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
   
-  if (lead_jet_eta_bin==-1 or lead_jet_pt_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
-  FillCutflowHistograms("jet_{1} #eta / p_{T}", mcEventWeight, weight_final);
+  if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
+  FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
   
   m_h_RunNumber->Fill(runNumber, weight_final);
   m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
@@ -421,10 +421,10 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   FillCutflowHistograms("#Delta#phi(Z,jet)", mcEventWeight, weight_final);
   
   
-  //Info("execute()", "weight=%.f m_isMC=%s ptbin=%d etabin=%d", weight_final, (m_isMC ? "True" : "False"), lead_jet_pt_bin, lead_jet_eta_bin);
+  //Info("execute()", "weight=%.f m_isMC=%s ptbin=%d etabin=%d", weight_final, (m_isMC ? "True" : "False"), Z_pt_ref_bin, lead_jet_eta_bin);
 
   //Info("execute()", "lead_jet_eta=%.1f (%d) lead_jet_pt=%.1f (%d)",
-  //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, lead_jet_pt_bin);
+  //lead_jet_eta, lead_jet_eta_bin, lead_jet_pt, Z_pt_ref_bin);
   
   if (jet_pt->size()>1) { if (jet_pt->at(1)>pTRef1*0.2) {return EL::StatusCode::SUCCESS;} } // event with second jet is vetoed
   FillCutflowHistograms("jet_{2} p_{T}", mcEventWeight, weight_final);
@@ -462,6 +462,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     m_h_electron2_eta->Fill( el_eta->at(1), weight_final );
     m_h_electron2_phi->Fill( el_phi->at(1), weight_final );
   }
+  
   // plots of Z itself
   m_h_ZpT->Fill(ZpT, weight_final);
   m_h_Zeta->Fill(Zeta, weight_final);
@@ -469,7 +470,6 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   m_h_ZM->Fill(ZM, weight_final);
   // jet plots after cuts
   m_h_nJets->Fill(njets, weight_final);
-  m_h_jet_pt_bin->Fill(lead_jet_pt, lead_jet_pt_bin, weight_final);
   m_h_jet_eta->Fill(lead_jet_eta, weight_final);
   m_h_jet_pt->Fill(lead_jet_pt, weight_final);
   m_h_jet_phi->Fill(lead_jet_phi, weight_final);
@@ -482,12 +482,16 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   // Z-Jet relationship
   m_h_Z_jet_dPhi->Fill(dPhiZJet1, weight_final);
   m_h_Z_jet_dEta->Fill(dEtaZJet1, weight_final);
-  (m_balance_hists[lead_jet_pt_bin])[lead_jet_eta_bin]->Fill(lead_jet_pt/pTRef1, weight_final);
-  FillFlavorHistograms((m_balance_hists_b[lead_jet_pt_bin])[lead_jet_eta_bin],
-		       (m_balance_hists_c[lead_jet_pt_bin])[lead_jet_eta_bin],
-		       (m_balance_hists_l[lead_jet_pt_bin])[lead_jet_eta_bin],
-		       lead_jet_truthLabel, lead_jet_pt/pTRef1, weight_final);    
   
+  if (Z_pt_ref_bin>=0) { // valid Z_pT bin
+    m_h_jet_pt_bin->Fill(lead_jet_pt, Z_pt_ref_bin, weight_final);
+    (m_balance_hists[Z_pt_ref_bin])[lead_jet_eta_bin]->Fill(lead_jet_pt/pTRef1, weight_final);
+    FillFlavorHistograms((m_balance_hists_b[Z_pt_ref_bin])[lead_jet_eta_bin],
+			 (m_balance_hists_c[Z_pt_ref_bin])[lead_jet_eta_bin],
+			 (m_balance_hists_l[Z_pt_ref_bin])[lead_jet_eta_bin],
+			 lead_jet_truthLabel, lead_jet_pt/pTRef1, weight_final);    
+  }
+    
   return EL::StatusCode::SUCCESS;
 }
 
