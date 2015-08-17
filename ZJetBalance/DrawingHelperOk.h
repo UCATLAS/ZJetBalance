@@ -44,6 +44,7 @@ namespace ZJetBalance {
 	       const bool& useWeightedSum,
 	       const bool& doNormalize = true /* could be false in case we do not need normalize the distribution, for e.g. efficiency */
 	       );
+    void SetShowStat(bool showStat) { m_showStat=showStat; }
     void SetDataFileName(const std::string& name) {m_Data_fileName=name;} 
     void SetLuminosity(const double& luminosity) {m_luminosity=luminosity;}
     double GetLuminosity() {return m_luminosity;}
@@ -71,7 +72,7 @@ namespace ZJetBalance {
     void RatioPlot(TH1F* hData,
 		   std::vector<TH1F>& mcHistStack,
 		   const std::vector<std::string>& mcSampleTitles,
-		   const std::vector<double>& mcEntries,
+		   const std::vector<std::map<std::string, double> >& mcStats,
 		   const std::string& comment,
 		   const std::string& label,
 		   const double& ratio_plot_range,
@@ -84,7 +85,7 @@ namespace ZJetBalance {
 		   const double& xMaximum=-1);
     void RatioPlot(TH1F* hData,
 		   std::vector<TH1F>& mcHistStack,
-		   const std::vector<double>& mcEntries,
+		   const std::vector<std::map<std::string, double> >& mcStats,
 		   const std::string& comment,
 		   const std::string& label,
 		   const double& ratio_plot_range,
@@ -97,7 +98,17 @@ namespace ZJetBalance {
 		   const double& xMaximum=-1);
     void DumpCutFlow(const std::string& commandPrefix="", // e.g. "WithBTag_"
 		     const std::string& cutflowHistogramName="cutflow_weighted_final");
-    
+    std::string ReturnLegend(const std::string& title,
+			     const double& entry,
+			     const double& mean,
+			     const double& rms,
+			     const std::string& drawOption,
+			     bool isData);
+    std::string ReturnLegend(const std::string& title,
+			     const std::map<std::string, double> stats,
+			     const std::string& drawOption,
+			     bool isData);
+      
   protected:
     // const memeber
     const std::string        m_outputFileName;
@@ -111,6 +122,7 @@ namespace ZJetBalance {
     std::vector<std::string> m_MC_symbols;
     std::string              m_Data_fileName;
     double                   m_luminosity;
+    bool                     m_showStat;
     
     TCanvas* m_canvas;
     void CustimizeCampusWithRightMargin();
@@ -130,8 +142,11 @@ namespace ZJetBalance {
 		      const int& markerStyle,
 		      const bool& fillHistogram,
 		      const double& normalization = 1.0);
+    std::map<std::string, double> ReturnStatsMap(TH1* h);
   };
 
 }
+
+
 
 #endif 

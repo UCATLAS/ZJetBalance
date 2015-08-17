@@ -109,10 +109,10 @@ int main(int argc, char* argv[]) {
   int       nptbins  = -1;
   int       netabins = -1;
   
-  TH1F* hRef_pt = (TH1F*)f->Get("ProcZJetBalancept_binning_info");
+  TH1F* hRef_pt = (TH1F*)f->Get("pt_binning_info");
   GetBinningInformation(hRef_pt, ptbins, nptbins);
   
-  TH1F* hRef_eta = (TH1F*)f->Get("ProcZJetBalanceeta_binning_info");
+  TH1F* hRef_eta = (TH1F*)f->Get("eta_binning_info");
   GetBinningInformation(hRef_eta, etabins, netabins);
   
   
@@ -122,10 +122,10 @@ int main(int argc, char* argv[]) {
   
   for (int iEtaBin=1; iEtaBin<netabins+1;++iEtaBin) {
     TH1F *h_mean  = new TH1F(Form("mean_pt_eta%d", iEtaBin), 
-			     Form("%.1f<#eta^{const scale}<%.1f", etabins[iEtaBin-1], etabins[iEtaBin]),
+			     Form("%.1f<#eta<%.1f", etabins[iEtaBin-1], etabins[iEtaBin]),
 			     nptbins, ptbins);
     TH1F *h_width = new TH1F(Form("width_pt_eta%d", iEtaBin),
-			     Form("%.1f<#eta^{const scale}<%.1f", etabins[iEtaBin-1], etabins[iEtaBin]),
+			     Form("%.1f<#eta<%.1f", etabins[iEtaBin-1], etabins[iEtaBin]),
 			     nptbins, ptbins);
     //TH1F *h_chi2  = new TH1F(Form("chi2_pt_eta%d", iEtaBin), "", nptbins, ptbins);
     h_mean->GetXaxis()->SetTitle("p_{T, Z}^{ref} [GeV]");
@@ -146,8 +146,8 @@ int main(int argc, char* argv[]) {
 			     Form("%.1f<p_{T}^{ref}<%.1f", ptbins[iPtBin-1], ptbins[iPtBin]),
 			     netabins, etabins);
     //TH1F *h_chi2  = new TH1F(Form("chi2_eta_pt%d", iPtBin), "", netabins, etabins);
-    h_mean->GetXaxis()->SetTitle("jet #eta (const scale)");
-    h_width->GetXaxis()->SetTitle("jet #eta (const scale)");
+    h_mean->GetXaxis()->SetTitle("jet #eta");
+    h_width->GetXaxis()->SetTitle("jet #eta");
     
     Info("main()", "iPtBin=%d : histograms %s %s created", 
 	 iPtBin, h_mean->GetName(), h_width->GetName());
@@ -287,7 +287,7 @@ int main(int argc, char* argv[]) {
 				 ));
     title.SetNDC();
     
-    DrawHisto(h_mean_eta,"Mean of fit",0.8,1.2,"jet #eta (const scale)");
+    DrawHisto(h_mean_eta,"Mean of fit",0.8,1.2,"jet #eta");
     myFitter->ResetTextCounters();
     myFitter->DrawTextLeft(jetDesc);
     myFitter->DrawTextLeft(fitDesc);
@@ -295,7 +295,7 @@ int main(int argc, char* argv[]) {
     title.Draw();
     can->Print(pdf);
     
-    DrawHisto(h_width_eta,"Width/Mean of fit",0.0,0.6,"jet #eta (const scale)");
+    DrawHisto(h_width_eta,"Width/Mean of fit",0.0,0.6,"jet #eta");
     myFitter->ResetTextCounters();
     myFitter->DrawTextLeft(jetDesc);
     myFitter->DrawTextLeft(fitDesc);
