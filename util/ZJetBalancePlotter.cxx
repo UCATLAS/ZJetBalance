@@ -1,6 +1,7 @@
 // borrowing JES_ResponseFitter/util/FitZjetDB.cxx
 
 #include <JES_ResponseFitter/JES_BalanceFitter.h>
+#include <ZJetBalance/DrawingHelperOk.h>
 #include <TFile.h>
 #include <TH1F.h>
 #include <TCanvas.h>
@@ -92,11 +93,7 @@ int main(int argc, char* argv[]) {
     Form("Zjet_DB_Gauss_fits_%s.pdf", outTag.Data());
   
   gErrorIgnoreLevel=2000; // removes Canvas print statements
-  TFile *f = TFile::Open(inFile.Data());
-  if (!f) {
-    std::cout << "inFile=[" << inFile.Data() << "] is not valid file name." << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  TFile* f = ZJetBalance::DrawingHelperOk::GetTFile(inFile.Data());
   
   // set cutflow histogram
   outputList.Add((TH1F*)f->Get("cutflow"));  
@@ -109,10 +106,10 @@ int main(int argc, char* argv[]) {
   int       nptbins  = -1;
   int       netabins = -1;
   
-  TH1F* hRef_pt = (TH1F*)f->Get("pt_binning_info");
+  TH1F* hRef_pt = (TH1F*) ZJetBalance::DrawingHelperOk::GetObject(f, "pt_binning_info");
   GetBinningInformation(hRef_pt, ptbins, nptbins);
   
-  TH1F* hRef_eta = (TH1F*)f->Get("eta_binning_info");
+  TH1F* hRef_eta = (TH1F*) ZJetBalance::DrawingHelperOk::GetObject(f, "eta_binning_info");
   GetBinningInformation(hRef_eta, etabins, netabins);
   
   
@@ -170,7 +167,7 @@ int main(int argc, char* argv[]) {
     for (int iPtBin=1;iPtBin<nptbins+1;++iPtBin) {
       double ptlow=ptbins[iPtBin]; //, ptup=ptbins[bin+1], pt=(ptlow+ptup)/2;
       double fitMin = 17.0/ptlow;
-      TH1F *h = (TH1F*)f->Get(Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
+      TH1F *h = (TH1F*) ZJetBalance::DrawingHelperOk::GetObject(f, Form("DB_RefEtaBin%d_PtBin%d", iEtaBin, iPtBin));
       h->SetStats(0);
       myFitter->FitAndDraw(h,fitMin);
       can->Print(pdf);
