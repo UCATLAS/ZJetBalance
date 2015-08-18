@@ -365,6 +365,8 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
   
   // selection criteria need to be applied
+  m_h_ZM_beforecut->Fill(ZM, weight_final);
+  
   if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
   
@@ -399,7 +401,6 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   m_h_ZpT_beforecut->Fill(ZpT, weight_final);
   m_h_Zeta_beforecut->Fill(Zeta, weight_final);
   m_h_Zphi_beforecut->Fill(Zphi, weight_final);
-  m_h_ZM_beforecut->Fill(ZM, weight_final);
   
   // muon before cut
   if( m_fillLeptonBefore && m_isMuonSample ) {
