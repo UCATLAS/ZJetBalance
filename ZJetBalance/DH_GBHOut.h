@@ -19,7 +19,9 @@ namespace ZJetBalance {
 			       const double& yMaximum=-1,
 			       const bool& setXRange=false,
 			       const double& xMinimum=-1,
-			       const double& xMaximum=-1);    
+			       const double& xMaximum=-1,
+			       const double& ratio_plot_range_min=0.5,
+			       const double& ratio_plot_range_max=1.5);
     void SetFlavorColors(int color_b, int color_c, int color_l) { 
       m_color_b=color_b;
       m_color_c=color_c;

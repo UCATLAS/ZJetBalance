@@ -17,7 +17,9 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
 					      const double& yMaximum,
 					      const bool& setXRange,
 					      const double& xMinimum,
-					      const double& xMaximum)
+					      const double& xMaximum,
+					      const double& ratio_plot_range_min,
+					      const double& ratio_plot_range_max)
 {
   // data preparation 
   TFile* fData = GetTFile(m_Data_fileName);
@@ -146,7 +148,8 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
   
   // ratio plot
-  RatioPlot(hData, mcHistStack, mcSampleTitle, mcStats, comment, label, 0.5, mcDrawOption,
+  RatioPlot(hData, mcHistStack, mcSampleTitle, mcStats, comment, label, 
+	    ratio_plot_range_min, ratio_plot_range_max, mcDrawOption,
 	    setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   
