@@ -44,14 +44,14 @@ int main()
   drawer_electron.DrawFlavorComposition("jet_eta", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#eta^{jet}", label);
   drawer_electron.DrawFlavorComposition("jet_phi", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#phi^{jet}", label);
   drawer_electron.DrawFlavorComposition("jet_pt", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{jet}", label);
-  drawer_electron.MyDataMcComparisonTH1F("averageInteractionsPerCrossing", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#mu (preselection) ", label);
-  drawer_electron.MyDataMcComparisonTH1F("1st_jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "leading jet #eta (preselection)", label);
-  drawer_electron.MyDataMcComparisonTH1F("1st_jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "leading jet p_{T} (preselection)", label);
-  drawer_electron.MyDataMcComparisonTH1F("nJets_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "N_{jets} (preselection)", label);
-  drawer_electron.MyDataMcComparisonTH1F("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#eta^{jet} (preselection)", label);
-  drawer_electron.MyDataMcComparisonTH1F("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{jet} (preselection)", label);
-  drawer_electron.DrawFlavorComposition("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#eta^{jet} (preselection)", label);
-  drawer_electron.DrawFlavorComposition("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{jet} (preselection)", label);  
+  drawer_electron.MyDataMcComparisonTH1F("averageInteractionsPerCrossing", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#mu (before balance cut) ", label);
+  drawer_electron.MyDataMcComparisonTH1F("1st_jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "leading jet #eta (before balance cut)", label);
+  drawer_electron.MyDataMcComparisonTH1F("1st_jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "leading jet p_{T} (before balance cut)", label);
+  drawer_electron.MyDataMcComparisonTH1F("nJets_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "N_{jets} (before balance cut)", label);
+  drawer_electron.MyDataMcComparisonTH1F("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#eta^{jet} (before balance cut)", label);
+  drawer_electron.MyDataMcComparisonTH1F("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{jet} (before balance cut)", label);
+  drawer_electron.DrawFlavorComposition("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#eta^{jet} (before balance cut)", label);
+  drawer_electron.DrawFlavorComposition("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{jet} (before balance cut)", label);  
   drawer_electron.MyDataMcComparisonTH1F("ZpT_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{Z} [GeV]", label);
   drawer_electron.MyDataMcComparisonTH1F("Zeta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#eta^{Z}", label);
   drawer_electron.MyDataMcComparisonTH1F("Zphi_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#phi^{Z}", label);
@@ -91,7 +91,7 @@ int main()
       if (found==std::string::npos) { continue; }
       std::string xtitle = ((TH1F*)key->ReadObj())->GetXaxis()->GetTitle();
       std::string title = ((TH1F*)key->ReadObj())->GetTitle();
-      drawer2_electron.MyDataMcComparisonTH1F_GraphStyle(keyName, Form("%s", title.c_str()), xtitle, label, true, 0.5, 1.5); // set Y range by hand
+      drawer2_electron.MyDataMcComparisonTH1F_GraphStyle(keyName, Form("%s", title.c_str()), xtitle, label, true, 0.5, 1.5, false, -1, -1, 0.85, 1.15); // set Y range by hand
       //drawer2_electron.MyDataMcComparisonTH1F(keyName, Form("%s", title.c_str()), xtitle);      
     }//over Keys
   }
@@ -117,6 +117,7 @@ int main()
 		    kGreen, 8, true);
   
   drawer_muon.MyDataMcComparisonTH1F("ZpT", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{Z} [GeV]", label);
+  drawer_muon.MyDataMcComparisonTH1F("ZpTRef", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T, Z}^{ref} [GeV]", label);
   drawer_muon.MyDataMcComparisonTH1F("ZM", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "M_{Z} [GeV]", label);
   drawer_muon.MyDataMcComparisonTH1F("Z_jet_dPhi", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#Delta (jet, Z)", label);
   drawer_muon.MyDataMcComparisonTH1F("muon1_eta", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{muon1}", label);
@@ -131,14 +132,14 @@ int main()
   drawer_muon.DrawFlavorComposition("jet_eta", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{jet}", label);
   drawer_muon.DrawFlavorComposition("jet_phi", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#phi^{jet}", label);
   drawer_muon.DrawFlavorComposition("jet_pt", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{jet}", label);
-  drawer_muon.MyDataMcComparisonTH1F("averageInteractionsPerCrossing", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#mu (preselection) ", label);
-  drawer_muon.MyDataMcComparisonTH1F("1st_jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "leading jet #eta (preselection)", label);
-  drawer_muon.MyDataMcComparisonTH1F("1st_jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "leading jet p_{T} (preselection)", label);
-  drawer_muon.MyDataMcComparisonTH1F("nJets_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "N_{jets} (preselection)", label);
-  drawer_muon.MyDataMcComparisonTH1F("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{jet} (preselection)", label);
-  drawer_muon.MyDataMcComparisonTH1F("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{jet} (preselection)", label);
-  drawer_muon.DrawFlavorComposition("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{jet} (preselection)", label);
-  drawer_muon.DrawFlavorComposition("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{jet} (preselection)", label);  
+  drawer_muon.MyDataMcComparisonTH1F("averageInteractionsPerCrossing", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#mu (before balance cut) ", label);
+  drawer_muon.MyDataMcComparisonTH1F("1st_jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "leading jet #eta (before balance cut)", label);
+  drawer_muon.MyDataMcComparisonTH1F("1st_jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "leading jet p_{T} (before balance cut)", label);
+  drawer_muon.MyDataMcComparisonTH1F("nJets_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "N_{jets} (before balance cut)", label);
+  drawer_muon.MyDataMcComparisonTH1F("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{jet} (before balance cut)", label);
+  drawer_muon.MyDataMcComparisonTH1F("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{jet} (before balance cut)", label);
+  drawer_muon.DrawFlavorComposition("jet_eta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{jet} (before balance cut)", label);
+  drawer_muon.DrawFlavorComposition("jet_pt_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{jet} (before balance cut)", label);  
   drawer_muon.MyDataMcComparisonTH1F("ZpT_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "p_{T}^{Z} [GeV]", label);
   drawer_muon.MyDataMcComparisonTH1F("Zeta_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#eta^{Z}", label);
   drawer_muon.MyDataMcComparisonTH1F("Zphi_beforecut", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_muon.GetLuminosity()), "#phi^{Z}", label);
@@ -177,7 +178,7 @@ int main()
       if (found==std::string::npos) { continue; }
       std::string xtitle = ((TH1F*)key->ReadObj())->GetXaxis()->GetTitle();
       std::string title = ((TH1F*)key->ReadObj())->GetTitle();
-      drawer2_muon.MyDataMcComparisonTH1F_GraphStyle(keyName, Form("%s", title.c_str()), xtitle, label, true, 0.5, 1.5); // set Y range by hand
+      drawer2_muon.MyDataMcComparisonTH1F_GraphStyle(keyName, Form("%s", title.c_str()), xtitle, label, true, 0.5, 1.5, false, -1, -1, 0.85, 1.15); // set Y range by hand
       //drawer2_muon.MyDataMcComparisonTH1F(keyName, Form("%s", title.c_str()), xtitle);      
     }//over Keys
   }
