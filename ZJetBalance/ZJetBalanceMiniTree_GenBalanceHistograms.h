@@ -71,6 +71,7 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   TH1F* m_h_Zeta; //!
   TH1F* m_h_Zphi; //!
   TH1F* m_h_ZM; //!
+  TH1F* m_h_ZpTRef; //!
   TH1F* m_h_ZpT_beforecut; //!
   TH1F* m_h_Zeta_beforecut; //!
   TH1F* m_h_Zphi_beforecut; //!

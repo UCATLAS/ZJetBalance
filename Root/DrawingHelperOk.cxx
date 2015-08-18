@@ -227,7 +227,8 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
 					const std::vector<std::map<std::string, double> >& mcStats,
 					const std::string& comment,
 					const std::string& label,
-					const double& ratio_plot_range,
+					const double& ratio_plot_range_min,
+					const double& ratio_plot_range_max,
 					const std::string& mcDrawOption,
 					const bool& setYRange,
 					const double& yMinimum,
@@ -243,7 +244,8 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
 	    mcStats,
 	    comment,
 	    label,
-	    ratio_plot_range,
+	    ratio_plot_range_min,
+	    ratio_plot_range_max,
 	    mcDrawOption,
 	    setYRange,
 	    yMinimum,
@@ -261,7 +263,8 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
 					const std::vector<std::map<std::string, double> >& mcStats,
 					const std::string& comment,
 					const std::string& label,
-					const double& ratio_plot_range,
+					const double& ratio_plot_range_min,
+					const double& ratio_plot_range_max,
 					const std::string& mcDrawOption,
 					const bool& setYRange,
 					const double& yMinimum,
@@ -399,8 +402,8 @@ ZJetBalance::DrawingHelperOk::RatioPlot(TH1F* hData,
   TLine l1((setXRange ? xMinimum : h_ratio_data.GetXaxis()->GetXmin()), 1.0, 
 	   (setXRange ? xMaximum : h_ratio_data.GetXaxis()->GetXmax()), 1.0);
   // font size
-  h_ratio_mc.SetMaximum(1.0+ratio_plot_range);
-  h_ratio_mc.SetMinimum(1.0-ratio_plot_range);
+  h_ratio_mc.SetMaximum(ratio_plot_range_max);
+  h_ratio_mc.SetMinimum(ratio_plot_range_min);
   h_ratio_mc.SetFillColor(kYellow+3);
   h_ratio_mc.GetXaxis()->SetLabelSize(0.15);
   h_ratio_mc.GetXaxis()->SetTitleSize(0.15);
@@ -442,7 +445,9 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F_GraphStyle(const std::strin
 								const double& yMaximum,
 								const bool& setXRange,
 								const double& xMinimum,
-								const double& xMaximum)
+								const double& xMaximum,
+								const double& ratio_plot_range_min,
+								const double& ratio_plot_range_max)
 {
   MyDataMcComparisonTH1F(histname,
 			 comment,
@@ -454,7 +459,9 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F_GraphStyle(const std::strin
 			 yMaximum,
 			 setXRange,
 			 xMinimum,
-			 xMaximum);
+			 xMaximum,
+			 ratio_plot_range_min,
+			 ratio_plot_range_max);
 }
   
 // ======================================
@@ -469,7 +476,9 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 						     const double& yMaximum,
 						     const bool& setXRange,
 						     const double& xMinimum,
-						     const double& xMaximum)
+						     const double& xMaximum,
+						     const double& ratio_plot_range_min,
+						     const double& ratio_plot_range_max)
 {    
   // data preparation 
   TFile* fData = GetTFile(m_Data_fileName);
@@ -568,8 +577,9 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 
   
   // ratio plot
-  RatioPlot(hData, mcHistStack, mcStats, comment, label, 0.5, mcDrawOption,
-	    setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
+  RatioPlot(hData, mcHistStack, mcStats, comment, label, 
+	    ratio_plot_range_min, ratio_plot_range_max, 
+	    mcDrawOption, setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   CloseMCFiles(mcFiles);
 }

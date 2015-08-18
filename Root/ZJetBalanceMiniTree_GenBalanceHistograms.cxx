@@ -126,10 +126,11 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
   m_h_electron2_phi = book("electron2_phi", "e_{2} #phi", 64, -TMath::Pi(), TMath::Pi());
 
   // plots of Z itself
-  m_h_ZpT   = book("ZpT",   "Z p_{T} [GeV]",  120,  0,    240);
-  m_h_Zeta  = book("Zeta",  "Z #eta",         60,  -3.0, 3.0);
-  m_h_Zphi  = book("Zphi",  "Z #phi",         64, -TMath::Pi(), TMath::Pi());
-  m_h_ZM    = book("ZM",    "m_{Z} [GeV]",    60, 60, 120);
+  m_h_ZpT    = book("ZpT",   "Z p_{T} [GeV]",  120,  0,    240);
+  m_h_ZpTRef = book("ZpTRef","Z p_{T}^{ref} [GeV]",  120,  0,   240);
+  m_h_Zeta   = book("Zeta",  "Z #eta",         60,  -3.0, 3.0);
+  m_h_Zphi   = book("Zphi",  "Z #phi",         64, -TMath::Pi(), TMath::Pi());
+  m_h_ZM     = book("ZM",    "m_{Z} [GeV]",    60, 60, 120);
 
   m_h_ZpT_beforecut   = book("ZpT_beforecut",   "Z p_{T} [GeV]",  120,  0,    240);
   m_h_Zeta_beforecut  = book("Zeta_beforecut",  "Z #eta",         60,  -3.0, 3.0);
@@ -340,6 +341,9 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   }
   
   FillCutflowHistograms("Process NTuple", mcEventWeight, weight_final);
+  m_h_RunNumber->Fill(runNumber, weight_final);
+  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
+
 
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
@@ -360,9 +364,12 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
   FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
   
-  m_h_RunNumber->Fill(runNumber, weight_final);
-  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
-
+  // selection criteria need to be applied
+  m_h_ZM_beforecut->Fill(ZM, weight_final);
+  
+  if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
+  FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
+  
   // for valiadtion
   int nJetsBeforeCut = 0;
   
@@ -394,8 +401,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   m_h_ZpT_beforecut->Fill(ZpT, weight_final);
   m_h_Zeta_beforecut->Fill(Zeta, weight_final);
   m_h_Zphi_beforecut->Fill(Zphi, weight_final);
-  m_h_ZM_beforecut->Fill(ZM, weight_final);
-
+  
   // muon before cut
   if( m_fillLeptonBefore && m_isMuonSample ) {
     m_h_muon1_pT_beforecut->Fill ( muon_pt ->at(0), weight_final );
@@ -413,10 +419,6 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     m_h_electron2_phi_beforecut->Fill( el_phi->at(1), weight_final );
   }
   
-  // selection criteria need to be applied
-  if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
-  FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
-
   if (TMath::Abs(dPhiZJet1)<m_cutDPhiZJet)  { return EL::StatusCode::SUCCESS; }
   FillCutflowHistograms("#Delta#phi(Z,jet)", mcEventWeight, weight_final);
   
@@ -465,6 +467,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   
   // plots of Z itself
   m_h_ZpT->Fill(ZpT, weight_final);
+  m_h_ZpTRef->Fill(pTRef1, weight_final);
   m_h_Zeta->Fill(Zeta, weight_final);
   m_h_Zphi->Fill(Zphi, weight_final);
   m_h_ZM->Fill(ZM, weight_final);
@@ -491,7 +494,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
 			 (m_balance_hists_l[Z_pt_ref_bin])[lead_jet_eta_bin],
 			 lead_jet_truthLabel, lead_jet_pt/pTRef1, weight_final);    
   }
-    
+  
   return EL::StatusCode::SUCCESS;
 }
 
