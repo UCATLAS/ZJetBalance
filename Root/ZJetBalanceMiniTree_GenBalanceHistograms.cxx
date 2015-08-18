@@ -341,16 +341,15 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   }
   
   FillCutflowHistograms("Process NTuple", mcEventWeight, weight_final);
+  m_h_RunNumber->Fill(runNumber, weight_final);
+  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
+
 
   if(m_debug) Info("execute()", "Processing Event @ RunNumber=%10d, EventNumber=%d", runNumber, eventNumber);
   ++m_eventCounter;
   if (m_eventCounter%10000==0) {
     Info("execute()", "%10d th event is been processed.", m_eventCounter);
   }
-  
-  // selection criteria need to be applied
-  if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
-  FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
   
   // 
   const float& lead_jet_pt      = jet_pt->at(0);
@@ -365,9 +364,10 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
   FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
   
-  m_h_RunNumber->Fill(runNumber, weight_final);
-  m_h_averageInteractionsPerCrossing->Fill(averageInteractionsPerCrossing, weight_final); // for validation
-
+  // selection criteria need to be applied
+  if (TMath::Abs(ZM-91)>m_ZMassWindow)      { return EL::StatusCode::SUCCESS; }
+  FillCutflowHistograms("m_{Z} Window", mcEventWeight, weight_final);
+  
   // for valiadtion
   int nJetsBeforeCut = 0;
   
