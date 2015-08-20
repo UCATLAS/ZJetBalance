@@ -174,6 +174,8 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: histInitialize ()
   m_h_jet_pt_b  = book("jet_pt_b",  "jet^{1} p_{T} MC truth b", 50, 0, 300.);
   m_h_jet_pt_c  = book("jet_pt_c",  "jet^{1} p_{T} MC truth c", 50, 0, 300.);
   m_h_jet_pt_l  = book("jet_pt_l",  "jet^{1} #eta MC truth l", 50, 0, 300.);
+  m_h_SumPtTrkPt500PV_beforecut = book("track_sum_pt_500_MeV_beforecut","", 50, 0, 300.);
+  m_h_SumPtTrkPt500PV = book("track_sum_pt_500_MeV","", 50, 0, 300.);
 
   m_h_jet_pt_bin = new TH2F("jet_pt_bin", "", 100, 0, 500, m_n_pT_binning, -0.5, -0.5+m_n_pT_binning); // validation purpose
   wk()->addOutput( m_h_jet_pt_bin );
@@ -360,6 +362,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   const int    Z_pt_ref_bin  = GetPtBin(pTRef1);
   //const int    lead_jet_eta_bin = GetEtaBin(lead_jet_constScale_eta);
   const int    lead_jet_eta_bin = GetEtaBin(lead_jet_eta);
+  const float& sumPtTrkPt500PV = jet_SumPtTrkPt500PV->at(0);
   
   if (lead_jet_eta_bin==-1) {return EL::StatusCode::SUCCESS;} // out of eta range (defined as binning)
   FillCutflowHistograms("jet_{1} #eta", mcEventWeight, weight_final);
@@ -401,7 +404,9 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   m_h_ZpT_beforecut->Fill(ZpT, weight_final);
   m_h_Zeta_beforecut->Fill(Zeta, weight_final);
   m_h_Zphi_beforecut->Fill(Zphi, weight_final);
-  
+  m_h_ZM_beforecut->Fill(ZM, weight_final);
+  m_h_SumPtTrkPt500PV_beforecut->Fill(sumPtTrkPt500PV, weight_final);
+
   // muon before cut
   if( m_fillLeptonBefore && m_isMuonSample ) {
     m_h_muon1_pT_beforecut->Fill ( muon_pt ->at(0), weight_final );
@@ -471,6 +476,7 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
   m_h_Zeta->Fill(Zeta, weight_final);
   m_h_Zphi->Fill(Zphi, weight_final);
   m_h_ZM->Fill(ZM, weight_final);
+  m_h_SumPtTrkPt500PV->Fill(sumPtTrkPt500PV, weight_final);
   // jet plots after cuts
   m_h_nJets->Fill(njets, weight_final);
   m_h_jet_eta->Fill(lead_jet_eta, weight_final);
