@@ -119,6 +119,8 @@ class ZJetBalanceMiniTree_GenBalanceHistograms : public ZJetBalanceMiniTreeAnaBa
   TH1F* m_h_1st_jet_pt_beforecut_c; //!
   TH1F* m_h_1st_jet_eta_beforecut_l; //!
   TH1F* m_h_1st_jet_pt_beforecut_l; //!
+  TH1F* m_h_SumPtTrkPt500PV_beforecut; //!
+  TH1F* m_h_SumPtTrkPt500PV; //!
   TH1F* m_h_cutflow; //!
   TH1F* m_h_cutflow_weighted; //!
   TH1F* m_h_cutflow_weighted_final; //!

@@ -453,7 +453,6 @@ bool BalanceAlgorithm :: executeAnalysis ( const xAOD::EventInfo* eventInfo,
     weight = eventInfo->auxdecor< float >( "weight" );
   }
 
-
   ///////////////////////////// fill the tree ////////////////////////////////////////////
   if(m_writeTree){
     if( m_myTrees.find( systName ) == m_myTrees.end() ) { AddTree( systName ); }
