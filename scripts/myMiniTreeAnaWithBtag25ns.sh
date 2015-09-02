@@ -17,7 +17,7 @@ function RunZJetBalanceMiniTreeAnaWithCustomizedConfig {
 	cat ${tmpConfFileName}
 	
 	runZJetBalanceMiniTreeAna -inFile ${8} -submitDir ${9} -algorithm 2 -algoConfig ${tmpConfFileName}
-	\rm -r ${tmpConfFileName}
+	rm ${tmpConfFileName}
     fi
 }
 
