@@ -454,6 +454,7 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F_GraphStyle(const std::strin
 			 xtitle,
 			 label,
 			 "E2",
+       false, // Do not use area weighting.
 			 setYRange,
 			 yMinimum,
 			 yMaximum,
@@ -471,6 +472,7 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 						     const std::string& xtitle,
 						     const std::string& label,
 						     const std::string& mcDrawOption,
+                 const bool& useAreaWeighting,
 						     const bool& setYRange,
 						     const double& yMinimum,
 						     const double& yMaximum,
@@ -500,6 +502,14 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 	  histname.c_str());
     return;
   }
+
+  double areaWeightFactor = 0; 
+  if( useAreaWeighting ){
+    for(int iMC=0; iMC < m_MC_fileNames.size(); iMC++){
+      areaWeightFactor += ((TH1F*)mcFiles.at(iMC)->Get(histname.c_str()))->Integral();  
+    }
+    areaWeightFactor = (hData->Integral())/(areaWeightFactor);
+  }
   
   for (int iMC=0, nMCs=m_MC_fileNames.size(); iMC<nMCs; iMC++)  {
     TH1F* tmp = PrepareTH1F(mcFiles.at(iMC),
@@ -508,7 +518,7 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
 			    m_MC_colors.at(iMC),
 			    m_MC_styles.at(iMC),
 			    true, // fillHistogram
-			    m_MC_normalizationFactor.at(iMC));
+			    (useAreaWeighting ? areaWeightFactor : m_MC_normalizationFactor.at(iMC) ) );
     mcHists.push_back(tmp);
     std::map<std::string, double> stats = ReturnStatsMap(tmp);
     mcStats.push_back(stats);

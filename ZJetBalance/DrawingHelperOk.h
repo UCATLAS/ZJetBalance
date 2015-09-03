@@ -53,6 +53,7 @@ namespace ZJetBalance {
 				const std::string& xtitle,
 				const std::string& label="Internal",
 				const std::string& mcDrawOption="H",
+				const bool& useAreaWeighting=false,
 				const bool& setYRange=false,
 				const double& yMinimum=-1,
 				const double& yMaximum=-1,

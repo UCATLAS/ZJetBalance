@@ -12,6 +12,7 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
 					      const std::string& xtitle,
 					      const std::string& label,
 					      const std::string& mcDrawOption,
+                const bool& useAreaWeighting,
 					      const bool& setYRange,
 					      const double& yMinimum,
 					      const double& yMaximum,
@@ -40,7 +41,16 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   // initializer  
   mcSampleTitle[0]="b"; mcSampleTitle[1]="c"; mcSampleTitle[2]="others";
   mcHists[0] = new TH1F(); mcHists[1] = new TH1F(); mcHists[2] = new TH1F(); 
-  
+
+  // Area Normalization
+  double areaWeightFactor = 0; 
+  if( useAreaWeighting ){
+    for(int iMC=0; iMC < m_MC_fileNames.size(); iMC++){
+      areaWeightFactor += ((TH1F*)mcFiles.at(iMC)->Get(histname.c_str()))->Integral();  
+    }
+    areaWeightFactor = (hData->Integral())/(areaWeightFactor);
+  }
+
   for (int iMC=0, nMCs=m_MC_fileNames.size(); iMC<nMCs; iMC++)  {
     TH1F* tmp_b = PrepareTH1F(mcFiles.at(iMC),
 			      histname+"_b",
@@ -48,21 +58,21 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
 			      m_MC_colors.at(iMC),
 			      m_MC_styles.at(iMC),
 			      true, // fillHistogram
-			      m_MC_normalizationFactor.at(iMC));
+			      (useAreaWeighting ? areaWeightFactor : m_MC_normalizationFactor.at(iMC)) );
     TH1F* tmp_c = PrepareTH1F(mcFiles.at(iMC),
 			      histname+"_c",
 			      xtitle,
 			      m_MC_colors.at(iMC),
 			      m_MC_styles.at(iMC),
 			      true, // fillHistogram
-			      m_MC_normalizationFactor.at(iMC));
+			      (useAreaWeighting ? areaWeightFactor : m_MC_normalizationFactor.at(iMC)) );
     TH1F* tmp_l = PrepareTH1F(mcFiles.at(iMC),
 			      histname+"_l",
 			      xtitle,
 			      m_MC_colors.at(iMC),
 			      m_MC_styles.at(iMC),
 			      true, // fillHistogram
-			      m_MC_normalizationFactor.at(iMC));
+			      (useAreaWeighting ? areaWeightFactor : m_MC_normalizationFactor.at(iMC)) );
     if (iMC==0) { // copy
       tmp_b->Copy(*(mcHists[0]));
       tmp_c->Copy(*(mcHists[1]));
