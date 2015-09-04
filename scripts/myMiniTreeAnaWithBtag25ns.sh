@@ -29,7 +29,7 @@ function RunZJetBalanceMiniTreeAnaWithCustomizedConfig {
 # xAOD  : 19890410
 # DxAOD : 6380269
 # additional weight =  0.320356
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.320356 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/mcZee/all.root' 'el_hist361106'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.320356 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/mcZee/all.root' 'el_hist361106'
 rm -f all_el_hist361106.root
 hadd all_el_hist361106.root el_hist361106/hist-*.root
 
@@ -37,7 +37,7 @@ hadd all_el_hist361106.root el_hist361106/hist-*.root
 # xAOD  : 19152982
 # DxAOD : 36342
 # additional weight = 0.001893
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.001893 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/mcZtautau/all.root' 'el_hist361108'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.001893 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/mcZtautau/all.root' 'el_hist361108'
 rm -f all_el_hist361108.root
 hadd all_el_hist361108.root el_hist361108/hist-*.root
 
@@ -45,13 +45,13 @@ hadd all_el_hist361108.root el_hist361108/hist-*.root
 # xAOD  : 13392604
 # DxAOD : 732290 
 # additional weight = 0.036690
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.036690 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/mcttbar/all.root' 'el_hist410000' 
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.036690 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/mcttbar/all.root' 'el_hist410000' 
 rm -f all_el_hist410000.root
 hadd all_el_hist410000.root el_hist410000/hist-*.root
 
 # Data
 # with dummy input for PRW
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 1.0 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/data/all.root' 'el_histData25ns'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 1.0 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_e24_lhmedium_L1EM18VH_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/electron/data/all.root' 'el_histData25ns'
 rm -f all_el_histData25ns.root
 hadd all_el_histData25ns.root el_histData25ns/hist-*.root
 
@@ -70,7 +70,7 @@ ZJetBalancePlotter -usePoisson -inFile all_el_histData25ns.root -outTag allData_
 # xAOD  : 19962997
 # DxAOD : 8737695 
 # additional weight = 0.438137 
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.438137 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/mcZmumu/all.root' 'mu_hist361107'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.438137 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/mcZmumu/all.root' 'mu_hist361107'
 rm -f all_mu_hist361107.root
 hadd all_mu_hist361107.root mu_hist361107/hist-*.root
 
@@ -78,7 +78,7 @@ hadd all_mu_hist361107.root mu_hist361107/hist-*.root
 # xAOD  : 19152982
 # DxAOD : 36342 
 # additional weight = 0.001893 
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.001893 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root'  '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/mcZtautau/all.root' 'mu_hist361108'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.001893 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root'  '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/mcZtautau/all.root' 'mu_hist361108'
 rm -f all_mu_hist361108.root
 hadd all_mu_hist361108.root mu_hist361108/hist-*.root
 
@@ -86,13 +86,13 @@ hadd all_mu_hist361108.root mu_hist361108/hist-*.root
 # xAOD  : 13392604
 # DxAOD : 732290 
 # additional weight = 0.036690
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.036690 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/mcttbar/all.root' 'mu_hist410000'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 0.036690 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/mcttbar/all.root' 'mu_hist410000'
 rm -f all_mu_hist410000.root
 hadd all_mu_hist410000.root mu_hist410000/hist-*.root
 
 # Data
 # with dummy input for PRW
-RunZJetBalanceMiniTreeAnaWithCustomizedConfig 1.0 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,50,75,100,200' '-2.5,-1.6,0.8,0.8,1.6,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/data/all.root' 'mu_histData25ns'
+RunZJetBalanceMiniTreeAnaWithCustomizedConfig 1.0 '$ROOTCOREBIN/data/ZJetBalance/ilumicalc_histograms_HLT_mu20_iloose_L1MU15_276262-276954.root' '$ROOTCOREBIN/data/ZJetBalance/prw.361106.361107.361108.410000.r6282.root' '20,200' '-2.5,2.5' 'True' 'Fix70' '/afs/cern.ch/work/b/btuan/public/output/25ns/muon/data/all.root' 'mu_histData25ns'
 rm -f all_mu_histData25ns.root
 hadd all_mu_histData25ns.root mu_histData25ns/hist-*.root
 

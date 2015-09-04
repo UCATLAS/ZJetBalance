@@ -4,8 +4,8 @@
 
 int main()
 {
-  const double luminosity_muon=0.0802888;
-  const double luminosity_electron=0.0802888;
+  const double luminosity_muon=0.0545403;
+  const double luminosity_electron=0.0545403;
   
   const std::string label="Internal";
   
@@ -28,7 +28,7 @@ int main()
 	   	"Tt",
 		  kGreen, 8, true);
   
-  const std::string period("D3-D6");
+  const std::string period("D3,D4,D6");
   drawer_electron.MyDataMcComparisonTH1F("ZpT", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "p_{T}^{Z} [GeV]", label, "H", true);
   drawer_electron.MyDataMcComparisonTH1F("ZM", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "M_{Z} [GeV]", label, "H", true);
   drawer_electron.MyDataMcComparisonTH1F("Z_jet_dPhi", Form("%s   (%.2f fb^{-1})", period.c_str(), drawer_electron.GetLuminosity()), "#Delta (jet, Z)", label, "H", true);
