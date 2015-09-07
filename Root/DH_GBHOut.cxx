@@ -155,7 +155,7 @@ ZJetBalance::DH_GBHOut::DrawFlavorComposition(const std::string& histname,
   myComment.Draw();
   
   CustimizeCampusWithRightMargin();
-  m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
+  // m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
   
   // ratio plot
   RatioPlot(hData, mcHistStack, mcSampleTitle, mcStats, comment, label, 
