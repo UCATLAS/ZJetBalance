@@ -615,7 +615,9 @@ ZJetBalance::DrawingHelperOk::MyMcOnlyTH1F(const std::string& histname,
   std::vector<TFile*> mcFiles = OpenAndReturnMCFiles();
   std::vector<TH1F*> mcHists;
   std::vector<std::map<std::string, double> > mcStats;
-  
+  std::string tmpDrawOption = "P HIST " + mcDrawOption; // Suppress error bars
+
+
   if (m_MC_fileNames.size()==0) {
     Error("MyMcOnlyTH1F()", "no MC files registered. no draw for %s", 
     histname.c_str());
@@ -626,10 +628,11 @@ ZJetBalance::DrawingHelperOk::MyMcOnlyTH1F(const std::string& histname,
     TH1F* tmp = PrepareTH1F(mcFiles.at(iMC),
           histname,
           xtitle,
-          m_MC_colors.at(iMC),
-          m_MC_styles.at(iMC),
+          (iMC==0 ? kBlue : m_MC_colors.at(iMC)), // Yellow is hard to see
+          8, //m_MC_styles.at(iMC),
           true, // fillHistogram
           1.0 ); // Do no rescaling for MC only 
+    tmp->SetFillStyle(3002);
     mcHists.push_back(tmp);
     std::map<std::string, double> stats = ReturnStatsMap(tmp);
     mcStats.push_back(stats);
@@ -647,7 +650,7 @@ ZJetBalance::DrawingHelperOk::MyMcOnlyTH1F(const std::string& histname,
   if (setYRange) {
     hMC->SetMaximum(yMaximum);
     hMC->SetMinimum(yMinimum);
-  } else if (mcDrawOption=="H") { // nominal histograms (auto range)
+  } else if (tmpDrawOption=="H") { // nominal histograms (auto range)
     hMC->SetMinimum(hMC->GetMinimum()<0 ? hMC->GetMinimum() : 0.);
   } 
   
@@ -656,11 +659,11 @@ ZJetBalance::DrawingHelperOk::MyMcOnlyTH1F(const std::string& histname,
   }
   
   hMC->GetXaxis()->SetTitle(xtitle.c_str());
-  hMC->Draw(Form("%s", mcDrawOption.c_str()));
+  hMC->Draw(Form("%s", tmpDrawOption.c_str())); 
   
   // hMC->Draw(Form("%s SAME", mcDrawOption.c_str()));
   for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
-    mcHistStack.at(iMC).Draw(Form("%s SAME", mcDrawOption.c_str()));
+    mcHistStack.at(iMC).Draw(Form("%s SAME", tmpDrawOption.c_str()));
   }
   
   TLegend leg(0.76, 0.15, 0.98, 0.90);
@@ -852,7 +855,7 @@ ZJetBalance::DrawingHelperOk::ReturnLegend(const std::string& title,
     } else {
       rc = (isData ? 
 	    Form("#splitline{%s (%.0f)}{ave=%.1f rms=%.1f}", title.c_str(), entry, mean, rms) :
-	    Form("#splitline{%s (%.1f)}{ave=%.1f rms=%.1f}", title.c_str(), entry, mean, rms));
+	    Form("#splitline{%s (%.3f)}{ave=%.3f rms=%.3f}", title.c_str(), entry, mean, rms));
 	    //Form("#splitline{%s (%.0f)}{#splitline{mean=%.1f}{RMS=%.1f}}", title.c_str(), entry, mean, rms) :
 	    //Form("#splitline{%s (%.1f)}{#splitline{mean=%.1f}{RMS=%.1f}}", title.c_str(), entry, mean, rms));
     }

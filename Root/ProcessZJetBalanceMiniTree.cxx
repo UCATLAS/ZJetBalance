@@ -435,8 +435,7 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
   
     double pileup_reweighting_factor = GetPileupReweightingFactor();
     m_h_prwfactor->Fill(pileup_reweighting_factor);
-    // weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
-    weight_final = pileup_reweighting_factor;
+    weight_final = mcEventWeight*weight_xs*pileup_reweighting_factor;
 
     if( m_isMuonSample ){
       // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
@@ -464,7 +463,6 @@ EL::StatusCode ProcessZJetBalanceMiniTree :: execute ()
     // Info("execute()", "mcEventWeight=%.4e weight_xs=%.4e pileup_factor=%.1e weight_final=%.1e muon_effSF0=%f muon_effSF1=%f trigSF=%f",
     // 	 mcEventWeight, weight_xs, pileup_reweighting_factor, weight_final, muon_effSF->at(0)[0], muon_effSF->at(1)[0], weight_muon_trig->at(0));
   }
-  std::cout << "Final weight: " << weight_final << std::endl;
 
   // use non-weighted to check that the correct number of events was processes
   // use weighted to see the effect of the weights calculated in xAH

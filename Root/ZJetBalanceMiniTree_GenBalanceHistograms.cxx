@@ -318,9 +318,9 @@ EL::StatusCode ZJetBalanceMiniTree_GenBalanceHistograms :: execute ()
     if(m_debug) { 
       Info("execute()","Line %d: PRW factor successfully obtained!", __LINE__); 
     }
-    weight_final = 
-      mcEventWeight*weight_xs*pileup_reweighting_factor*m_additional_weight;
-    
+    // weight_final *= mcEventWeight*weight_xs*pileup_reweighting_factor*m_additional_weight;
+    weight_final *= pileup_reweighting_factor*m_additional_weight*weight_xs*(10e-6);
+
     if (m_isMuonSample){
       // trigger weight: 0 is nominal, rest are systematics +,- 1 sigma for each
       m_h_muonTrigFactor->Fill( weight_muon_trig->at(0) );

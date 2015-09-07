@@ -66,9 +66,10 @@ int main()
       if (not keyName.BeginsWith("DB_")) { continue; }
 
       std::string title = ((TH1F*)key->ReadObj())->GetTitle();
-      if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) { 
-        std::cout << "MC only plot: " << keyName << std::endl;
-        drawer_electron.MyMcOnlyTH1F(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
+      if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) {
+        const char* flavorTag = keyName(keyName.Length()-1, keyName.Length()).Data();
+        std::cout << "MC only plot: " << keyName << "_" << flavorTag << std::endl;
+        drawer_electron.MyMcOnlyTH1F(keyName.Data(), Form("%s, %s-tag", title.c_str(), flavorTag), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
         continue; 
       }
 
@@ -160,8 +161,9 @@ int main()
 
       std::string title = ((TH1F*)key->ReadObj())->GetTitle();
       if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) { 
-        std::cout << "MC only plot: " << keyName << std::endl;
-        drawer_muon.MyMcOnlyTH1F(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
+        const char* flavorTag = keyName(keyName.Length()-1, keyName.Length()).Data();
+        std::cout << "MC only plot: " << keyName << "_" << flavorTag << std::endl;
+        drawer_muon.MyMcOnlyTH1F(keyName.Data(), Form("%s, %s-tag", title.c_str(), flavorTag), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
         continue;
       }
       
