@@ -468,30 +468,30 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F_GraphStyle(const std::strin
 // ======================================
 void 
 ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname,
-						     const std::string& comment,
-						     const std::string& xtitle,
-						     const std::string& label,
-						     const std::string& mcDrawOption,
+                 const std::string& comment,
+                 const std::string& xtitle,
+                 const std::string& label,
+                 const std::string& mcDrawOption,
                  const bool& useAreaWeighting,
-						     const bool& setYRange,
-						     const double& yMinimum,
-						     const double& yMaximum,
-						     const bool& setXRange,
-						     const double& xMinimum,
-						     const double& xMaximum,
-						     const double& ratio_plot_range_min,
-						     const double& ratio_plot_range_max)
+                 const bool& setYRange,
+                 const double& yMinimum,
+                 const double& yMaximum,
+                 const bool& setXRange,
+                 const double& xMinimum,
+                 const double& xMaximum,
+                 const double& ratio_plot_range_min,
+                 const double& ratio_plot_range_max)
 {    
   // data preparation 
   TFile* fData = GetTFile(m_Data_fileName);
   
   TH1F* hData = PrepareTH1F(fData,
-			    histname,
-			    xtitle,
-			    kBlack,
-			    8,
-			    false, // not fillHistogram
-			    1.0);
+          histname,
+          xtitle,
+          kBlack,
+          8,
+          false, // not fillHistogram
+          1.0);
   
   std::vector<TFile*> mcFiles = OpenAndReturnMCFiles();
   std::vector<TH1F*> mcHists;
@@ -499,13 +499,13 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   
   if (m_MC_fileNames.size()==0) {
     Error("MyDataMcComparison()", "no MC files registered. no draw for %s", 
-	  histname.c_str());
+    histname.c_str());
     return;
   }
 
   double areaWeightFactor = 0; 
   if( useAreaWeighting ){
-    for(int iMC=0; iMC < m_MC_fileNames.size(); iMC++){
+    for(unsigned int iMC=0; iMC < m_MC_fileNames.size(); iMC++){
       areaWeightFactor += ((TH1F*)mcFiles.at(iMC)->Get(histname.c_str()))->Integral();  
     }
     areaWeightFactor = (hData->Integral())/(areaWeightFactor);
@@ -513,12 +513,12 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   
   for (int iMC=0, nMCs=m_MC_fileNames.size(); iMC<nMCs; iMC++)  {
     TH1F* tmp = PrepareTH1F(mcFiles.at(iMC),
-			    histname,
-			    xtitle,
-			    m_MC_colors.at(iMC),
-			    m_MC_styles.at(iMC),
-			    true, // fillHistogram
-			    (useAreaWeighting ? areaWeightFactor : m_MC_normalizationFactor.at(iMC) ) );
+          histname,
+          xtitle,
+          m_MC_colors.at(iMC),
+          m_MC_styles.at(iMC),
+          true, // fillHistogram
+          (useAreaWeighting ? areaWeightFactor : m_MC_normalizationFactor.at(iMC) ) );
     mcHists.push_back(tmp);
     std::map<std::string, double> stats = ReturnStatsMap(tmp);
     mcStats.push_back(stats);
@@ -588,11 +588,105 @@ ZJetBalance::DrawingHelperOk::MyDataMcComparisonTH1F(const std::string& histname
   
   // ratio plot
   RatioPlot(hData, mcHistStack, mcStats, comment, label, 
-	    ratio_plot_range_min, ratio_plot_range_max, 
-	    mcDrawOption, setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
+      ratio_plot_range_min, ratio_plot_range_max, 
+      mcDrawOption, setYRange, yMinimum, yMaximum, setXRange, xMinimum, xMaximum);
   
   CloseMCFiles(mcFiles);
 }
+
+
+// ======================================
+void 
+ZJetBalance::DrawingHelperOk::MyMcOnlyTH1F(const std::string& histname,
+                 const std::string& comment,
+                 const std::string& xtitle,
+                 const std::string& label,
+                 const std::string& mcDrawOption,
+                 const bool& useAreaWeighting,
+                 const bool& setYRange,
+                 const double& yMinimum,
+                 const double& yMaximum,
+                 const bool& setXRange,
+                 const double& xMinimum,
+                 const double& xMaximum,
+                 const double& ratio_plot_range_min,
+                 const double& ratio_plot_range_max)
+{    
+  std::vector<TFile*> mcFiles = OpenAndReturnMCFiles();
+  std::vector<TH1F*> mcHists;
+  std::vector<std::map<std::string, double> > mcStats;
+  
+  if (m_MC_fileNames.size()==0) {
+    Error("MyMcOnlyTH1F()", "no MC files registered. no draw for %s", 
+    histname.c_str());
+    return;
+  }
+
+  for (int iMC=0, nMCs=m_MC_fileNames.size(); iMC<nMCs; iMC++)  {
+    TH1F* tmp = PrepareTH1F(mcFiles.at(iMC),
+          histname,
+          xtitle,
+          m_MC_colors.at(iMC),
+          m_MC_styles.at(iMC),
+          true, // fillHistogram
+          1.0 ); // Do no rescaling for MC only 
+    mcHists.push_back(tmp);
+    std::map<std::string, double> stats = ReturnStatsMap(tmp);
+    mcStats.push_back(stats);
+  }
+  
+  std::vector<TH1F> mcHistStack(mcHists.size());
+  for (int iFile=0, nFiles=mcHists.size(); iFile<nFiles; iFile++) {
+    mcHists.at(iFile)->Copy(mcHistStack[iFile]);
+    for (int kFile=iFile+1; kFile<nFiles; kFile++) {
+      mcHistStack[iFile] = mcHistStack[iFile] + (*mcHists.at(kFile));
+    }
+  }
+  
+  TH1F* hMC = (& (mcHistStack[0]) );
+  if (setYRange) {
+    hMC->SetMaximum(yMaximum);
+    hMC->SetMinimum(yMinimum);
+  } else if (mcDrawOption=="H") { // nominal histograms (auto range)
+    hMC->SetMinimum(hMC->GetMinimum()<0 ? hMC->GetMinimum() : 0.);
+  } 
+  
+  if (setXRange) {
+    hMC->GetXaxis()->SetRangeUser(xMinimum, xMaximum);
+  }
+  
+  hMC->GetXaxis()->SetTitle(xtitle.c_str());
+  hMC->Draw(Form("%s", mcDrawOption.c_str()));
+  
+  // hMC->Draw(Form("%s SAME", mcDrawOption.c_str()));
+  for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
+    mcHistStack.at(iMC).Draw(Form("%s SAME", mcDrawOption.c_str()));
+  }
+  
+  TLegend leg(0.76, 0.15, 0.98, 0.90);
+  leg.SetLineStyle(0);
+  leg.SetLineColor(0);
+  leg.SetFillStyle(0);
+  
+  for (int iMC=0, nMCs=mcHistStack.size(); iMC<nMCs; iMC++) {
+    std::string mcLegend = ReturnLegend(m_MC_sampleTitles.at(iMC),mcStats.at(iMC), mcDrawOption, false);
+    leg.AddEntry( &(mcHistStack[iMC]), mcLegend.c_str(), "F");
+  }
+  
+  leg.Draw();
+  
+  ATLASLabel(0.20, 0.94, label.c_str(), kBlack);
+
+  TLatex myComment(0.45, 0.94, comment.c_str());
+  myComment.SetNDC();
+  myComment.Draw();
+  
+  CustimizeCampusWithRightMargin();
+  m_canvas->Print(Form("%s.pdf", m_outputFileName.c_str()));
+  
+  CloseMCFiles(mcFiles);
+}
+
 
 // ======================================
 void

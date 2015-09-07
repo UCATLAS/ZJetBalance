@@ -64,9 +64,14 @@ int main()
     while ((key = (TKey*)next())) {
       TString keyName = key->GetName();
       if (not keyName.BeginsWith("DB_")) { continue; }
-      if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) { continue; }
+
       std::string title = ((TH1F*)key->ReadObj())->GetTitle();
-      
+      if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) { 
+        std::cout << "MC only plot: " << keyName << std::endl;
+        drawer_electron.MyMcOnlyTH1F(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
+        continue; 
+      }
+
       drawer_electron.MyDataMcComparisonTH1F(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
       drawer_electron.DrawFlavorComposition(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
     }
@@ -152,8 +157,13 @@ int main()
     while ((key = (TKey*)next())) {
       TString keyName = key->GetName();
       if (not keyName.BeginsWith("DB_")) { continue; }
-      if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) { continue; }
+
       std::string title = ((TH1F*)key->ReadObj())->GetTitle();
+      if (keyName.EndsWith("_b") or keyName.EndsWith("_c") or keyName.EndsWith("_l")) { 
+        std::cout << "MC only plot: " << keyName << std::endl;
+        drawer_muon.MyMcOnlyTH1F(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
+        continue;
+      }
       
       drawer_muon.MyDataMcComparisonTH1F(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
       drawer_muon.DrawFlavorComposition(keyName.Data(), Form("%s", title.c_str()), "p_{T}^{jet}/p_{T, Z}^{ref}", label, "H", true, false, -1, -1, true, 0, 2.5); // set xrange by hand
